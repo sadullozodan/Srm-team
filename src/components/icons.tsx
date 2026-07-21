@@ -294,35 +294,31 @@ export function FlagUK(p: P) {
   );
 }
 
-// OMUZ logo mark — rounded roof/house with antenna dot.
+// OMUZ official logo mark — Mortarboard cap top over purple ring ("O").
 export function LogoMark(p: P) {
   return (
     <svg
-      width={30}
-      height={30}
+      width={32}
+      height={32}
       viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...p}
     >
+      {/* Top Mortarboard Cap */}
+      <path d="M16 2.5 L30 11 L16 19.5 L2 11 Z" fill="#1e1b4b" className="dark:fill-[#312e81]" />
       <path
-        d="M16 3.5 27 12v14.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V12L16 3.5Z"
-        fill="currentColor"
-        opacity=".12"
-      />
-      <path
-        d="m4.5 13 11.5-9 11.5 9"
-        stroke="currentColor"
-        strokeWidth="2.4"
+        d="M9.5 13.5 C11.5 12 14.5 11.2 16 11.2 C17.5 11.2 20.5 12 22.5 13.5"
+        stroke="#ffffff"
+        strokeWidth="1.8"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
-      <circle cx="16" cy="19" r="6.5" stroke="currentColor" strokeWidth="2.4" />
+      {/* Ring "O" */}
       <path
-        d="M16 6.5v3"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M16 9C9.925 9 5 13.925 5 20C5 26.075 9.925 31 16 31C22.075 31 27 26.075 27 20C27 13.925 22.075 9 16 9ZM16 14.5C12.962 14.5 10.5 16.962 10.5 20C10.5 23.038 12.962 25.5 16 25.5C19.038 25.5 21.5 23.038 21.5 20C21.5 16.962 19.038 14.5 16 14.5Z"
+        fill="#5842f4"
       />
     </svg>
   );
