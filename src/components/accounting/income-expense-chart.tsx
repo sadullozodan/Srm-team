@@ -94,34 +94,34 @@ export function IncomeExpenseChart({
   }, []);
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900/60 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+    <div className="w-full bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2">
             <span className="size-2.5 rounded-full bg-[#22c55e]" />
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Income</span>
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Income</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <span className="size-2.5 rounded-full bg-[#ef4444]" />
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Expense</span>
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Expense</span>
           </div>
         </div>
 
-        {/* Year Dropdown */}
+        {/* Year Dropdown matching screenshot */}
         <div className="relative">
-          <label className="absolute -top-2 left-2 bg-white dark:bg-slate-900 px-1 text-[10px] text-slate-400 font-medium z-10">
+          <span className="absolute -top-2.5 left-3 bg-white dark:bg-slate-900 px-1 text-[11px] font-medium text-slate-400 z-10">
             Year
-          </label>
-          <div className="border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50/50 dark:bg-slate-800 flex items-center gap-2">
-            <span>2023</span>
-            <Calendar className="size-3.5 text-slate-400" />
+          </span>
+          <div className="border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-1.5 bg-white dark:bg-slate-800 flex items-center gap-3 shadow-2xs">
+            <span className="text-sm font-bold text-slate-800 dark:text-slate-100">2023</span>
+            <Calendar className="size-4 text-slate-600 dark:text-slate-300" />
           </div>
         </div>
       </div>
 
       {/* Chart Canvas */}
-      <div className="w-full h-[260px]">
+      <div className="w-full h-[300px]">
         {mounted && (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 15, right: 15, left: 0, bottom: 5 }}>

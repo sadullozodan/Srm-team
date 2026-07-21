@@ -46,63 +46,64 @@ export function StudentsPaymentDonutChart({
   }, []);
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900/60 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+    <div className="w-full h-full min-h-[360px] bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       {/* Title */}
-      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Students payment</h3>
+      <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
+        Students payment
+      </h3>
 
-      {/* Main Content Layout: Donut Chart + Right Legend */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
-        {/* Donut Chart Container */}
-        <div className="relative size-40 sm:size-44 flex items-center justify-center shrink-0">
-          {mounted && (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={46}
-                  outerRadius={68}
-                  paddingAngle={2}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          )}
+      {/* Main Donut Visual */}
+      <div className="relative size-48 sm:size-52 mx-auto flex items-center justify-center shrink-0 my-2">
+        {mounted && (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey="value"
+                stroke="none"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        )}
 
-          {/* Center Overlay Text */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-            <span className="text-[11px] font-semibold text-slate-400">
-              {totalLabel}
-            </span>
-            <span className="text-xl font-extrabold text-slate-900 dark:text-white leading-tight">
-              {totalCount}
-            </span>
-          </div>
+        {/* Center Overlay Text matching screenshot */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+          <span className="text-xs font-medium text-slate-400">
+            {totalLabel}
+          </span>
+          <span className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+            {totalCount}
+          </span>
         </div>
+      </div>
 
-        {/* Legend List */}
-        <div className="flex flex-col gap-2.5 w-full sm:w-auto">
-          {data.map((item, index) => (
-            <div key={index} className="flex items-center justify-between gap-4 text-xs font-semibold">
-              <div className="flex items-center gap-2">
-                <span
-                  className="size-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-slate-600 dark:text-slate-300">{item.name}</span>
-              </div>
-              <span className="text-slate-900 dark:text-slate-100 font-bold">
-                {item.percentage} - {item.count}
+      {/* Bottom Legend Matching Screenshot */}
+      <div className="space-y-2.5 pt-2">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center justify-between text-xs font-semibold">
+            <div className="flex items-center gap-2">
+              <span
+                className="size-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-slate-600 dark:text-slate-300 font-medium">
+                {item.name}
               </span>
             </div>
-          ))}
-        </div>
+            <span className="text-slate-900 dark:text-slate-100 font-extrabold tracking-wide">
+              {item.percentage} - {item.count}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
