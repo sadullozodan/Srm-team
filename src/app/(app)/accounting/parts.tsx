@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { CrudApi } from "@/lib/api/resources";
-import { expensesApi, paymentsApi, queryKeys } from "@/lib/api/resources";
+import { queryKeys } from "@/lib/api/resources";
 import type { ListParams } from "@/lib/api/types";
 import { MONTHS } from "@/lib/series";
 import { cn } from "@/lib/utils";
@@ -24,11 +24,9 @@ export {
   Pill,
   PrimaryAction,
   SearchField,
-  SectionTitle,
   SelectField,
   type Tone,
 } from "../panels";
-export { Stepper } from "../parts";
 
 export { cellCls };
 
@@ -74,31 +72,6 @@ export function useDebouncedSearch(onChange: () => void) {
   }, [input]);
 
   return { input, setInput, search };
-}
-
-/**
- * Payments and expenses for one year, for the screens that have to total them
- * themselves. Neither endpoint aggregates or filters by date, so this pulls a
- * wide page and the caller buckets it — see BACKEND-GAPS.md.
- */
-const LEDGER_PAGE = { pageSize: 500 };
-
-export function useLedgerSources() {
-  const payments = useQuery({
-    queryKey: queryKeys.list("Payments", LEDGER_PAGE),
-    queryFn: () => paymentsApi.list(LEDGER_PAGE),
-  });
-  const expenses = useQuery({
-    queryKey: queryKeys.list("Expenses", LEDGER_PAGE),
-    queryFn: () => expensesApi.list(LEDGER_PAGE),
-  });
-
-  return {
-    payments: payments.data?.items ?? [],
-    expenses: expenses.data?.items ?? [],
-    isPending: payments.isPending || expenses.isPending,
-    isError: payments.isError || expenses.isError,
-  };
 }
 
 export interface ResourceTableProps<TDto> {
