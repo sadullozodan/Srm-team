@@ -152,13 +152,13 @@ export function AccountingPanel() {
 
       {/* 4. Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Income / Expense Line Chart (7 cols on lg) */}
-        <div className="lg:col-span-7">
+        {/* Left: Income / Expense Line Chart (8 cols on lg) */}
+        <div className="lg:col-span-8">
           <IncomeExpenseChart />
         </div>
 
-        {/* Right: Students Payment Donut Chart (5 cols on lg) */}
-        <div className="lg:col-span-5">
+        {/* Right: Students Payment Donut Chart (4 cols on lg) */}
+        <div className="lg:col-span-4">
           <StudentsPaymentDonutChart />
         </div>
       </div>

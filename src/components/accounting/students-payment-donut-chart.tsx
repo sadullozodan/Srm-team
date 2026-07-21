@@ -46,7 +46,7 @@ export function StudentsPaymentDonutChart({
   }, []);
 
   return (
-    <div className="w-full h-full min-h-[360px] bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="w-full h-full min-h-[400px] bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       {/* Title */}
       <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
         Students payment
