@@ -44,7 +44,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 px-1 py-1 text-primary"
+          className="flex items-center gap-2 px-1 py-1 text-primary transition-opacity hover:opacity-90"
         >
           {/* Full wordmark when the rail is open, capped "o" when it is not. */}
           <Logo className="h-9 group-data-[collapsible=icon]:hidden" />
