@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 import { expensesApi } from "@/lib/api/resources";
-import type { ActivationStatus } from "@/lib/api/types";
-import { Badge } from "@/components/ui/badge";
-import { TableCell, TableRow } from "@/components/ui/table";
+import type { ActivationStatus, ExpenseCategory } from "@/lib/api/types";
 import {
-  PageHeader,
-  ResourceList,
-  SearchBox,
-  StatusFilter,
+  ExportButton,
+  Filters,
+  NameCell,
+  Panel,
+  PanelHeader,
+  Pill,
+  ResourceTable,
+  SearchField,
+  SelectField,
+  cellCls,
   money,
   shortDate,
   statusIndex,
@@ -19,8 +23,12 @@ import {
 const STATUSES: readonly ActivationStatus[] = ["Inactive", "Active"];
 
 // The API spells the categories in PascalCase; only one needs splitting.
-const CATEGORY_LABELS: Record<string, string> = {
+const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
+  Tax: "Tax",
   OfficeExpenses: "Office expenses",
+  Marketing: "Marketing",
+  Employees: "Employees",
+  Other: "Other",
 };
 
 export default function ExpensesPage() {
@@ -29,47 +37,56 @@ export default function ExpensesPage() {
   const { input, setInput, search } = useDebouncedSearch(() => setPage(1));
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Expenses" />
+    <Panel>
+      <PanelHeader title="Expenses" backHref="/accounting">
+        <ExportButton />
+      </PanelHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchBox value={input} onChange={setInput} placeholder="Search by name" />
-        <StatusFilter
+      <Filters>
+        <SearchField value={input} onChange={setInput} />
+        <SelectField
+          label="Status"
           value={status}
           options={STATUSES}
+          allLabel="All status"
           onChange={(value) => {
             setStatus(value);
             setPage(1);
           }}
         />
-      </div>
+      </Filters>
 
-      <ResourceList
+      <ResourceTable
         api={expensesApi}
         search={search}
         page={page}
         onPageChange={setPage}
         params={{ status: statusIndex(STATUSES, status) }}
         emptyMessage="No expenses recorded."
-        columns={["Name", "Category", "Amount", "Recipient", "Branch", "Date", "Status"]}
+        minWidth="min-w-[820px]"
+        columns={["Full name", "Category", "Total payment", "Recipient", "Branch", "Date", "Status"]}
         row={(expense) => (
-          <TableRow key={expense.id}>
-            <TableCell className="font-medium">{expense.name ?? "—"}</TableCell>
-            <TableCell className="text-muted-foreground">
-              {CATEGORY_LABELS[expense.category] ?? expense.category}
-            </TableCell>
-            <TableCell className="text-destructive">{money(expense.amount)}</TableCell>
-            <TableCell className="text-muted-foreground">{expense.recipient ?? "—"}</TableCell>
-            <TableCell className="text-muted-foreground">{expense.branchName ?? "—"}</TableCell>
-            <TableCell className="text-muted-foreground">{shortDate(expense.date)}</TableCell>
-            <TableCell>
-              <Badge variant={expense.status === "Active" ? "success" : "muted"}>
+          <tr key={expense.id} className="transition-colors hover:bg-muted/40">
+            <td className={cellCls}>
+              <NameCell name={expense.name ?? "—"} sub={expense.recipient} />
+            </td>
+            <td className={cellCls}>
+              <Pill tone="brand">{CATEGORY_LABELS[expense.category] ?? expense.category}</Pill>
+            </td>
+            <td className={`${cellCls} font-semibold text-rose-500`}>{money(expense.amount)}</td>
+            <td className={`${cellCls} text-muted-foreground`}>{expense.recipient ?? "—"}</td>
+            <td className={`${cellCls} text-muted-foreground`}>{expense.branchName ?? "—"}</td>
+            <td className={`${cellCls} font-mono text-xs text-muted-foreground`}>
+              {shortDate(expense.date)}
+            </td>
+            <td className={cellCls}>
+              <Pill tone={expense.status === "Active" ? "success" : "neutral"}>
                 {expense.status}
-              </Badge>
-            </TableCell>
-          </TableRow>
+              </Pill>
+            </td>
+          </tr>
         )}
       />
-    </div>
+    </Panel>
   );
 }

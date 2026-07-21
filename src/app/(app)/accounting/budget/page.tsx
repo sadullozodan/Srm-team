@@ -3,13 +3,17 @@
 import { useState } from "react";
 import { budgetsApi } from "@/lib/api/resources";
 import type { ActivationStatus } from "@/lib/api/types";
-import { Badge } from "@/components/ui/badge";
-import { TableCell, TableRow } from "@/components/ui/table";
 import {
-  PageHeader,
-  ResourceList,
-  SearchBox,
-  StatusFilter,
+  ExportButton,
+  Filters,
+  NameCell,
+  Panel,
+  PanelHeader,
+  Pill,
+  ResourceTable,
+  SearchField,
+  SelectField,
+  cellCls,
   money,
   shortDate,
   statusIndex,
@@ -24,28 +28,33 @@ export default function BudgetPage() {
   const { input, setInput, search } = useDebouncedSearch(() => setPage(1));
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Budget plan" />
+    <Panel>
+      <PanelHeader title="Budget plan" backHref="/accounting">
+        <ExportButton />
+      </PanelHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchBox value={input} onChange={setInput} placeholder="Search by category" />
-        <StatusFilter
+      <Filters>
+        <SearchField value={input} onChange={setInput} placeholder="Search by category" />
+        <SelectField
+          label="Status"
           value={status}
           options={STATUSES}
+          allLabel="All status"
           onChange={(value) => {
             setStatus(value);
             setPage(1);
           }}
         />
-      </div>
+      </Filters>
 
-      <ResourceList
+      <ResourceTable
         api={budgetsApi}
         search={search}
         page={page}
         onPageChange={setPage}
         params={{ status: statusIndex(STATUSES, status) }}
         emptyMessage="No budget lines found."
+        minWidth="min-w-[880px]"
         columns={[
           "Category name",
           "From",
@@ -59,32 +68,32 @@ export default function BudgetPage() {
         row={(budget) => {
           const remaining = budget.amountAllocated - budget.amountSpent;
           return (
-            <TableRow key={budget.id}>
-              <TableCell className="font-medium">{budget.categoryName ?? "—"}</TableCell>
-              <TableCell className="text-muted-foreground">
+            <tr key={budget.id} className="transition-colors hover:bg-muted/40">
+              <td className={cellCls}>
+                <NameCell name={budget.categoryName ?? "—"} sub={budget.branchName} />
+              </td>
+              <td className={`${cellCls} font-mono text-xs text-muted-foreground`}>
                 {shortDate(budget.fromDate)}
-              </TableCell>
-              <TableCell className="text-muted-foreground">{shortDate(budget.toDate)}</TableCell>
-              <TableCell>{money(budget.amountAllocated)}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {money(budget.amountSpent)}
-              </TableCell>
-              {/* Overspend is the number an accountant is looking for, so colour it. */}
-              <TableCell className={remaining < 0 ? "text-destructive" : "text-emerald-600"}>
-                {money(remaining)}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {budget.branchName ?? "—"}
-              </TableCell>
-              <TableCell>
-                <Badge variant={budget.status === "Active" ? "success" : "muted"}>
+              </td>
+              <td className={`${cellCls} font-mono text-xs text-muted-foreground`}>
+                {shortDate(budget.toDate)}
+              </td>
+              <td className={`${cellCls} font-semibold`}>{money(budget.amountAllocated)}</td>
+              <td className={`${cellCls} text-muted-foreground`}>{money(budget.amountSpent)}</td>
+              {/* Overspend is the number an accountant is looking for. */}
+              <td className={cellCls}>
+                <Pill tone={remaining < 0 ? "danger" : "success"}>{money(remaining)}</Pill>
+              </td>
+              <td className={`${cellCls} text-muted-foreground`}>{budget.branchName ?? "—"}</td>
+              <td className={cellCls}>
+                <Pill tone={budget.status === "Active" ? "success" : "neutral"}>
                   {budget.status}
-                </Badge>
-              </TableCell>
-            </TableRow>
+                </Pill>
+              </td>
+            </tr>
           );
         }}
       />
-    </div>
+    </Panel>
   );
 }

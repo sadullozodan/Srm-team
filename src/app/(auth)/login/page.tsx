@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/context";
 import { ApiError } from "@/lib/api/client";
+import { normalizePhone } from "@/lib/phone";
 import { AuthTabs } from "../auth-tabs";
 
 export default function LoginPage() {
@@ -30,9 +31,9 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      // The backend still calls this field userName; the phone is what people
-      // actually sign in with.
-      await login({ userName: phone, password });
+      // The backend still calls this field userName, and it matches the stored
+      // digits literally — so a "+" or a space here reads as a wrong password.
+      await login({ userName: normalizePhone(phone), password });
       router.replace("/");
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -60,12 +61,13 @@ export default function LoginPage() {
           <Input
             id="phone"
             type="tel"
+            inputMode="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             autoComplete="tel"
             required
             className="h-13"
-            placeholder="Phone"
+            placeholder="Phone number"
           />
         </div>
 

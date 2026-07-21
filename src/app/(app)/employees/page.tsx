@@ -1,78 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Braces,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
   List,
-  Pencil,
   Plus,
-  Search,
+  SquarePen,
   Star,
   Trash2,
+  UserCheck,
 } from "lucide-react";
 import { employeesApi, queryKeys } from "@/lib/api/resources";
 import type { ActivationStatus, EmployeeDto } from "@/lib/api/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+  Filters,
+  NameCell,
+  OutlineAction,
+  Panel,
+  PanelHeader,
+  Pill,
+  PrimaryAction,
+  SearchField,
+  SelectField,
+  cellCls,
+  statusIndex,
+  useDebouncedSearch,
+  type Tone,
+} from "../accounting/parts";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 12;
+const STATUSES: readonly ActivationStatus[] = ["Inactive", "Active"];
 
-// ActivationStatus is a string on the wire but the list filter takes its index.
-const STATUS_ORDER: ActivationStatus[] = ["Inactive", "Active"];
-const statusVariant: Record<ActivationStatus, "success" | "muted"> = {
-  Active: "success",
-  Inactive: "muted",
+// The Figma colours each job title differently; positions are free text on the
+// backend, so the well-known ones get their colour and the rest fall back.
+const POSITION_TONES: Record<string, Tone> = {
+  Admin: "brand",
+  Manager: "warning",
+  Developer: "brand",
+  Mentor: "warning",
 };
 
-function fullName(e: EmployeeDto): string {
-  return e.fullName ?? ([e.firstName, e.lastName].filter(Boolean).join(" ") || "—");
+function fullName(employee: EmployeeDto): string {
+  return (
+    employee.fullName ??
+    ([employee.firstName, employee.lastName].filter(Boolean).join(" ") || "—")
+  );
+}
+
+function positionsOf(employee: EmployeeDto): string[] {
+  return employee.positions ?? [];
 }
 
 export default function EmployeesPage() {
-  const [view, setView] = useState<"list" | "grid">("list");
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const [view, setView] = useState<"grid" | "list">("grid");
   const [status, setStatus] = useState<ActivationStatus | "">("");
   const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(1);
-    }, 350);
-    return () => clearTimeout(id);
-  }, [searchInput]);
+  const { input, setInput, search } = useDebouncedSearch(() => setPage(1));
 
   const queryClient = useQueryClient();
-  const statusParam = status ? STATUS_ORDER.indexOf(status) : undefined;
+  const params = {
+    page,
+    pageSize: PAGE_SIZE,
+    search,
+    status: statusIndex(STATUSES, status),
+  };
 
   const { data, isPending, isError, error, isPlaceholderData } = useQuery({
-    queryKey: queryKeys.list("Employees", { page, pageSize: PAGE_SIZE, search, status: statusParam }),
-    queryFn: () =>
-      employeesApi.list({ page, pageSize: PAGE_SIZE, search, status: statusParam }),
+    queryKey: queryKeys.list("Employees", params),
+    queryFn: () => employeesApi.list(params),
     placeholderData: keepPreviousData,
   });
 
@@ -88,58 +89,43 @@ export default function EmployeesPage() {
   }
 
   const employees = data?.items ?? [];
-  const totalPages = data?.totalPages ?? 1;
+  const totalPages = Math.max(data?.totalPages ?? 1, 1);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Employees</h1>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button variant="outline" render={<Link href="/employees/positions" />}>
-            <Braces className="size-4" />
-            Position
-          </Button>
-          <Button variant="outline" render={<Link href="/employees/mentor-levels" />}>
-            <Star className="size-4 fill-current text-amber-500" />
-            Mentor levels
-          </Button>
-          <Button size="lg" className="gap-1.5" render={<Link href="/employees/new" />}>
-            <Plus className="size-4" />
-            Add new
-          </Button>
-        </div>
-      </div>
+    <Panel>
+      <PanelHeader title="Employees">
+        <OutlineAction href="/employees/positions">
+          <Braces className="size-4 stroke-[2.5]" />
+          <span>POSITION</span>
+        </OutlineAction>
+        <OutlineAction href="/employees/mentor-levels">
+          <Star className="size-4 fill-current" />
+          <span>MENTOR LEVELS</span>
+        </OutlineAction>
+        <PrimaryAction href="/employees/new">
+          <Plus className="size-4 stroke-3" />
+          <span>ADD NEW</span>
+        </PrimaryAction>
+      </PanelHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-56 flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search by name"
-            className="h-11 rounded-xl bg-card pl-9"
-          />
-        </div>
-
-        <div className="w-44">
-          <Select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as ActivationStatus | "");
-              setPage(1);
-            }}
-            className="h-11 rounded-xl bg-card"
-          >
-            <option value="">All statuses</option>
-            {STATUS_ORDER.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </Select>
+      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+        <div className="flex-1">
+          <Filters>
+            <SearchField value={input} onChange={setInput} />
+            <SelectField
+              label="Status"
+              value={status}
+              options={STATUSES}
+              allLabel="All status"
+              onChange={(value) => {
+                setStatus(value);
+                setPage(1);
+              }}
+            />
+          </Filters>
         </div>
 
-        <div className="flex overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex items-center gap-1 self-end rounded-xl border border-border bg-muted p-1">
           <ViewToggle active={view === "grid"} onClick={() => setView("grid")} label="Grid view">
             <LayoutGrid className="size-4" />
           </ViewToggle>
@@ -150,168 +136,208 @@ export default function EmployeesPage() {
       </div>
 
       {isError ? (
-        <Card>
-          <CardContent className="p-6 text-sm text-destructive">
-            Couldn&apos;t load employees
-            {error instanceof Error ? `: ${error.message}` : "."}
-          </CardContent>
-        </Card>
-      ) : view === "list" ? (
-        <ListView employees={employees} loading={isPending} onDelete={handleDelete} />
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">
+          Couldn&apos;t load employees
+          {error instanceof Error ? `: ${error.message}` : "."}
+        </div>
+      ) : isPending ? (
+        <LoadingState view={view} />
+      ) : employees.length === 0 ? (
+        <p className="rounded-xl border border-border py-10 text-center text-sm text-muted-foreground">
+          No employees found.
+        </p>
+      ) : view === "grid" ? (
+        <GridView employees={employees} onDelete={handleDelete} />
       ) : (
-        <GridView employees={employees} loading={isPending} />
+        <ListView employees={employees} onDelete={handleDelete} />
       )}
 
-      {!isError && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          total={data?.totalCount ?? 0}
-          disabled={isPlaceholderData}
-          onPrev={() => setPage((p) => Math.max(1, p - 1))}
-          onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-        />
-      )}
+      <div className="flex items-center justify-between gap-3 text-xs font-medium text-muted-foreground">
+        <span>{data?.totalCount ?? 0} total</span>
+        <div className="flex items-center gap-2">
+          <PageButton
+            label="Previous page"
+            disabled={isPlaceholderData || page <= 1}
+            onClick={() => setPage(Math.max(1, page - 1))}
+          >
+            <ChevronLeft className="size-4" />
+          </PageButton>
+          <span className="min-w-20 text-center">
+            Page {page} of {totalPages}
+          </span>
+          <PageButton
+            label="Next page"
+            disabled={isPlaceholderData || page >= totalPages}
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+          >
+            <ChevronRight className="size-4" />
+          </PageButton>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function PositionPills({ positions }: { positions: string[] }) {
+  if (positions.length === 0) {
+    return <span className="text-xs text-muted-foreground">No positions</span>;
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {positions.map((position) => (
+        <Pill key={position} tone={POSITION_TONES[position] ?? "neutral"}>
+          {position}
+        </Pill>
+      ))}
+    </div>
+  );
+}
+
+function GridView({
+  employees,
+  onDelete,
+}: {
+  employees: EmployeeDto[];
+  onDelete: (employee: EmployeeDto) => void;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {employees.map((employee) => (
+        <div
+          key={employee.id}
+          className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs transition-all hover:border-primary/40 hover:shadow-md sm:p-5"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1">
+              <Link
+                href={`/employees/${employee.id}`}
+                className="block truncate leading-tight font-bold hover:text-primary"
+              >
+                {fullName(employee)}
+              </Link>
+              <p className="text-xs font-medium text-muted-foreground">
+                {employee.phoneNumber ?? "—"}
+                {employee.experience > 0 && ` | ${employee.experience} year`}
+              </p>
+            </div>
+            <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-muted text-muted-foreground">
+              <UserCheck className="size-5" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
+            <PositionPills positions={positionsOf(employee)} />
+            <RowActions employee={employee} onDelete={onDelete} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 function ListView({
   employees,
-  loading,
   onDelete,
 }: {
   employees: EmployeeDto[];
-  loading: boolean;
   onDelete: (employee: EmployeeDto) => void;
 }) {
   return (
-    <Card className="overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead>Full name</TableHead>
-            <TableHead>Positions</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Experience</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            Array.from({ length: 8 }).map((_, i) => (
-              <TableRow key={i} className="hover:bg-transparent">
-                {Array.from({ length: 6 }).map((_, j) => (
-                  <TableCell key={j}>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : employees.length === 0 ? (
-            <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                No employees found.
-              </TableCell>
-            </TableRow>
-          ) : (
-            employees.map((e) => (
-              <TableRow key={e.id}>
-                <TableCell className="font-medium">
-                  <Link href={`/employees/${e.id}`} className="hover:text-primary">
-                    {fullName(e)}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {e.positions && e.positions.length > 0 ? e.positions.join(", ") : "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {e.phoneNumber ?? "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {e.experience} yr
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant[e.status]}>{e.status}</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label="Edit"
-                      render={<Link href={`/employees/${e.id}/edit`} />}
-                    >
-                      <Pencil className="size-4 text-primary" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label="Delete"
-                      onClick={() => onDelete(e)}
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </Card>
+    <div className="overflow-x-auto rounded-xl border border-border">
+      <table className="w-full min-w-[750px] border-collapse text-left">
+        <thead>
+          <tr className="bg-muted/70 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+            <th className={cellCls}>Full name</th>
+            <th className={cellCls}>Position</th>
+            <th className={cellCls}>Phone</th>
+            <th className={cellCls}>Status</th>
+            <th className={`${cellCls} text-right`}>Action</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border text-xs font-medium sm:text-sm">
+          {employees.map((employee) => (
+            <tr key={employee.id} className="transition-colors hover:bg-muted/40">
+              <td className={cellCls}>
+                <NameCell
+                  name={fullName(employee)}
+                  sub={employee.branchName}
+                  href={`/employees/${employee.id}`}
+                />
+              </td>
+              <td className={cellCls}>
+                <PositionPills positions={positionsOf(employee)} />
+              </td>
+              <td className={`${cellCls} font-mono text-xs text-muted-foreground`}>
+                {employee.phoneNumber ?? "—"}
+              </td>
+              <td className={cellCls}>
+                <Pill tone={employee.status === "Active" ? "success" : "danger"}>
+                  {employee.status}
+                </Pill>
+              </td>
+              <td className={`${cellCls} text-right`}>
+                <div className="flex items-center justify-end">
+                  <RowActions employee={employee} onDelete={onDelete} />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-function GridView({ employees, loading }: { employees: EmployeeDto[]; loading: boolean }) {
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i}>
-            <CardContent className="space-y-3 p-5">
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-4 w-20" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (employees.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-10 text-center text-muted-foreground">
-          No employees found.
-        </CardContent>
-      </Card>
-    );
-  }
-
+function RowActions({
+  employee,
+  onDelete,
+}: {
+  employee: EmployeeDto;
+  onDelete: (employee: EmployeeDto) => void;
+}) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {employees.map((e) => (
-        <Link key={e.id} href={`/employees/${e.id}`} className="block">
-          <Card className="h-full transition-colors hover:border-primary/40">
-            <CardContent className="space-y-3 p-5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{fullName(e)}</p>
-                  <p className="text-sm text-muted-foreground">{e.phoneNumber ?? "—"}</p>
-                </div>
-                <Badge variant={statusVariant[e.status]}>{e.status}</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {e.positions && e.positions.length > 0
-                  ? e.positions.join(", ")
-                  : "No positions"}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
+    <div className="flex items-center gap-2">
+      <Link
+        href={`/employees/${employee.id}/edit`}
+        title="Edit"
+        className="rounded p-1 text-primary transition-colors hover:bg-primary/10"
+      >
+        <SquarePen className="size-4" />
+      </Link>
+      <button
+        type="button"
+        title="Delete"
+        onClick={() => onDelete(employee)}
+        className="rounded p-1 text-rose-500 transition-colors hover:bg-rose-500/10"
+      >
+        <Trash2 className="size-4" />
+      </button>
+    </div>
+  );
+}
+
+function LoadingState({ view }: { view: "grid" | "list" }) {
+  const count = view === "grid" ? 6 : 8;
+  return (
+    <div
+      className={
+        view === "grid"
+          ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+          : "space-y-2 rounded-xl border border-border p-4"
+      }
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className={
+            view === "grid"
+              ? "space-y-3 rounded-2xl border border-border p-5"
+              : undefined
+          }
+        >
+          <span className="block h-5 w-40 animate-pulse rounded bg-muted" />
+          <span className="mt-2 block h-4 w-28 animate-pulse rounded bg-muted" />
+        </div>
       ))}
     </div>
   );
@@ -335,8 +361,10 @@ function ViewToggle({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "flex size-11 items-center justify-center transition-colors",
-        active ? "bg-secondary text-primary" : "text-muted-foreground hover:bg-muted"
+        "rounded-lg p-2 transition-all",
+        active
+          ? "bg-card text-foreground shadow-xs"
+          : "text-muted-foreground hover:text-foreground"
       )}
     >
       {children}
@@ -344,35 +372,26 @@ function ViewToggle({
   );
 }
 
-function Pagination({
-  page,
-  totalPages,
-  total,
+function PageButton({
+  label,
   disabled,
-  onPrev,
-  onNext,
+  onClick,
+  children,
 }: {
-  page: number;
-  totalPages: number;
-  total: number;
+  label: string;
   disabled: boolean;
-  onPrev: () => void;
-  onNext: () => void;
+  onClick: () => void;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-      <span>{total} total</span>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" onClick={onPrev} disabled={disabled || page <= 1} aria-label="Previous page">
-          <ChevronLeft className="size-4" />
-        </Button>
-        <span className="min-w-20 text-center">
-          Page {page} of {Math.max(totalPages, 1)}
-        </span>
-        <Button variant="outline" size="icon" onClick={onNext} disabled={disabled || page >= totalPages} aria-label="Next page">
-          <ChevronRight className="size-4" />
-        </Button>
-      </div>
-    </div>
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="grid size-9 place-items-center rounded-lg border border-border text-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
+    >
+      {children}
+    </button>
   );
 }

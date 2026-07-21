@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Plus, SquarePen, Trash2, X } from "lucide-react";
 import { positionsApi, queryKeys } from "@/lib/api/resources";
 import type { PositionDto } from "@/lib/api/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Field, Panel, PanelHeader, PrimaryAction } from "../../accounting/parts";
 
 // Positions are the job titles an employee can hold. Short list, edited in
-// place — a page rather than the drawer the Figma shows, because the rest of
-// the app has no drawer pattern yet.
+// place — a page rather than the Figma's drawer, because the rest of the app
+// has no drawer pattern yet.
 
 const LIST_PARAMS = { pageSize: 100 };
+
+const fieldCls =
+  "w-full rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-xs font-medium text-foreground transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none";
 
 export default function PositionsPage() {
   const queryClient = useQueryClient();
@@ -74,117 +73,132 @@ export default function PositionsPage() {
   const positions = data?.items ?? [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Positions</h1>
-        <Button variant="outline" render={<Link href="/employees" />}>
-          <ArrowLeft className="size-4" />
-          Employees
-        </Button>
-      </div>
+    <Panel>
+      <PanelHeader title="Positions" backHref="/employees" />
 
-      <Card>
-        <CardContent className="p-5">
-          <form onSubmit={handleCreate} className="flex flex-wrap items-center gap-3">
-            <Input
+      <form onSubmit={handleCreate} className="flex flex-wrap items-center gap-3">
+        <div className="min-w-56 flex-1">
+          <Field label="New position">
+            <input
+              type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="New position name"
-              className="h-11 min-w-56 flex-1 rounded-xl"
+              placeholder="e.g. Mentor"
+              className={fieldCls}
             />
-            <Button type="submit" disabled={!newName.trim() || createMutation.isPending}>
-              <Plus className="size-4" />
-              Add position
-            </Button>
-          </form>
-          {createMutation.isError && (
-            <p role="alert" className="mt-3 text-sm text-destructive">
-              {createMutation.error instanceof Error
-                ? createMutation.error.message
-                : "Couldn't add that position."}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+          </Field>
+        </div>
+        <PrimaryAction type="submit" disabled={!newName.trim() || createMutation.isPending}>
+          <Plus className="size-4 stroke-3" />
+          <span>ADD</span>
+        </PrimaryAction>
+      </form>
+
+      {createMutation.isError && (
+        <p role="alert" className="text-sm text-destructive">
+          {createMutation.error instanceof Error
+            ? createMutation.error.message
+            : "Couldn't add that position."}
+        </p>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {isPending
           ? Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4">
-                  <Skeleton className="h-5 w-32" />
-                </CardContent>
-              </Card>
+              <div key={i} className="rounded-2xl border border-border p-4">
+                <span className="block h-5 w-32 animate-pulse rounded bg-muted" />
+              </div>
             ))
           : positions.map((position) => (
-              <Card key={position.id}>
-                <CardContent className="flex items-center justify-between gap-2 p-4">
-                  {editingId === position.id ? (
-                    <>
-                      <Input
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        className="h-9 rounded-lg"
-                        autoFocus
-                      />
-                      <div className="flex shrink-0 items-center gap-1">
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          aria-label="Save"
-                          disabled={!editingName.trim()}
-                          onClick={() =>
-                            renameMutation.mutate({
-                              id: position.id,
-                              name: editingName.trim(),
-                            })
-                          }
-                        >
-                          <Check className="size-4 text-emerald-600" />
-                        </Button>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          aria-label="Cancel"
-                          onClick={() => setEditingId(null)}
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <span className="truncate font-medium">{position.name ?? "—"}</span>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          aria-label="Rename"
-                          onClick={() => startEditing(position)}
-                        >
-                          <Pencil className="size-4 text-primary" />
-                        </Button>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          aria-label="Delete"
-                          onClick={() => handleDelete(position)}
-                        >
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+              <div
+                key={position.id}
+                className="flex items-center justify-between gap-2 rounded-2xl border border-border bg-card p-4 shadow-xs transition-all hover:border-primary/40"
+              >
+                {editingId === position.id ? (
+                  <>
+                    <input
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      className={fieldCls}
+                      autoFocus
+                    />
+                    <div className="flex shrink-0 items-center gap-1">
+                      <IconButton
+                        label="Save"
+                        tone="text-emerald-600 hover:bg-emerald-500/10"
+                        disabled={!editingName.trim()}
+                        onClick={() =>
+                          renameMutation.mutate({ id: position.id, name: editingName.trim() })
+                        }
+                      >
+                        <Check className="size-4" />
+                      </IconButton>
+                      <IconButton
+                        label="Cancel"
+                        tone="text-muted-foreground hover:bg-muted"
+                        onClick={() => setEditingId(null)}
+                      >
+                        <X className="size-4" />
+                      </IconButton>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="truncate font-bold">{position.name ?? "—"}</span>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <IconButton
+                        label="Rename"
+                        tone="text-primary hover:bg-primary/10"
+                        onClick={() => startEditing(position)}
+                      >
+                        <SquarePen className="size-4" />
+                      </IconButton>
+                      <IconButton
+                        label="Delete"
+                        tone="text-rose-500 hover:bg-rose-500/10"
+                        onClick={() => handleDelete(position)}
+                      >
+                        <Trash2 className="size-4" />
+                      </IconButton>
+                    </div>
+                  </>
+                )}
+              </div>
             ))}
       </div>
 
       {!isPending && positions.length === 0 && (
-        <p className="py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-xl border border-border py-10 text-center text-sm text-muted-foreground">
           No positions yet — add the first one above.
         </p>
       )}
-    </div>
+    </Panel>
+  );
+}
+
+function IconButton({
+  label,
+  tone,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  tone: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`rounded p-1.5 transition-colors disabled:opacity-40 ${tone}`}
+    >
+      {children}
+    </button>
   );
 }

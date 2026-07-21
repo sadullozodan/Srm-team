@@ -3,13 +3,17 @@
 import { useState } from "react";
 import { salariesApi } from "@/lib/api/resources";
 import type { ActivationStatus } from "@/lib/api/types";
-import { Badge } from "@/components/ui/badge";
-import { TableCell, TableRow } from "@/components/ui/table";
 import {
-  PageHeader,
-  ResourceList,
-  SearchBox,
-  StatusFilter,
+  ExportButton,
+  Filters,
+  NameCell,
+  Panel,
+  PanelHeader,
+  Pill,
+  ResourceTable,
+  SearchField,
+  SelectField,
+  cellCls,
   money,
   monthLabel,
   statusIndex,
@@ -24,49 +28,60 @@ export default function SalaryPage() {
   const { input, setInput, search } = useDebouncedSearch(() => setPage(1));
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Salary" />
+    <Panel>
+      <PanelHeader title="Salary" backHref="/accounting">
+        <ExportButton />
+      </PanelHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchBox value={input} onChange={setInput} />
-        <StatusFilter
+      <Filters>
+        <SearchField value={input} onChange={setInput} />
+        <SelectField
+          label="Status"
           value={status}
           options={STATUSES}
+          allLabel="All status"
           onChange={(value) => {
             setStatus(value);
             setPage(1);
           }}
         />
-      </div>
+      </Filters>
 
-      <ResourceList
+      <ResourceTable
         api={salariesApi}
         search={search}
         page={page}
         onPageChange={setPage}
         params={{ status: statusIndex(STATUSES, status) }}
         emptyMessage="No salaries found."
-        columns={["Full name", "Month", "Total", "Prepaid", "Paid", "Remaining", "Status"]}
+        columns={["Full name", "Total", "Prepaid", "Remaining", "Paid", "Month", "Status"]}
         row={(salary) => (
-          <TableRow key={salary.id}>
-            <TableCell className="font-medium">{salary.employeeName ?? "—"}</TableCell>
-            <TableCell className="text-muted-foreground">
+          <tr key={salary.id} className="transition-colors hover:bg-muted/40">
+            <td className={cellCls}>
+              <NameCell
+                name={salary.employeeName ?? "—"}
+                href={`/employees/${salary.employeeId}`}
+              />
+            </td>
+            <td className={`${cellCls} font-semibold`}>{money(salary.total)}</td>
+            <td className={`${cellCls} text-muted-foreground`}>{money(salary.prepaid)}</td>
+            <td className={cellCls}>
+              <Pill tone={salary.remaining > 0 ? "warning" : "success"}>
+                {money(salary.remaining)}
+              </Pill>
+            </td>
+            <td className={`${cellCls} text-muted-foreground`}>{money(salary.paid)}</td>
+            <td className={`${cellCls} text-muted-foreground`}>
               {monthLabel(salary.year, salary.month)}
-            </TableCell>
-            <TableCell>{money(salary.total)}</TableCell>
-            <TableCell className="text-muted-foreground">{money(salary.prepaid)}</TableCell>
-            <TableCell className="text-muted-foreground">{money(salary.paid)}</TableCell>
-            <TableCell className={salary.remaining > 0 ? "text-amber-600" : "text-emerald-600"}>
-              {money(salary.remaining)}
-            </TableCell>
-            <TableCell>
-              <Badge variant={salary.status === "Active" ? "success" : "muted"}>
+            </td>
+            <td className={cellCls}>
+              <Pill tone={salary.status === "Active" ? "success" : "neutral"}>
                 {salary.status}
-              </Badge>
-            </TableCell>
-          </TableRow>
+              </Pill>
+            </td>
+          </tr>
         )}
       />
-    </div>
+    </Panel>
   );
 }

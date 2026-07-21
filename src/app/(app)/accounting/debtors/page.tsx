@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { debtorsApi } from "@/lib/api/resources";
 import type { DebtStatus } from "@/lib/api/types";
-import { Badge } from "@/components/ui/badge";
-import { TableCell, TableRow } from "@/components/ui/table";
 import {
-  PageHeader,
-  ResourceList,
-  SearchBox,
-  StatusFilter,
+  ExportButton,
+  Filters,
+  NameCell,
+  Panel,
+  PanelHeader,
+  Pill,
+  ResourceTable,
+  SearchField,
+  SelectField,
+  cellCls,
   money,
   shortDate,
   statusIndex,
@@ -25,28 +28,33 @@ export default function DebtorsPage() {
   const { input, setInput, search } = useDebouncedSearch(() => setPage(1));
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Debtors" />
+    <Panel>
+      <PanelHeader title="Debtors" backHref="/accounting">
+        <ExportButton />
+      </PanelHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchBox value={input} onChange={setInput} />
-        <StatusFilter
+      <Filters>
+        <SearchField value={input} onChange={setInput} />
+        <SelectField
+          label="Status"
           value={status}
           options={STATUSES}
+          allLabel="All status"
           onChange={(value) => {
             setStatus(value);
             setPage(1);
           }}
         />
-      </div>
+      </Filters>
 
-      <ResourceList
+      <ResourceTable
         api={debtorsApi}
         search={search}
         page={page}
         onPageChange={setPage}
         params={{ status: statusIndex(STATUSES, status) }}
         emptyMessage="Nobody is in debt."
+        minWidth="min-w-[900px]"
         columns={[
           "Full name",
           "From",
@@ -58,32 +66,36 @@ export default function DebtorsPage() {
           "Status",
         ]}
         row={(debtor) => (
-          <TableRow key={debtor.id}>
-            <TableCell className="font-medium">
-              <Link href={`/students/${debtor.studentId}`} className="hover:text-primary">
-                {debtor.fullName ?? "—"}
-              </Link>
-            </TableCell>
-            <TableCell className="text-muted-foreground">{shortDate(debtor.fromDate)}</TableCell>
-            <TableCell className="text-muted-foreground">{shortDate(debtor.toDate)}</TableCell>
-            <TableCell className="text-destructive">
+          <tr key={debtor.id} className="transition-colors hover:bg-muted/40">
+            <td className={cellCls}>
+              <NameCell name={debtor.fullName ?? "—"} href={`/students/${debtor.studentId}`} />
+            </td>
+            <td className={`${cellCls} font-mono text-xs text-muted-foreground`}>
+              {shortDate(debtor.fromDate)}
+            </td>
+            <td className={`${cellCls} font-mono text-xs text-muted-foreground`}>
+              {shortDate(debtor.toDate)}
+            </td>
+            <td className={`${cellCls} font-semibold text-rose-500`}>
               {money(debtor.totalDebtAmount)}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
+            </td>
+            <td className={`${cellCls} text-muted-foreground`}>
               {money(debtor.paymentPerMonth)}
-            </TableCell>
-            <TableCell className="text-emerald-600">{money(debtor.totalPaidAmount)}</TableCell>
-            <TableCell className="max-w-64 text-muted-foreground">
+            </td>
+            <td className={`${cellCls} font-semibold text-emerald-600`}>
+              {money(debtor.totalPaidAmount)}
+            </td>
+            <td className={`${cellCls} max-w-64 text-muted-foreground`}>
               <span className="line-clamp-2">{debtor.notes || "—"}</span>
-            </TableCell>
-            <TableCell>
-              <Badge variant={debtor.status === "Paid" ? "success" : "warning"}>
+            </td>
+            <td className={cellCls}>
+              <Pill tone={debtor.status === "Paid" ? "success" : "warning"}>
                 {debtor.status === "InProgress" ? "In progress" : "Paid"}
-              </Badge>
-            </TableCell>
-          </TableRow>
+              </Pill>
+            </td>
+          </tr>
         )}
       />
-    </div>
+    </Panel>
   );
 }

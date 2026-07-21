@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/lib/series.check.mts"
+    "check": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/lib/series.check.mts && node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/lib/phone.check.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

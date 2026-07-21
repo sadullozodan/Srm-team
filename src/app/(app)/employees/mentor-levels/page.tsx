@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { mentorLevelsApi } from "@/lib/api/resources";
 import type { MentorLevelType } from "@/lib/api/types";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { TableCell, TableRow } from "@/components/ui/table";
 import {
-  PageHeader,
-  ResourceList,
-  SearchBox,
+  ExportButton,
+  Filters,
+  NameCell,
+  Panel,
+  PanelHeader,
+  Pill,
+  ResourceTable,
+  SearchField,
+  cellCls,
   money,
   monthLabel,
   useDebouncedSearch,
@@ -27,42 +28,41 @@ export default function MentorLevelsPage() {
   const { input, setInput, search } = useDebouncedSearch(() => setPage(1));
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Mentor levels">
-        <Button variant="outline" render={<Link href="/employees" />}>
-          <ArrowLeft className="size-4" />
-          Employees
-        </Button>
-      </PageHeader>
+    <Panel>
+      <PanelHeader title="Mentor levels" backHref="/employees">
+        <ExportButton />
+      </PanelHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchBox value={input} onChange={setInput} placeholder="Search by mentor" />
-      </div>
+      <Filters>
+        <SearchField value={input} onChange={setInput} placeholder="Search by mentor" />
+      </Filters>
 
-      <ResourceList
+      <ResourceTable
         api={mentorLevelsApi}
         search={search}
         page={page}
         onPageChange={setPage}
         emptyMessage="No mentor levels set."
+        minWidth="min-w-[560px]"
         columns={["Full name", "Month", "Level", "Hour rate"]}
         row={(entry) => (
-          <TableRow key={entry.id}>
-            <TableCell className="font-medium">
-              <Link href={`/employees/${entry.employeeId}`} className="hover:text-primary">
-                {entry.employeeName ?? "—"}
-              </Link>
-            </TableCell>
-            <TableCell className="text-muted-foreground">
+          <tr key={entry.id} className="transition-colors hover:bg-muted/40">
+            <td className={cellCls}>
+              <NameCell
+                name={entry.employeeName ?? "—"}
+                href={`/employees/${entry.employeeId}`}
+              />
+            </td>
+            <td className={`${cellCls} text-muted-foreground`}>
               {monthLabel(entry.year, entry.month)}
-            </TableCell>
-            <TableCell>
-              <Badge>{levelLabel(entry.level)}</Badge>
-            </TableCell>
-            <TableCell className="text-muted-foreground">{money(entry.hourRate)}</TableCell>
-          </TableRow>
+            </td>
+            <td className={cellCls}>
+              <Pill tone="brand">{levelLabel(entry.level)}</Pill>
+            </td>
+            <td className={`${cellCls} font-semibold`}>{money(entry.hourRate)}</td>
+          </tr>
         )}
       />
-    </div>
+    </Panel>
   );
 }

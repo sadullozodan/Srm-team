@@ -14,6 +14,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authApi } from "@/lib/api/resources";
+import { normalizePhone } from "@/lib/phone";
 import { ApiError } from "@/lib/api/client";
 
 type Step = "phone" | "code" | "password";
@@ -53,8 +54,10 @@ export default function ForgotPasswordPage() {
 
   const screen = SCREENS[step];
 
+  // Same digits-only shape the account was registered under, or the backend
+  // looks up a number nobody has.
   async function sendCode() {
-    await authApi.forgotPassword({ phone });
+    await authApi.forgotPassword({ phone: normalizePhone(phone) });
     setCode("");
     setStep("code");
   }
@@ -78,7 +81,11 @@ export default function ForgotPasswordPage() {
       if (step === "phone") {
         await sendCode();
       } else {
-        await authApi.resetPassword({ phone, code, newPassword });
+        await authApi.resetPassword({
+          phone: normalizePhone(phone),
+          code,
+          newPassword,
+        });
         router.replace("/login");
       }
     } catch (err) {

@@ -3,26 +3,31 @@
 import { useState } from "react";
 import { paymentsApi } from "@/lib/api/resources";
 import type { PaymentStatus } from "@/lib/api/types";
-import { Badge } from "@/components/ui/badge";
-import { TableCell, TableRow } from "@/components/ui/table";
 import {
-  PageHeader,
-  ResourceList,
-  SearchBox,
-  StatusFilter,
+  ExportButton,
+  Filters,
+  NameCell,
+  Panel,
+  PanelHeader,
+  Pill,
+  ResourceTable,
+  SearchField,
+  SelectField,
+  cellCls,
   money,
   shortDate,
   statusIndex,
   useDebouncedSearch,
+  type Tone,
 } from "../parts";
 
 const STATUSES: readonly PaymentStatus[] = ["NotPaid", "Active", "Prepayment", "Paid"];
 
-const tone: Record<PaymentStatus, "success" | "warning" | "destructive" | "muted"> = {
+const tone: Record<PaymentStatus, Tone> = {
   Paid: "success",
-  Prepayment: "warning",
-  Active: "muted",
-  NotPaid: "destructive",
+  Active: "success",
+  Prepayment: "neutral",
+  NotPaid: "danger",
 };
 
 export default function PaymentsPage() {
@@ -31,55 +36,69 @@ export default function PaymentsPage() {
   const { input, setInput, search } = useDebouncedSearch(() => setPage(1));
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Payment's" />
+    <Panel>
+      <PanelHeader title="Payments" backHref="/accounting">
+        <ExportButton />
+      </PanelHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchBox value={input} onChange={setInput} />
-        <StatusFilter
+      <Filters>
+        <SearchField value={input} onChange={setInput} placeholder="Search payment" />
+        <SelectField
+          label="Status"
           value={status}
           options={STATUSES}
+          allLabel="All status"
           onChange={(value) => {
             setStatus(value);
             setPage(1);
           }}
         />
-      </div>
+      </Filters>
 
-      <ResourceList
+      <ResourceTable
         api={paymentsApi}
         search={search}
         page={page}
         onPageChange={setPage}
         params={{ status: statusIndex(STATUSES, status) }}
         emptyMessage="No payments found."
-        columns={[
-          "Full name",
-          "Amount",
-          "Paid",
-          "Discount",
-          "Date",
-          "Group",
-          "Branch",
-          "Status",
-        ]}
-        row={(payment) => (
-          <TableRow key={payment.id}>
-            <TableCell className="font-medium">{payment.studentName ?? "—"}</TableCell>
-            <TableCell>{money(payment.amount)}</TableCell>
-            <TableCell className="text-muted-foreground">{money(payment.paid)}</TableCell>
-            <TableCell className="text-muted-foreground">
-              {payment.discount > 0 ? money(payment.discount) : "—"}
-            </TableCell>
-            <TableCell className="text-muted-foreground">{shortDate(payment.date)}</TableCell>
-            <TableCell className="text-muted-foreground">{payment.groupName ?? "—"}</TableCell>
-            <TableCell className="text-muted-foreground">{payment.branchName ?? "—"}</TableCell>
-            <TableCell>
-              <Badge variant={tone[payment.status]}>{payment.status}</Badge>
-            </TableCell>
-          </TableRow>
-        )}
+        minWidth="min-w-[820px]"
+        columns={["Full name", "Amount", "Paid", "Date", "Groups", "Branch", "Status"]}
+        row={(payment) => {
+          const owed = payment.amount - payment.paid;
+          return (
+            <tr key={payment.id} className="transition-colors hover:bg-muted/40">
+              <td className={cellCls}>
+                <NameCell
+                  name={payment.studentName ?? "—"}
+                  sub={payment.groupName}
+                  href={`/students/${payment.studentId}`}
+                />
+              </td>
+
+              <td className={cellCls}>
+                <div className="flex items-center gap-2">
+                  {/* Red when the student still owes on this invoice. */}
+                  <span className={owed > 0 ? "font-semibold text-rose-500" : "font-semibold"}>
+                    {money(payment.amount)}
+                  </span>
+                  {payment.discount > 0 && <Pill tone="warning">-{money(payment.discount)}</Pill>}
+                </div>
+              </td>
+
+              <td className={cellCls}>{money(payment.paid)}</td>
+              <td className={`${cellCls} font-mono text-xs text-muted-foreground`}>
+                {shortDate(payment.date)}
+              </td>
+              <td className={`${cellCls} text-muted-foreground`}>{payment.groupName ?? "—"}</td>
+              <td className={`${cellCls} text-muted-foreground`}>{payment.branchName ?? "—"}</td>
+              <td className={cellCls}>
+                <Pill tone={tone[payment.status]}>{payment.status}</Pill>
+              </td>
+            </tr>
+          );
+        }}
       />
-    </div>
+    </Panel>
   );
 }

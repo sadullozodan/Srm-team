@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/context";
 import { ApiError } from "@/lib/api/client";
+import { normalizePhone } from "@/lib/phone";
 import { AuthTabs } from "../auth-tabs";
 
 // Field order is the Figma's. Everything after `phone` is optional on the
@@ -48,14 +49,16 @@ export default function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
+      // The phone doubles as the account's userName, so it has to be stored in
+      // the same shape the login screen will send.
       await register({
         firstName: values.firstName,
         lastName: values.lastName,
-        phone: values.phone,
+        phone: normalizePhone(values.phone),
         password,
         birthDate: values.birthDate || null,
         address: values.address || null,
-        parentPhone: values.parentPhone || null,
+        parentPhone: values.parentPhone ? normalizePhone(values.parentPhone) : null,
       });
       router.replace("/");
     } catch (err) {
