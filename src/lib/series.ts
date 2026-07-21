@@ -1,6 +1,7 @@
 import type {
   DailyAttendanceDto,
   DashboardStatsDto,
+  ExpenseDto,
   GroupDto,
   LeadDto,
   LeftCoursesPointDto,
@@ -138,6 +139,91 @@ export function leftCoursesSeries(points: LeftCoursesPointDto[]): LeftCoursesPoi
       returned: point?.returned ?? 0,
     };
   });
+}
+
+export type CashflowPoint = {
+  month: string;
+  income: number;
+  expense: number;
+  net: number;
+};
+
+/**
+ * Money in against money out, per month of `year`.
+ *
+ * ponytail: totalled here rather than by the API — neither /api/Payments nor
+ * /api/Expenses aggregates or filters by date, so the pages pull a wide page
+ * and bucket it. Accurate as long as a year fits in one page; see
+ * BACKEND-GAPS.md for the endpoint that would replace this.
+ */
+export function cashflowSeries(
+  payments: PaymentDto[],
+  expenses: ExpenseDto[],
+  year: number,
+): CashflowPoint[] {
+  const points = MONTHS.map((month) => ({ month, income: 0, expense: 0, net: 0 }));
+
+  const addTo = (iso: string, amount: number, key: "income" | "expense") => {
+    const date = new Date(iso);
+    if (isNaN(date.getTime()) || date.getFullYear() !== year) return;
+    points[date.getMonth()][key] += amount;
+  };
+
+  for (const payment of payments) addTo(payment.date, payment.paid, "income");
+  for (const expense of expenses) addTo(expense.date, expense.amount, "expense");
+
+  for (const point of points) point.net = point.income - point.expense;
+  return points;
+}
+
+export type PaymentSplit = { paid: number; notPaid: number; total: number };
+
+/** How many invoices are settled against outstanding — the donut on /accounting. */
+export function paymentSplit(payments: PaymentDto[]): PaymentSplit {
+  const paid = payments.filter((payment) => payment.status === "Paid").length;
+  return { paid, notPaid: payments.length - paid, total: payments.length };
+}
+
+export type LedgerEntry = {
+  id: string;
+  name: string;
+  category: string;
+  date: string;
+  amount: number;
+  /** Positive entries are money in, negative money out. */
+  direction: "in" | "out";
+};
+
+/**
+ * Payments and expenses merged into one dated ledger, newest first — the Net
+ * screen. Same caveat as `cashflowSeries`: merged client-side because there is
+ * no combined endpoint.
+ */
+export function ledgerEntries(
+  payments: PaymentDto[],
+  expenses: ExpenseDto[],
+): LedgerEntry[] {
+  const fromPayments: LedgerEntry[] = payments.map((payment) => ({
+    id: `payment-${payment.id}`,
+    name: payment.studentName ?? "—",
+    category: "Student",
+    date: payment.date,
+    amount: payment.paid,
+    direction: "in",
+  }));
+
+  const fromExpenses: LedgerEntry[] = expenses.map((expense) => ({
+    id: `expense-${expense.id}`,
+    name: expense.recipient ?? expense.name ?? "—",
+    category: expense.category,
+    date: expense.date,
+    amount: expense.amount,
+    direction: "out",
+  }));
+
+  return [...fromPayments, ...fromExpenses].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
 }
 
 /** Share of billable money actually collected: income vs income + debt. */

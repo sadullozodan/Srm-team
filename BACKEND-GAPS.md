@@ -38,6 +38,8 @@ Every one of these is the same paged list controller (`Page`, `PageSize`,
 | Page | Source |
 | --- | --- |
 | `/accounting` | `GET /api/Dashboard/stats` for the three totals |
+| `/accounting/accountant` | `GET /api/Payments` + `/api/Expenses` + `/api/Budgets`, totalled client-side |
+| `/accounting/net` | `GET /api/Payments` + `/api/Expenses`, merged into one ledger |
 | `/accounting/payments` | `GET /api/Payments` |
 | `/accounting/debtors` | `GET /api/Debtors` |
 | `/accounting/budget` | `GET /api/Budgets` |
@@ -49,12 +51,15 @@ Every one of these is the same paged list controller (`Page`, `PageSize`,
 
 ## Missing
 
-### 1. Net, and income against expense over time
+### 1. Cashflow totals
 
-The Figma has a Net view and an income-vs-expense chart. Both need money
-totalled per month; `GET /api/Payments` and `GET /api/Expenses` are flat paged
-lists with no aggregate and no date filter, so building either client-side means
-pulling every row. Not built.
+`/accounting/net` and `/accounting/accountant` total money per month
+themselves, because `GET /api/Payments` and `GET /api/Expenses` are flat paged
+lists with no aggregate and no date filter. Both pages therefore pull one wide
+page (500 rows) and bucket it in `cashflowSeries` / `ledgerEntries`.
+
+That is correct only while a year fits in 500 rows. One endpoint would remove
+the guess and the over-fetch:
 
 ```
 GET /api/Dashboard/cashflow?year=2024

@@ -10,6 +10,8 @@ import { ExportButton, Panel, PanelHeader, money } from "./parts";
 // endpoint that already totals them, and each card links to the real list.
 
 const SECTIONS = [
+  { href: "/accounting/accountant", label: "Accountant", blurb: "Income, expense and net for the year" },
+  { href: "/accounting/net", label: "Net", blurb: "Payments and expenses on one ledger" },
   { href: "/accounting/payments", label: "Payments", blurb: "What students owe and have paid" },
   { href: "/accounting/debtors", label: "Debtors", blurb: "Outstanding balances by student" },
   { href: "/accounting/budget", label: "Budget plan", blurb: "Allocated against spent, by category" },
