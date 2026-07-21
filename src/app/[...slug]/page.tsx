@@ -3,10 +3,7 @@
 import { usePathname } from "next/navigation";
 import { titleForPath } from "@/lib/nav";
 
-// Placeholder for every shell route. Renders the route's title from the nav
-// config so navigation and active-state are visible. No page content built —
-// real pages added later at their own paths take precedence over this catch-all.
-export default function Page() {
+export default function CatchAllPage() {
   const pathname = usePathname();
 
   return (
