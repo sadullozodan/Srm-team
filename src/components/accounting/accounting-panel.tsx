@@ -72,9 +72,9 @@ export function AccountingPanel() {
           <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             20 500 s
           </div>
-          {/* Watermark Icon */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3 size-14 rounded-full bg-white/15 flex items-center justify-center pointer-events-none">
-            <DollarSign className="size-8 text-white opacity-80" />
+          {/* Watermark Icon (Subtle Translucent) */}
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
+            <DollarSign className="size-6 text-white opacity-40 stroke-[2.2]" />
           </div>
         </div>
 
@@ -86,9 +86,9 @@ export function AccountingPanel() {
           <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             11 000 s
           </div>
-          {/* Watermark Icon */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3 size-14 rounded-full bg-white/15 flex items-center justify-center pointer-events-none">
-            <PiggyBank className="size-8 text-white opacity-80" />
+          {/* Watermark Icon (Subtle Translucent) */}
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
+            <PiggyBank className="size-6 text-white opacity-40 stroke-[1.8]" />
           </div>
         </div>
 
@@ -100,9 +100,9 @@ export function AccountingPanel() {
           <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             5 000 s
           </div>
-          {/* Watermark Icon */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3 size-14 rounded-full bg-white/15 flex items-center justify-center pointer-events-none">
-            <Frown className="size-8 text-white opacity-80" />
+          {/* Watermark Icon (Subtle Translucent) */}
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
+            <Frown className="size-6 text-white opacity-40 stroke-[1.8]" />
           </div>
         </div>
 
@@ -114,9 +114,9 @@ export function AccountingPanel() {
           <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             5 000 s
           </div>
-          {/* Watermark Icon */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3 size-14 rounded-full bg-white/15 flex items-center justify-center pointer-events-none">
-            <Smile className="size-8 text-white opacity-80" />
+          {/* Watermark Icon (Subtle Translucent) */}
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
+            <Smile className="size-6 text-white opacity-40 stroke-[1.8]" />
           </div>
         </div>
       </div>

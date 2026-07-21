@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { Calendar } from "lucide-react";
 
 export interface IncomeExpenseItem {
   month: string;
@@ -114,7 +115,7 @@ export function IncomeExpenseChart({
           </label>
           <div className="border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50/50 dark:bg-slate-800 flex items-center gap-2">
             <span>2023</span>
-            <span className="text-slate-400 text-[10px]">📅</span>
+            <Calendar className="size-3.5 text-slate-400" />
           </div>
         </div>
       </div>
