@@ -11,6 +11,7 @@ import {
   X,
   Download,
 } from "lucide-react";
+import { AccountantAreaChart } from "./accountant-area-chart";
 
 interface AccountantRow {
   id: number;
@@ -99,99 +100,9 @@ export function AccountantPanel() {
           </div>
         </div>
 
-        {/* Interactive SVG Area Chart Canvas */}
-        <div className="w-full h-64 pt-2 relative">
-          <svg className="w-full h-full overflow-visible" viewBox="0 0 800 220" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="gradientIncome" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.45" />
-                <stop offset="100%" stopColor="#22c55e" stopOpacity="0.0" />
-              </linearGradient>
-              <linearGradient id="gradientExpense" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.45" />
-                <stop offset="100%" stopColor="#ef4444" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
-
-            {/* Horizontal Grid lines */}
-            <line x1="40" y1="30" x2="780" y2="30" stroke="#e2e8f0" strokeDasharray="3 3" />
-            <line x1="40" y1="70" x2="780" y2="70" stroke="#e2e8f0" strokeDasharray="3 3" />
-            <line x1="40" y1="110" x2="780" y2="110" stroke="#e2e8f0" strokeDasharray="3 3" />
-            <line x1="40" y1="150" x2="780" y2="150" stroke="#e2e8f0" strokeDasharray="3 3" />
-            <line x1="40" y1="190" x2="780" y2="190" stroke="#cbd5e1" />
-
-            {/* Y-Axis Labels */}
-            <text x="32" y="34" fontSize="10" fill="#94a3b8" textAnchor="end">30000</text>
-            <text x="32" y="74" fontSize="10" fill="#94a3b8" textAnchor="end">25000</text>
-            <text x="32" y="114" fontSize="10" fill="#94a3b8" textAnchor="end">20000</text>
-            <text x="32" y="154" fontSize="10" fill="#94a3b8" textAnchor="end">15000</text>
-            <text x="32" y="194" fontSize="10" fill="#94a3b8" textAnchor="end">0</text>
-
-            {/* Expense Red Curve & Area */}
-            <path
-              d="M 60,130 Q 120,130 180,100 T 300,70 T 420,40 T 540,60 T 660,30 T 780,70 L 780,190 L 60,190 Z"
-              fill="url(#gradientExpense)"
-            />
-            <path
-              d="M 60,130 Q 120,130 180,100 T 300,70 T 420,40 T 540,60 T 660,30 T 780,70"
-              fill="none"
-              stroke="#ef4444"
-              strokeWidth="3"
-            />
-
-            {/* Income Green Curve & Area */}
-            <path
-              d="M 60,185 Q 120,160 180,120 T 300,165 T 420,110 T 540,75 T 660,50 T 780,120 L 780,190 L 60,190 Z"
-              fill="url(#gradientIncome)"
-            />
-            <path
-              d="M 60,185 Q 120,160 180,120 T 300,165 T 420,110 T 540,75 T 660,50 T 780,120"
-              fill="none"
-              stroke="#22c55e"
-              strokeWidth="3"
-            />
-
-            {/* Dashed vertical guideline for May */}
-            <line x1="360" y1="30" x2="360" y2="190" stroke="#cbd5e1" strokeDasharray="3 3" />
-
-            {/* Point Markers for May */}
-            <circle cx="360" cy="70" r="5" fill="#ef4444" stroke="#ffffff" strokeWidth="2" />
-            <circle cx="360" cy="110" r="5" fill="#22c55e" stroke="#ffffff" strokeWidth="2" />
-
-            {/* X-Axis Labels */}
-            <text x="60" y="210" fontSize="10" fill="#64748b" textAnchor="middle">Junuary</text>
-            <text x="130" y="210" fontSize="10" fill="#64748b" textAnchor="middle">February</text>
-            <text x="200" y="210" fontSize="10" fill="#64748b" textAnchor="middle">March</text>
-            <text x="280" y="210" fontSize="10" fill="#64748b" textAnchor="middle">April</text>
-            <text x="360" y="210" fontSize="10" fill="#4f46e5" fontWeight="bold" textAnchor="middle">May</text>
-            <text x="430" y="210" fontSize="10" fill="#64748b" textAnchor="middle">June</text>
-            <text x="500" y="210" fontSize="10" fill="#64748b" textAnchor="middle">July</text>
-            <text x="570" y="210" fontSize="10" fill="#64748b" textAnchor="middle">August</text>
-            <text x="640" y="210" fontSize="10" fill="#64748b" textAnchor="middle">September</text>
-            <text x="710" y="210" fontSize="10" fill="#64748b" textAnchor="middle">October</text>
-            <text x="770" y="210" fontSize="10" fill="#64748b" textAnchor="middle">November</text>
-          </svg>
-
-          {/* May Tooltip Popup Overlay */}
-          <div className="absolute left-[41%] top-[25%] -translate-x-1/2 bg-white dark:bg-slate-800 rounded-xl p-3 shadow-xl border border-slate-200 dark:border-slate-700 text-xs space-y-1.5 min-w-[130px] z-10 animate-in fade-in duration-200">
-            <p className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700/60 pb-1">
-              May
-            </p>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-emerald-500" />
-                <span className="text-slate-600 dark:text-slate-300 font-medium">Income:</span>
-              </div>
-              <span className="font-bold text-slate-900 dark:text-slate-100">15 000</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-rose-500" />
-                <span className="text-slate-600 dark:text-slate-300 font-medium">Expense:</span>
-              </div>
-              <span className="font-bold text-slate-900 dark:text-slate-100">6 000</span>
-            </div>
-          </div>
+        {/* Interactive Recharts Area Chart */}
+        <div className="w-full pt-2">
+          <AccountantAreaChart height={300} />
         </div>
       </div>
 
