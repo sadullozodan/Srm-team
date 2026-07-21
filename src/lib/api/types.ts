@@ -348,6 +348,8 @@ export interface ProblemDetails {
   status?: number | null;
   detail?: string | null;
   instance?: string | null;
+  // ASP.NET model validation: field name → messages.
+  errors?: Record<string, string[]>;
   [key: string]: unknown;
 }
 

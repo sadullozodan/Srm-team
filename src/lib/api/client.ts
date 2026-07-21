@@ -71,6 +71,17 @@ function buildRequest(path: string, options: FetchOptions, token: string | null)
   return fetch(`${BASE}${path}`, { ...rest, headers: finalHeaders, body });
 }
 
+// A validation 400 only says "One or more validation errors occurred"; the
+// useful part is the per-field list, so fold it into the message.
+function fieldErrors(problem?: ProblemDetails): string | null {
+  const entries = Object.entries(problem?.errors ?? {});
+  if (entries.length === 0) return null;
+
+  return entries
+    .map(([field, messages]) => `${field}: ${messages.join(" ")}`)
+    .join("\n");
+}
+
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
   let res = await buildRequest(path, options, getAccessToken());
 
@@ -90,7 +101,8 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     } catch {
       // Non-JSON error body — fall back to the status text.
     }
-    const message = problem?.detail ?? problem?.title ?? res.statusText ?? "Request failed";
+    const message =
+      fieldErrors(problem) ?? problem?.detail ?? problem?.title ?? res.statusText ?? "Request failed";
     throw new ApiError(res.status, message, problem);
   }
 
