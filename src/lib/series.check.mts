@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import type { DashboardStatsDto, GroupDto, LeadDto, PaymentDto } from "./api/types.ts";
 import {
+  attendanceSeries,
   collectionRate,
   enrollSeries,
   incomeDelta,
@@ -37,6 +38,16 @@ const payments = [
 ] as PaymentDto[];
 assert.equal(incomeDelta(payments, august), -50, "half of last month");
 assert.equal(incomeDelta([payments[1]], august), null, "no baseline, no percentage");
+
+// An empty month must still draw a full, flat month — not a blank chart.
+const quietFebruary = attendanceSeries([], 2024, 1);
+assert.equal(quietFebruary.length, 29, "February 2024 is a leap month");
+assert.deepEqual(quietFebruary[0], { day: "01", late: 0, absent: 0 }, "missing day reads zero");
+assert.equal(attendanceSeries([], 2025, 1).length, 28, "February 2025 is not");
+
+const withRecords = attendanceSeries([{ day: 3, late: 2, absent: 1 }], 2024, 0);
+assert.deepEqual(withRecords[2], { day: "03", late: 2, absent: 1 }, "day 3 lands on index 2");
+assert.equal(withRecords[0].late, 0, "days without records stay zero");
 
 const stats = { incomeThisMonth: 12580, totalDebt: 1398 } as DashboardStatsDto;
 assert.equal(collectionRate(stats), 90, "income against income + debt");

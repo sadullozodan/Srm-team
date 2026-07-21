@@ -9,9 +9,12 @@ import type {
   CourseDto,
   EnrollmentDto,
   CourseWriteDto,
+  DailyAttendanceDto,
   DashboardStatsDto,
   EmployeeDto,
   EmployeeWriteDto,
+  ForgotPasswordRequest,
+  ResetPasswordByCodeRequest,
   GraduateDto,
   LeadDto,
   PaymentDto,
@@ -85,10 +88,20 @@ export const authApi = {
   register: (body: RegisterRequest) =>
     apiFetch<AuthResponse>("/api/Auth/register", { method: "POST", json: body }),
   me: () => apiFetch<UserProfileDto>("/api/Auth/me"),
+  // Password recovery by SMS code: request one, then reset with it.
+  forgotPassword: (body: ForgotPasswordRequest) =>
+    apiFetch<void>("/api/Auth/forgot-password", { method: "POST", json: body }),
+  resetPassword: (body: ResetPasswordByCodeRequest) =>
+    apiFetch<void>("/api/Auth/reset-password", { method: "POST", json: body }),
 };
 
 export const dashboardApi = {
   stats: () => apiFetch<DashboardStatsDto>("/api/Dashboard/stats"),
+  // month is 1-12, as the API counts them.
+  attendance: (year: number, month: number) =>
+    apiFetch<DailyAttendanceDto[]>(
+      `/api/Dashboard/attendance${toQuery({ year, month })}`,
+    ),
 };
 
 // Journal is a nested tree (group → weeks → lessons → attendance) edited in place.
@@ -123,6 +136,8 @@ export const journalApi = {
 export const queryKeys = {
   me: ["me"] as const,
   dashboard: ["dashboard", "stats"] as const,
+  dashboardAttendance: (year: number, month: number) =>
+    ["dashboard", "attendance", year, month] as const,
   list: (resource: string, params?: ListParams) =>
     params ? ([resource, "list", params] as const) : ([resource, "list"] as const),
   detail: (resource: string, id: string) => [resource, "detail", id] as const,

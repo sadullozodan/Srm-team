@@ -22,33 +22,26 @@ there are working credentials.)
 | Enroll chart | `GET /api/Groups` — `enrolledCount` by group `startDate` month |
 | Enroll table | `GET /api/Students` |
 | Employed graduates | `stats.employedGraduatesCount`, `GET /api/Graduates` |
+| Attendance chart | `GET /api/Dashboard/attendance?year=&month=` |
 
 Shaping lives in `src/lib/series.ts` and is covered by `npm run check:api`.
 
 ## Missing
 
-### 1. Today's absent students
+### 1. Today's absent students, and why
 
-Powers the table under the Present/Absent/Late pills. Nothing returns a student
-and an absence reason together; `GET /api/Journal/lessons/{lessonId}/attendance`
-needs a lesson id the dashboard has not got.
+The table under the Present/Absent/Late pills lists real students from
+`GET /api/Students`, but it cannot filter them to *today's absentees* and the
+Reason column is always empty — nothing returns a student and an absence reason
+together, and `GET /api/Journal/lessons/{lessonId}/attendance` needs a lesson id
+the dashboard has not got.
 
 ```
 GET /api/Dashboard/absentees?date=2024-08-28
 → [{ studentId, studentName, groupId, groupName, phones: string[], reason }]
 ```
 
-### 2. Attendance per day
-
-Powers the wide green/red chart. Same problem: attendance is only reachable one
-lesson at a time.
-
-```
-GET /api/Dashboard/attendance?year=2024&month=2
-→ [{ day: 1..31, late, absent }]
-```
-
-### 3. Left courses per month
+### 2. Left courses per month
 
 Powers the bar chart. `EnrollmentStatus.Left` exists but there is no
 enrollments list endpoint, and nothing records *when* a status changed.
@@ -58,7 +51,7 @@ GET /api/Dashboard/left-courses?year=2024
 → [{ month: 1..12, left, returned }]
 ```
 
-### 4. Notifications
+### 3. Notifications
 
 The bell panel and the mobile Notification tab are display-only.
 

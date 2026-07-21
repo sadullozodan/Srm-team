@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ListFilter } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { MonthPoint } from "@/lib/series";
+import { dashboardApi, queryKeys } from "@/lib/api/resources";
+import { attendanceSeries, type MonthPoint } from "@/lib/series";
 import { AttendanceChart, LeadsChart, LeftCoursesChart } from "./charts";
-import { CardTitle, Panel, Stepper, useMonthStepper } from "../parts";
+import { CardTitle, Panel, Stepper, useMonthPicker } from "../parts";
 
 export function LeadsCard({ data }: { data: MonthPoint[] }) {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -24,7 +26,13 @@ export function LeadsCard({ data }: { data: MonthPoint[] }) {
 }
 
 export function AttendanceCard() {
-  const { monthName, step } = useMonthStepper(1);
+  const { year, month, label, step } = useMonthPicker();
+
+  // The stepper actually filters here — this endpoint takes year and month.
+  const { data } = useQuery({
+    queryKey: queryKeys.dashboardAttendance(year, month + 1),
+    queryFn: () => dashboardApi.attendance(year, month + 1),
+  });
 
   return (
     <Panel className="p-5">
@@ -34,10 +42,10 @@ export function AttendanceCard() {
           <LegendDot color="#22c55e" label="Late" />
           <LegendDot color="#ef4444" label="Absent" />
         </div>
-        <Stepper label={`${monthName} 2024`} onStep={step} />
+        <Stepper label={label} onStep={step} />
       </div>
       <div className="mt-4">
-        <AttendanceChart />
+        <AttendanceChart data={attendanceSeries(data ?? [], year, month)} />
       </div>
     </Panel>
   );

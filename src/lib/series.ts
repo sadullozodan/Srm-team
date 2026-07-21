@@ -1,4 +1,10 @@
-import type { DashboardStatsDto, GroupDto, LeadDto, PaymentDto } from "./api/types";
+import type {
+  DailyAttendanceDto,
+  DashboardStatsDto,
+  GroupDto,
+  LeadDto,
+  PaymentDto,
+} from "./api/types";
 
 export const MONTHS = [
   "Jan",
@@ -84,6 +90,33 @@ export function incomeDelta(payments: PaymentDto[], today = new Date()): number 
 
   if (lastMonth === 0) return null; // no baseline — a percentage would be a lie
   return Math.round(((thisMonth - lastMonth) / lastMonth) * 100);
+}
+
+export type DayPoint = { day: string; late: number; absent: number };
+
+/**
+ * Late/absent per day, from GET /api/Dashboard/attendance. The API only returns
+ * days that have records, so the month is laid out in full and missing days
+ * read zero — a quiet month is a flat line, not a short chart.
+ */
+export function attendanceSeries(
+  points: DailyAttendanceDto[],
+  year: number,
+  month: number,
+): DayPoint[] {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const byDay = new Map(points.map((point) => [point.day, point]));
+
+  return Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const point = byDay.get(day);
+
+    return {
+      day: String(day).padStart(2, "0"),
+      late: point?.late ?? 0,
+      absent: point?.absent ?? 0,
+    };
+  });
 }
 
 /** Share of billable money actually collected: income vs income + debt. */

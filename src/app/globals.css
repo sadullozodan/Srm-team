@@ -8,14 +8,15 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #f4f5f7;
+  --background: #f2f4f5;
   --foreground: #12141c;
   --card: #ffffff;
   --card-foreground: #12141c;
   --popover: #ffffff;
   --popover-foreground: #12141c;
 
-  --primary: #4f46e5;
+  /* Brand indigo, sampled from the Figma logo and the Log in button. */
+  --primary: #4a3aff;
   --primary-foreground: #ffffff;
   --secondary: #eceaff;
   --secondary-foreground: #4f46e5;
@@ -43,7 +44,12 @@
   --sidebar-accent: #ffffff;
   --sidebar-accent-foreground: #4f46e5;
   --sidebar-border: #dcdef0;
-  --sidebar-ring: rgba(79, 70, 229, 0.35);
+  --sidebar-ring: rgba(74, 58, 255, 0.35);
+
+  /* Auth brand panel — its own token because it is slate, not the lavender
+     sidebar, and it needs a dark counterpart. */
+  --auth-panel: #e2e8f0;
+  --auth-panel-foreground: #262626;
 }
 
 .dark {
@@ -82,6 +88,9 @@
   --sidebar-accent-foreground: #c4bfff;
   --sidebar-border: #262a3a;
   --sidebar-ring: rgba(131, 123, 255, 0.4);
+
+  --auth-panel: #161a2b;
+  --auth-panel-foreground: #e7e9f2;
 }
 
 @theme inline {
@@ -116,6 +125,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-auth-panel: var(--auth-panel);
+  --color-auth-panel-foreground: var(--auth-panel-foreground);
   --font-sans: var(--font-geist-sans);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

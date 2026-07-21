@@ -15,8 +15,8 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { attendanceByDay, leftCoursesByMonth } from "@/lib/mock-dashboard";
-import type { MonthPoint } from "@/lib/series";
+import { leftCoursesByMonth } from "@/lib/mock-dashboard";
+import type { DayPoint, MonthPoint } from "@/lib/series";
 
 const axis = { tickLine: false, axisLine: false, tickMargin: 8 } as const;
 const grid = { vertical: false, strokeDasharray: "0" } as const;
@@ -63,10 +63,10 @@ const attendanceConfig = {
   absent: { label: "Absent", color: "#ef4444" },
 } satisfies ChartConfig;
 
-export function AttendanceChart() {
+export function AttendanceChart({ data }: { data: DayPoint[] }) {
   return (
     <ChartContainer config={attendanceConfig} className="aspect-auto h-65 w-full">
-      <AreaChart data={attendanceByDay} margin={{ left: -16, right: 8, top: 8 }}>
+      <AreaChart data={data} margin={{ left: -16, right: 8, top: 8 }}>
         <defs>
           <Fade id="fill-late" color="var(--color-late)" />
           <Fade id="fill-absent" color="var(--color-absent)" />

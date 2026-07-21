@@ -53,10 +53,26 @@ export interface LoginRequest {
   password: string;
 }
 
+// Registration is by phone now — no username, no full name.
 export interface RegisterRequest {
-  fullName: string;
-  userName: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   password: string;
+  birthDate?: string | null;
+  address?: string | null;
+  parentPhone?: string | null;
+}
+
+export interface ForgotPasswordRequest {
+  phone: string;
+}
+
+// The code arrives by SMS; it is not returned by forgot-password.
+export interface ResetPasswordByCodeRequest {
+  phone: string;
+  code: string;
+  newPassword: string;
 }
 
 export interface RefreshRequest {
@@ -382,4 +398,11 @@ export interface GraduateDto {
   age: number;
   dateOfIssue: string;
   workPlace: string | null;
+}
+
+// ---- Dashboard charts ----
+export interface DailyAttendanceDto {
+  day: number;
+  late: number;
+  absent: number;
 }

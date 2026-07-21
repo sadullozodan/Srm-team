@@ -1,4 +1,6 @@
 import type { SVGProps } from "react";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 // Filled OMUZ icon set — matches the Figma (bold, solid icons, not outlines).
 // Negative space uses var(--sidebar) so cutouts read correctly in both themes.
@@ -333,36 +335,37 @@ export function FlagTJ(p: P) {
   );
 }
 
-// OMUZ logo mark — rounded roof/house with antenna dot.
-export function LogoMark(p: P) {
+// Brand artwork, lifted straight from the Figma. Two cuts of the same file:
+// the wordmark wherever there is room, the capped "o" on its own where there
+// is not (collapsed sidebar, mobile bar).
+type LogoProps = { className?: string; priority?: boolean };
+
+// Both files are trimmed to their ink, so the CSS height is the height the
+// Figma measures. The navy cap would sink into the dark theme, so lift the
+// whole mark rather than shipping a second export.
+const logoCls = "w-auto shrink-0 dark:brightness-150";
+
+export function Logo({ className, priority }: LogoProps) {
   return (
-    <svg
-      width={30}
-      height={30}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...p}
-    >
-      <path
-        d="M16 3.5 27 12v14.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V12L16 3.5Z"
-        fill="currentColor"
-        opacity=".12"
-      />
-      <path
-        d="m4.5 13 11.5-9 11.5 9"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="16" cy="19" r="6.5" stroke="currentColor" strokeWidth="2.4" />
-      <path
-        d="M16 6.5v3"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </svg>
+    <Image
+      src="/logo.png"
+      alt="OMUZ"
+      width={354}
+      height={101}
+      priority={priority}
+      className={cn(logoCls, "h-8", className)}
+    />
+  );
+}
+
+export function LogoMark({ className }: LogoProps) {
+  return (
+    <Image
+      src="/logo-mark.png"
+      alt="OMUZ"
+      width={86}
+      height={101}
+      className={cn(logoCls, "h-7", className)}
+    />
   );
 }
