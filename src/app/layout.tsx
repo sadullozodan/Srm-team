@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { AppShell } from "@/components/app-shell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,6 +13,8 @@ export const metadata: Metadata = {
   description: "OMUZ education CRM",
 };
 
+// Root layout owns global providers only. The authenticated app chrome lives in
+// the (app) route group so the (auth) login screen can render without it.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,9 +27,7 @@ export default function RootLayout({
       className={`${geistSans.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <Providers>
-          <AppShell>{children}</AppShell>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
