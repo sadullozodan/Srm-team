@@ -47,7 +47,7 @@ export function AppSidebar() {
           href="/"
           className="flex items-center px-2 py-1 hover:opacity-90 transition-opacity"
         >
-          <Logo className="w-28 h-auto" />
+          <Logo className="h-8 w-auto" />
         </Link>
       </SidebarHeader>
 
