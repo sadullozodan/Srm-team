@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Loader2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { branchesApi, studentsApi, queryKeys } from "@/lib/api/resources";
 import { ApiError } from "@/lib/api/client";
 import type {
@@ -19,8 +19,15 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import {
+  FormActions,
+  FormError,
+  LabeledField as Field,
+  Panel,
+  PhotoCard,
+  SectionTitle,
+  Segmented,
+} from "@/app/(app)/panels";
 
 interface FormState {
   firstName: string;
@@ -124,9 +131,9 @@ export function StudentForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
         {/* Basic details */}
-        <Card>
-          <CardContent className="space-y-5 p-6">
-            <h2 className="text-lg font-semibold">Basic details</h2>
+        <Panel>
+          <SectionTitle>Basic details</SectionTitle>
+          <div className="space-y-5">
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="First name" required>
@@ -300,114 +307,20 @@ export function StudentForm({
                 placeholder="Description"
               />
             </Field>
-          </CardContent>
-        </Card>
+          </div>
+        </Panel>
 
-        {/* Photo */}
-        <Card className="h-fit">
-          <CardContent className="space-y-4 p-6">
-            <h2 className="text-lg font-semibold">Photo</h2>
-            <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border p-6">
-              {form.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={form.photoUrl}
-                  alt="Student avatar"
-                  className="size-28 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex size-28 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                  <ImagePlus className="size-8" />
-                </div>
-              )}
-              <Input
-                value={form.photoUrl}
-                onChange={(e) => set("photoUrl", e.target.value)}
-                className="h-10"
-                placeholder="Photo URL"
-                // The API rejects anything longer; a data: URI never fits.
-                maxLength={500}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <PhotoCard value={form.photoUrl} onChange={(v) => set("photoUrl", v)} />
       </div>
 
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm whitespace-pre-line text-destructive">
-          {error}
-        </p>
-      )}
+      <FormError message={error} />
 
-      <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" className="h-10" disabled={mutation.isPending}>
-          {mutation.isPending && <Loader2 className="animate-spin" />}
-          Save account
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="h-10"
-          onClick={() => router.back()}
-        >
-          Cancel
-        </Button>
-      </div>
+      <FormActions
+        saveLabel={studentId ? "SAVE CHANGES" : "SAVE ACCOUNT"}
+        saving={mutation.isPending}
+        onCancel={() => router.back()}
+      />
     </form>
   );
 }
 
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium">
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function Segmented<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: T[];
-  value: T;
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div className="inline-flex flex-wrap gap-2">
-      {options.map((option) => {
-        const active = option === value;
-        return (
-          <button
-            key={option}
-            type="button"
-            onClick={() => onChange(option)}
-            aria-pressed={active}
-            className={cn(
-              "h-10 rounded-lg border px-4 text-sm font-medium transition-colors",
-              active
-                ? "border-primary bg-secondary text-primary"
-                : "border-border text-muted-foreground hover:bg-muted"
-            )}
-          >
-            {option}
-          </button>
-        );
-      })}
-    </div>
-  );
-}

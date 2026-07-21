@@ -3,11 +3,14 @@
 // Shared create/edit form for an employee. Drives POST /api/Employees (create)
 // or PUT /api/Employees/{id} (edit). Branch and position options come from
 // their own list endpoints.
+//
+// Laid out as the team's Figma draws it: "Basic details" on the left, the photo
+// card and position picker down the right.
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import {
   branchesApi,
   employeesApi,
@@ -20,10 +23,19 @@ import type {
   EmployeeDto,
   EmployeeWriteDto,
 } from "@/lib/api/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+import { normalizePhone } from "@/lib/phone";
+import {
+  FormActions,
+  FormError,
+  NumberField,
+  Panel,
+  PhotoCard,
+  Pill,
+  SectionTitle,
+  SelectBox,
+  TextAreaField,
+  TextField,
+} from "@/app/(app)/panels";
 import { cn } from "@/lib/utils";
 
 const STATUSES: ActivationStatus[] = ["Active", "Inactive"];
@@ -71,12 +83,14 @@ function toWriteDto(f: FormState): EmployeeWriteDto {
     firstName: f.firstName.trim(),
     lastName: f.lastName.trim(),
     birthDate: f.birthDate || null,
-    phoneNumber: f.phoneNumber.trim(),
+    // Stored the same way the login screen sends it, so the two agree.
+    phoneNumber: normalizePhone(f.phoneNumber),
     email: clean(f.email),
     address: clean(f.address),
     telegramUsername: clean(f.telegramUsername),
     description: clean(f.description),
-    photoUrl: clean(f.photoUrl),
+    // A blob: preview is local to this tab — never send it.
+    photoUrl: f.photoUrl.startsWith("blob:") ? null : clean(f.photoUrl),
     experience: Number(f.experience) || 0,
     hourRate: f.hourRate.trim() === "" ? null : Number(f.hourRate),
     status: f.status,
@@ -139,269 +153,185 @@ export function EmployeeForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-        <Card>
-          <CardContent className="space-y-5 p-6">
-            <h2 className="text-lg font-semibold">Basic details</h2>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+        <Panel className="lg:col-span-7">
+          <SectionTitle>Basic details</SectionTitle>
 
+          <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="First name" required>
-                <Input
-                  value={form.firstName}
-                  onChange={(e) => set("firstName", e.target.value)}
-                  required
-                  className="h-10"
-                  placeholder="First name"
-                />
-              </Field>
-              <Field label="Last name" required>
-                <Input
-                  value={form.lastName}
-                  onChange={(e) => set("lastName", e.target.value)}
-                  required
-                  className="h-10"
-                  placeholder="Last name"
-                />
-              </Field>
+              <TextField
+                label="First name"
+                value={form.firstName}
+                onChange={(v) => set("firstName", v)}
+                required
+              />
+              <TextField
+                label="Last name"
+                value={form.lastName}
+                onChange={(v) => set("lastName", v)}
+                required
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Birth date">
-                <Input
-                  type="date"
-                  value={form.birthDate}
-                  onChange={(e) => set("birthDate", e.target.value)}
-                  className="h-10"
-                />
-              </Field>
-              <Field label="Phone number" required>
-                <Input
-                  value={form.phoneNumber}
-                  onChange={(e) => set("phoneNumber", e.target.value)}
-                  required
-                  className="h-10"
-                  placeholder="Phone number"
-                />
-              </Field>
+              <TextField
+                label="Birth date"
+                type="date"
+                value={form.birthDate}
+                onChange={(v) => set("birthDate", v)}
+              />
+              <TextField
+                label="Phone number"
+                type="tel"
+                value={form.phoneNumber}
+                onChange={(v) => set("phoneNumber", v)}
+                required
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Email">
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => set("email", e.target.value)}
-                  className="h-10"
-                  placeholder="Email"
-                />
-              </Field>
-              <Field label="Address">
-                <Input
-                  value={form.address}
-                  onChange={(e) => set("address", e.target.value)}
-                  className="h-10"
-                  placeholder="Address"
-                />
-              </Field>
+              <TextField
+                label="Email"
+                type="email"
+                value={form.email}
+                onChange={(v) => set("email", v)}
+              />
+              <TextField
+                label="Address"
+                value={form.address}
+                onChange={(v) => set("address", v)}
+              />
             </div>
 
-            <Field label="Status">
-              <div className="inline-flex flex-wrap gap-2">
-                {STATUSES.map((option) => {
-                  const active = option === form.status;
+            <div className="grid gap-4 sm:grid-cols-2">
+              <NumberField
+                label="Experience"
+                value={form.experience}
+                onChange={(v) => set("experience", v)}
+              />
+              <NumberField
+                label="Hour rate"
+                value={form.hourRate}
+                onChange={(v) => set("hourRate", v)}
+              />
+            </div>
+
+            <SelectBox
+              label="Branch"
+              value={form.branchId}
+              onChange={(v) => set("branchId", v)}
+              disabled={branchesQuery.isPending}
+            >
+              <option value="">Branch</option>
+              {branchesQuery.data?.items?.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.title ?? "Untitled"}
+                </option>
+              ))}
+            </SelectBox>
+
+            <TextField
+              label="Telegram user name"
+              value={form.telegramUsername}
+              onChange={(v) => set("telegramUsername", v)}
+            />
+
+            <TextAreaField
+              label="Description"
+              value={form.description}
+              onChange={(v) => set("description", v)}
+            />
+
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                Status
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {STATUSES.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => set("status", option)}
+                    aria-pressed={option === form.status}
+                    className={cn(
+                      "rounded-xl border px-4 py-2 text-xs font-bold transition-colors",
+                      option === form.status
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <FormError message={error} />
+
+          <FormActions
+            saveLabel={employeeId ? "SAVE CHANGES" : "SAVE ACCOUNT"}
+            saving={mutation.isPending}
+            onCancel={() => router.back()}
+          />
+        </Panel>
+
+        <div className="space-y-6 lg:col-span-5">
+          <PhotoCard value={form.photoUrl} onChange={(v) => set("photoUrl", v)} />
+
+          <Panel className="h-fit">
+            <SectionTitle>Positions</SectionTitle>
+
+            {employeeId && initial?.positions?.length ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] text-muted-foreground">Current:</span>
+                {initial.positions.map((position) => (
+                  <Pill key={position} tone="brand">
+                    {position}
+                  </Pill>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="max-h-64 space-y-1 overflow-y-auto rounded-xl border border-border p-2">
+              {positionsQuery.isPending ? (
+                <p className="p-2 text-xs text-muted-foreground">Loading…</p>
+              ) : positionsQuery.data?.items?.length ? (
+                positionsQuery.data.items.map((position) => {
+                  const checked = form.positionIds.includes(position.id);
                   return (
                     <button
-                      key={option}
+                      key={position.id}
                       type="button"
-                      onClick={() => set("status", option)}
-                      aria-pressed={active}
-                      className={cn(
-                        "h-10 rounded-lg border px-4 text-sm font-medium transition-colors",
-                        active
-                          ? "border-primary bg-secondary text-primary"
-                          : "border-border text-muted-foreground hover:bg-muted"
-                      )}
+                      onClick={() => togglePosition(position.id)}
+                      className="flex w-full items-center justify-between gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted"
                     >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
-            </Field>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Experience (years)">
-                <Input
-                  type="number"
-                  min={0}
-                  value={form.experience}
-                  onChange={(e) => set("experience", e.target.value)}
-                  className="h-10"
-                  placeholder="0"
-                />
-              </Field>
-              <Field label="Hour rate">
-                <Input
-                  type="number"
-                  min={0}
-                  value={form.hourRate}
-                  onChange={(e) => set("hourRate", e.target.value)}
-                  className="h-10"
-                  placeholder="e.g. 35"
-                />
-              </Field>
-            </div>
-
-            <Field label="Branch">
-              <Select
-                value={form.branchId}
-                onChange={(e) => set("branchId", e.target.value)}
-                disabled={branchesQuery.isPending}
-              >
-                <option value="">Select branch</option>
-                {branchesQuery.data?.items?.map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.title ?? "Untitled"}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-
-            <Field label="Telegram user name">
-              <Input
-                value={form.telegramUsername}
-                onChange={(e) => set("telegramUsername", e.target.value)}
-                className="h-10"
-                placeholder="Telegram user name"
-              />
-            </Field>
-
-            <Field label="Description">
-              <textarea
-                value={form.description}
-                onChange={(e) => set("description", e.target.value)}
-                rows={3}
-                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-                placeholder="Description"
-              />
-            </Field>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card className="h-fit">
-            <CardContent className="space-y-4 p-6">
-              <h2 className="text-lg font-semibold">Photo</h2>
-              <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border p-6">
-                {form.photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={form.photoUrl}
-                    alt="Employee avatar"
-                    className="size-28 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex size-28 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <ImagePlus className="size-8" />
-                  </div>
-                )}
-                <Input
-                  value={form.photoUrl}
-                  onChange={(e) => set("photoUrl", e.target.value)}
-                  className="h-10"
-                  placeholder="Photo URL"
-                  // The API rejects anything longer; a data: URI never fits.
-                  maxLength={500}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="h-fit">
-            <CardContent className="space-y-3 p-6">
-              <h2 className="text-lg font-semibold">Positions</h2>
-              <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
-                {positionsQuery.isPending ? (
-                  <p className="p-2 text-sm text-muted-foreground">Loading…</p>
-                ) : positionsQuery.data?.items?.length ? (
-                  positionsQuery.data.items.map((position) => {
-                    const checked = form.positionIds.includes(position.id);
-                    return (
-                      <label
-                        key={position.id}
-                        className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-muted"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => togglePosition(position.id)}
-                          className="size-4 accent-primary"
-                        />
+                      <span className="flex items-center gap-2 text-xs font-medium">
                         {position.color && (
                           <span
                             className="size-2.5 shrink-0 rounded-full"
                             style={{ backgroundColor: position.color }}
                           />
                         )}
-                        <span className="text-sm">{position.name ?? "—"}</span>
-                      </label>
-                    );
-                  })
-                ) : (
-                  <p className="p-2 text-sm text-muted-foreground">No positions found.</p>
-                )}
-              </div>
-              {employeeId && (
-                <p className="text-xs text-muted-foreground">
-                  Current: {initial?.positions?.join(", ") || "—"}. Re-select to update.
-                </p>
+                        {position.name ?? "—"}
+                      </span>
+                      {checked && <Check className="size-4 shrink-0 text-primary" />}
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="p-2 text-xs text-muted-foreground">No positions found.</p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+
+            {employeeId && (
+              <p className="text-[11px] text-muted-foreground">
+                The API returns position names, not ids — re-select to change them.
+              </p>
+            )}
+          </Panel>
         </div>
       </div>
-
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm whitespace-pre-line text-destructive">
-          {error}
-        </p>
-      )}
-
-      <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" className="h-10" disabled={mutation.isPending}>
-          {mutation.isPending && <Loader2 className="animate-spin" />}
-          Save employee
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="h-10"
-          onClick={() => router.back()}
-        >
-          Cancel
-        </Button>
-      </div>
     </form>
-  );
-}
-
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium">
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </label>
-      {children}
-    </div>
   );
 }
