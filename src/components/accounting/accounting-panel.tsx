@@ -106,19 +106,22 @@ export function AccountingPanel() {
           </div>
         </div>
 
-        {/* Net */}
-        <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#38bdf8] via-[#0284c7] to-[#60a5fa] text-white shadow-xs">
-          <div className="text-xs font-medium text-sky-100 opacity-90">
+        {/* Net (Clickable Link to /accounting/net) */}
+        <Link
+          href="/accounting/net"
+          className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#38bdf8] via-[#0284c7] to-[#60a5fa] text-white shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer block"
+        >
+          <div className="text-xs font-medium text-sky-100 opacity-90 group-hover:opacity-100 transition-opacity">
             Net
           </div>
           <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             5 000 s
           </div>
           {/* Watermark Icon (Subtle Translucent) */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none group-hover:scale-110 transition-transform">
             <Smile className="size-6 text-white opacity-40 stroke-[1.8]" />
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* 3. Action Buttons Row */}
