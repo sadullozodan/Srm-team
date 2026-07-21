@@ -12,6 +12,9 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "OMUZ",
   description: "OMUZ education CRM",
+  icons: {
+    icon: "/omuz-mark.svg",
+  },
 };
 
 export default function RootLayout({
