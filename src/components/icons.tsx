@@ -294,6 +294,45 @@ export function FlagUK(p: P) {
   );
 }
 
+function FlagFrame({ children, ...p }: P & { children: React.ReactNode }) {
+  return (
+    <svg
+      width={22}
+      height={16}
+      viewBox="0 0 60 40"
+      xmlns="http://www.w3.org/2000/svg"
+      {...p}
+    >
+      <clipPath id="flag-r">
+        <rect width="60" height="40" rx="4" />
+      </clipPath>
+      <g clipPath="url(#flag-r)">{children}</g>
+    </svg>
+  );
+}
+
+export function FlagRU(p: P) {
+  return (
+    <FlagFrame {...p}>
+      <rect width="60" height="13.4" fill="#fff" />
+      <rect y="13.4" width="60" height="13.3" fill="#0039A6" />
+      <rect y="26.7" width="60" height="13.3" fill="#D52B1E" />
+    </FlagFrame>
+  );
+}
+
+// ponytail: Tajik flag without the seven-star crown — reads right at 22px.
+export function FlagTJ(p: P) {
+  return (
+    <FlagFrame {...p}>
+      <rect width="60" height="12" fill="#CC0000" />
+      <rect y="12" width="60" height="16" fill="#fff" />
+      <rect y="28" width="60" height="12" fill="#006600" />
+      <circle cx="30" cy="20" r="4" fill="#F8C800" />
+    </FlagFrame>
+  );
+}
+
 // OMUZ logo mark — rounded roof/house with antenna dot.
 export function LogoMark(p: P) {
   return (

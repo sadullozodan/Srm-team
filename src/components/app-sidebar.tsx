@@ -43,7 +43,7 @@ export function AppSidebar() {
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
         <Link
-          href="/"
+          href="/dashboard"
           className="flex items-center gap-2 px-1 py-1 text-primary"
         >
           <LogoMark className="shrink-0" />
@@ -98,8 +98,7 @@ export function AppSidebar() {
                 }
 
                 const href = item.href!;
-                const active =
-                  href === "/" ? pathname === "/" : pathname === href;
+                const active = pathname === href;
                 return (
                   <SidebarMenuItem key={item.label}>
                     <SidebarMenuButton

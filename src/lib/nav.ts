@@ -10,7 +10,7 @@ export type NavItem = {
 
 // Mirrors the OMUZ reference sidebar exactly, top to bottom.
 export const NAV: NavItem[] = [
-  { label: "Dashboard", icon: "home", href: "/" },
+  { label: "Dashboard", icon: "home", href: "/dashboard" },
   {
     label: "Students",
     icon: "students",
