@@ -150,7 +150,7 @@ export function IncomeExpenseChart({
                 name="Income"
                 stroke="#22c55e"
                 strokeWidth={3.5}
-                dot={{ r: 4, fill: "#22c55e", stroke: "#ffffff", strokeWidth: 1.5 }}
+                dot={false}
                 activeDot={{ r: 6, fill: "#22c55e", stroke: "#ffffff", strokeWidth: 2 }}
               />
               <Line
@@ -159,7 +159,7 @@ export function IncomeExpenseChart({
                 name="Expense"
                 stroke="#ef4444"
                 strokeWidth={3.5}
-                dot={{ r: 4, fill: "#ef4444", stroke: "#ffffff", strokeWidth: 1.5 }}
+                dot={false}
                 activeDot={{ r: 6, fill: "#ef4444", stroke: "#ffffff", strokeWidth: 2 }}
               />
             </LineChart>
