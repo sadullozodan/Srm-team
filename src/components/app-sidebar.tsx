@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { NAV, type NavItem } from "@/lib/nav";
 import { LogoMark, NavIcon } from "./icons";
+import { Logo } from "./logo";
 import {
   Sidebar,
   SidebarContent,
@@ -44,12 +45,9 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link
           href="/"
-          className="flex items-center gap-0.5 px-1 py-1 text-foreground hover:opacity-95 transition-opacity"
+          className="flex items-center px-2 py-1 hover:opacity-90 transition-opacity"
         >
-          <LogoMark className="size-7 shrink-0" />
-          <span className="text-2xl font-black tracking-wider text-slate-900 dark:text-white group-data-[collapsible=icon]:hidden leading-none">
-            MUZ
-          </span>
+          <Logo className="w-28 h-auto" />
         </Link>
       </SidebarHeader>
 
