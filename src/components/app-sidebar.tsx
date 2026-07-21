@@ -44,11 +44,11 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link
           href="/"
-          className="flex items-center gap-2 px-1 py-1 text-primary"
+          className="flex items-center gap-1 px-1 py-1 text-primary"
         >
           <LogoMark className="shrink-0" />
           <span className="text-2xl font-extrabold tracking-tight group-data-[collapsible=icon]:hidden">
-            OMUZ
+            MUZ
           </span>
         </Link>
       </SidebarHeader>
