@@ -10,7 +10,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "OMUZ",
+  title: "CRM OMUZ",
   description: "OMUZ education CRM",
   icons: {
     icon: "/omuz-mark.svg",

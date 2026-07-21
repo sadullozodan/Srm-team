@@ -18,13 +18,13 @@ export interface IncomeExpenseItem {
 }
 
 export const MOCK_INCOME_EXPENSE_DATA: IncomeExpenseItem[] = [
-  { month: "Jan", income: 7000, expense: 3000 },
-  { month: "Feb", income: 15000, expense: 7000 },
-  { month: "Mar", income: 14000, expense: 9000 },
-  { month: "Apr", income: 20000, expense: 12000 },
+  { month: "Junuary", income: 0, expense: 14000 },
+  { month: "February", income: 8000, expense: 8000 },
+  { month: "March", income: 10000, expense: 23000 },
+  { month: "April", income: 20000, expense: 19000 },
   { month: "May", income: 22000, expense: 15000 },
-  { month: "Jun", income: 18000, expense: 9000 },
-  { month: "Jul", income: 25000, expense: 5000 },
+  { month: "June", income: 26000, expense: 10000 },
+  { month: "July", income: 18000, expense: 6000 },
 ];
 
 export interface CustomTooltipPayloadItem {
@@ -46,16 +46,16 @@ const IncomeExpenseCustomTooltip = ({ active, payload, label }: CustomTooltipPro
     const expenseItem = payload.find((item) => item.dataKey === "expense");
 
     return (
-      <div className="bg-[#181928] text-white rounded-xl p-3 shadow-2xl border border-[#2e3048] text-xs space-y-2 min-w-[150px] z-20">
-        <p className="font-bold text-slate-200 border-b border-[#2e3048] pb-1 uppercase tracking-wider">
+      <div className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl p-3 shadow-xl border border-slate-100 dark:border-slate-700 text-xs space-y-2 min-w-[150px] z-20">
+        <p className="font-bold text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700/60 pb-1">
           {label}
         </p>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-[#22c55e]" />
-            <span className="text-slate-300 font-medium">Income:</span>
+            <span className="text-slate-600 dark:text-slate-300 font-medium">Income:</span>
           </div>
-          <span className="font-bold text-[#22c55e]">
+          <span className="font-bold text-slate-900 dark:text-white">
             {incomeItem?.value !== undefined
               ? `${incomeItem.value.toLocaleString()} s`
               : "0 s"}
@@ -64,9 +64,9 @@ const IncomeExpenseCustomTooltip = ({ active, payload, label }: CustomTooltipPro
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-[#ef4444]" />
-            <span className="text-slate-300 font-medium">Expense:</span>
+            <span className="text-slate-600 dark:text-slate-300 font-medium">Expense:</span>
           </div>
-          <span className="font-bold text-[#ef4444]">
+          <span className="font-bold text-slate-900 dark:text-white">
             {expenseItem?.value !== undefined
               ? `${expenseItem.value.toLocaleString()} s`
               : "0 s"}
@@ -93,33 +93,38 @@ export function IncomeExpenseChart({
   }, []);
 
   return (
-    <div className="w-full bg-[#131422] rounded-2xl p-5 border border-[#23253b] text-white space-y-4">
+    <div className="w-full bg-white dark:bg-slate-900/60 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h3 className="text-base font-bold text-white">Income / Expense</h3>
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <div className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full bg-[#22c55e]" />
-              <span className="text-slate-300">Income</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full bg-[#ef4444]" />
-              <span className="text-slate-300">Expense</span>
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-[#22c55e]" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Income</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-[#ef4444]" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Expense</span>
           </div>
         </div>
-        <div className="border border-[#2a2c42] rounded-lg px-2.5 py-1 text-xs font-medium text-slate-300 bg-[#181928]">
-          Year 2023 ▾
+
+        {/* Year Dropdown */}
+        <div className="relative">
+          <label className="absolute -top-2 left-2 bg-white dark:bg-slate-900 px-1 text-[10px] text-slate-400 font-medium z-10">
+            Year
+          </label>
+          <div className="border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50/50 dark:bg-slate-800 flex items-center gap-2">
+            <span>2023</span>
+            <span className="text-slate-400 text-[10px]">📅</span>
+          </div>
         </div>
       </div>
 
-      {/* Explicit Parent Height Container for ResponsiveContainer */}
+      {/* Chart Canvas */}
       <div className="w-full h-[260px]">
         {mounted && (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 15, right: 15, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#25273c" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-800" vertical={false} />
               <XAxis
                 dataKey="month"
                 axisLine={false}
@@ -128,22 +133,23 @@ export function IncomeExpenseChart({
                 dy={8}
               />
               <YAxis
+                domain={[0, 30000]}
+                ticks={[0, 10000, 20000, 30000]}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "#94a3b8", fontSize: 11 }}
-                tickFormatter={(val) => (val === 0 ? "0" : `${val / 1000}k`)}
               />
               <Tooltip
                 content={<IncomeExpenseCustomTooltip />}
-                cursor={{ stroke: "#475569", strokeDasharray: "3 3" }}
+                cursor={{ stroke: "#94a3b8", strokeDasharray: "3 3" }}
               />
               <Line
                 type="monotone"
                 dataKey="income"
                 name="Income"
                 stroke="#22c55e"
-                strokeWidth={3}
-                dot={{ r: 4, fill: "#22c55e", stroke: "#131422", strokeWidth: 1.5 }}
+                strokeWidth={3.5}
+                dot={{ r: 4, fill: "#22c55e", stroke: "#ffffff", strokeWidth: 1.5 }}
                 activeDot={{ r: 6, fill: "#22c55e", stroke: "#ffffff", strokeWidth: 2 }}
               />
               <Line
@@ -151,8 +157,8 @@ export function IncomeExpenseChart({
                 dataKey="expense"
                 name="Expense"
                 stroke="#ef4444"
-                strokeWidth={3}
-                dot={{ r: 4, fill: "#ef4444", stroke: "#131422", strokeWidth: 1.5 }}
+                strokeWidth={3.5}
+                dot={{ r: 4, fill: "#ef4444", stroke: "#ffffff", strokeWidth: 1.5 }}
                 activeDot={{ r: 6, fill: "#ef4444", stroke: "#ffffff", strokeWidth: 2 }}
               />
             </LineChart>

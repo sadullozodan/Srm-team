@@ -24,7 +24,7 @@ export const MOCK_PAYMENT_DATA: PaymentSegment[] = [
     value: 48,
     percentage: "80%",
     count: 48,
-    color: "#ff6b00", // Orange
+    color: "#ff7043", // Orange
   },
 ];
 
@@ -36,7 +36,7 @@ export interface StudentsPaymentDonutChartProps {
 
 export function StudentsPaymentDonutChart({
   data = MOCK_PAYMENT_DATA,
-  totalLabel = "TOTAL",
+  totalLabel = "Total",
   totalCount = 60,
 }: StudentsPaymentDonutChartProps) {
   const [mounted, setMounted] = useState(false);
@@ -46,14 +46,14 @@ export function StudentsPaymentDonutChart({
   }, []);
 
   return (
-    <div className="w-full bg-[#131422] rounded-2xl p-5 border border-[#23253b] text-white space-y-4">
+    <div className="w-full bg-white dark:bg-slate-900/60 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
       {/* Title */}
-      <h3 className="text-base font-bold text-white">Students payment</h3>
+      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Students payment</h3>
 
       {/* Main Content Layout: Donut Chart + Right Legend */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2">
-        {/* Donut Chart Container with explicit dimensions */}
-        <div className="relative w-48 h-48 flex items-center justify-center shrink-0">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
+        {/* Donut Chart Container */}
+        <div className="relative size-40 sm:size-44 flex items-center justify-center shrink-0">
           {mounted && (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -61,9 +61,9 @@ export function StudentsPaymentDonutChart({
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={80}
-                  paddingAngle={3}
+                  innerRadius={46}
+                  outerRadius={68}
+                  paddingAngle={2}
                   dataKey="value"
                   stroke="none"
                 >
@@ -77,34 +77,29 @@ export function StudentsPaymentDonutChart({
 
           {/* Center Overlay Text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-            <span className="text-[11px] font-semibold text-slate-400 tracking-wider uppercase">
+            <span className="text-[11px] font-semibold text-slate-400">
               {totalLabel}
             </span>
-            <span className="text-2xl font-black text-white leading-tight">
+            <span className="text-xl font-extrabold text-slate-900 dark:text-white leading-tight">
               {totalCount}
             </span>
           </div>
         </div>
 
-        {/* Custom Legend Block */}
-        <div className="flex flex-col gap-3 w-full max-w-[200px]">
+        {/* Legend List */}
+        <div className="flex flex-col gap-2.5 w-full sm:w-auto">
           {data.map((item, index) => (
-            <div
-              key={index}
-              className="bg-[#1a1b2e] rounded-xl p-3 border border-[#2a2c44] flex flex-col gap-1 shadow-xs"
-            >
+            <div key={index} className="flex items-center justify-between gap-4 text-xs font-semibold">
               <div className="flex items-center gap-2">
                 <span
                   className="size-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-xs font-semibold text-slate-200">
-                  {item.name}
-                </span>
+                <span className="text-slate-600 dark:text-slate-300">{item.name}</span>
               </div>
-              <div className="text-xs font-bold text-slate-400 pl-4">
+              <span className="text-slate-900 dark:text-slate-100 font-bold">
                 {item.percentage} - {item.count}
-              </div>
+              </span>
             </div>
           ))}
         </div>
