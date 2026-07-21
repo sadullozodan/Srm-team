@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { NAV, type NavItem } from "@/lib/nav";
-import { LogoMark, NavIcon } from "./icons";
-import { Logo } from "./logo";
+import { Logo, LogoMark, NavIcon } from "./icons";
 import {
   Sidebar,
   SidebarContent,
@@ -44,10 +43,12 @@ export function AppSidebar() {
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
         <Link
-          href="/"
-          className="flex items-center px-2 py-1 hover:opacity-90 transition-opacity"
+          href="/dashboard"
+          className="flex items-center gap-2 px-1 py-1 text-primary transition-opacity hover:opacity-90"
         >
-          <Logo className="h-8 w-auto" />
+          {/* Full wordmark when the rail is open, capped "o" when it is not. */}
+          <Logo className="h-8 w-auto group-data-[collapsible=icon]:hidden" />
+          <LogoMark className="hidden size-7 shrink-0 group-data-[collapsible=icon]:block" />
         </Link>
       </SidebarHeader>
 
@@ -96,8 +97,7 @@ export function AppSidebar() {
                 }
 
                 const href = item.href!;
-                const active =
-                  href === "/" ? pathname === "/" : pathname === href;
+                const active = pathname === href;
                 return (
                   <SidebarMenuItem key={item.label}>
                     <SidebarMenuButton

@@ -10,13 +10,14 @@ export type NavItem = {
 
 // Mirrors the OMUZ reference sidebar exactly, top to bottom.
 export const NAV: NavItem[] = [
-  { label: "Dashboard", icon: "home", href: "/" },
+  { label: "Dashboard", icon: "home", href: "/dashboard" },
   {
     label: "Students",
     icon: "students",
     children: [
       { label: "All students", href: "/students" },
       { label: "Graduates", href: "/students/graduates" },
+      { label: "Left courses", href: "/students/left-courses" },
     ],
   },
   { label: "Groups", icon: "groups", href: "/groups" },
@@ -44,8 +45,11 @@ export const NAV: NavItem[] = [
     label: "Accounting",
     icon: "accounting",
     children: [
+      { label: "Overview", href: "/accounting" },
       { label: "Payment's", href: "/accounting/payments" },
+      { label: "Debtors", href: "/accounting/debtors" },
       { label: "Budget", href: "/accounting/budget" },
+      { label: "Expenses", href: "/accounting/expenses" },
       { label: "Salary", href: "/accounting/salary" },
       { label: "Avans", href: "/accounting/avans" },
     ],

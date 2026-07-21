@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Bell, ChevronDown, Moon, Search, Sun, User } from "lucide-react";
-import { FlagUK } from "./icons";
+import { Bell, ChevronDown, LogOut, Moon, Search, Sun, User } from "lucide-react";
+import { LANGS, type LangCode } from "@/lib/langs";
+import { NotificationPanel } from "@/components/notifications";
+import { useAuth } from "@/lib/auth/context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -15,8 +17,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const LANGS = ["EN", "RU", "UZ"] as const;
 
 export function Header() {
   return (
@@ -33,29 +33,81 @@ export function Header() {
       </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        <LangMenu />
+        {/* Lang + notifications live in the bottom tab bar on mobile. */}
+        <div className="hidden items-center gap-1 md:flex md:gap-2">
+          <LangMenu />
 
-        <Button variant="ghost" size="icon" className="rounded-full" aria-label="Notifications">
-          <Bell className="text-primary" />
-        </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full"
+                  aria-label="Notifications"
+                />
+              }
+            >
+              <Bell className="text-primary" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-95 overflow-hidden p-0">
+              <NotificationPanel />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <ThemeToggle />
 
         <Separator orientation="vertical" className="mx-1 hidden h-6! sm:block" />
 
-        <button aria-label="Account" className="rounded-full">
-          <Avatar className="size-9">
-            <AvatarFallback className="bg-muted text-muted-foreground">
-              <User className="size-5" />
-            </AvatarFallback>
-          </Avatar>
-        </button>
+        <AccountMenu />
       </div>
     </header>
   );
 }
 
-function ThemeToggle() {
+function AccountMenu() {
+  const { user, logout } = useAuth();
+  const initials = (user?.fullName ?? user?.userName ?? "")
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<button aria-label="Account" className="rounded-full" />}
+      >
+        <Avatar className="size-9">
+          <AvatarFallback className="bg-secondary text-primary">
+            {initials || <User className="size-5" />}
+          </AvatarFallback>
+        </Avatar>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <div className="px-2 py-1.5">
+          <p className="truncate text-sm font-medium">
+            {user?.fullName ?? user?.userName ?? "Account"}
+          </p>
+          {user?.roles && user.roles.length > 0 && (
+            <p className="truncate text-xs text-muted-foreground">
+              {user.roles.join(", ")}
+            </p>
+          )}
+        </div>
+        <DropdownMenuItem onClick={logout} className="text-destructive">
+          <LogOut className="size-4" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
   return (
     <Button
@@ -71,8 +123,9 @@ function ThemeToggle() {
   );
 }
 
-function LangMenu() {
-  const [lang, setLang] = useState<(typeof LANGS)[number]>("EN");
+export function LangMenu() {
+  const [lang, setLang] = useState<LangCode>("EN");
+  const current = LANGS.find((l) => l.code === lang)!;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -80,15 +133,15 @@ function LangMenu() {
           <Button variant="outline" className="h-10 gap-2 bg-card font-semibold" />
         }
       >
-        <FlagUK />
+        <current.Flag />
         {lang}
         <ChevronDown className="text-muted-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-32">
-        {LANGS.map((l) => (
-          <DropdownMenuItem key={l} onClick={() => setLang(l)}>
-            <FlagUK />
-            {l}
+      <DropdownMenuContent align="end" className="w-40">
+        {LANGS.map(({ code, label, Flag }) => (
+          <DropdownMenuItem key={code} onClick={() => setLang(code)}>
+            <Flag />
+            {label}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

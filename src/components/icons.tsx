@@ -1,4 +1,6 @@
 import type { SVGProps } from "react";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 // Filled OMUZ icon set — matches the Figma (bold, solid icons, not outlines).
 // Negative space uses var(--sidebar) so cutouts read correctly in both themes.
@@ -294,71 +296,76 @@ export function FlagUK(p: P) {
   );
 }
 
-// OMUZ official logo mark — Mortarboard cap top over purple ring ("O").
-export function LogoMark(p: P) {
+function FlagFrame({ children, ...p }: P & { children: React.ReactNode }) {
   return (
     <svg
-      width={32}
-      height={32}
-      viewBox="0 0 32 32"
-      fill="none"
+      width={22}
+      height={16}
+      viewBox="0 0 60 40"
       xmlns="http://www.w3.org/2000/svg"
       {...p}
     >
-      {/* Top Mortarboard Cap */}
-      <path d="M16 2.5 L30 11 L16 19.5 L2 11 Z" fill="#1e1b4b" className="dark:fill-[#312e81]" />
-      <path
-        d="M9.5 13.5 C11.5 12 14.5 11.2 16 11.2 C17.5 11.2 20.5 12 22.5 13.5"
-        stroke="#ffffff"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      {/* Ring "O" */}
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M16 9C9.925 9 5 13.925 5 20C5 26.075 9.925 31 16 31C22.075 31 27 26.075 27 20C27 13.925 22.075 9 16 9ZM16 14.5C12.962 14.5 10.5 16.962 10.5 20C10.5 23.038 12.962 25.5 16 25.5C19.038 25.5 21.5 23.038 21.5 20C21.5 16.962 19.038 14.5 16 14.5Z"
-        fill="#5842f4"
-      />
+      <clipPath id="flag-r">
+        <rect width="60" height="40" rx="4" />
+      </clipPath>
+      <g clipPath="url(#flag-r)">{children}</g>
     </svg>
   );
 }
 
-// Complete OMUZ wordmark React SVG component
-export function OmuzLogo(props: SVGProps<SVGSVGElement>) {
+export function FlagRU(p: P) {
   return (
-    <svg
-      width="160"
-      height="48"
-      viewBox="0 0 160 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-32 h-auto text-[#6366f1]"
-      {...props}
-    >
-      <g fill="currentColor">
-        {/* Letter 'o' with Graduation Cap */}
-        <path d="M18 1.5L31 8L18 14.5L5 8L18 1.5Z" />
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M18 13C10.82 13 5 18.82 5 26C5 33.18 10.82 39 18 39C25.18 39 31 33.18 31 26C31 18.82 25.18 13 18 13ZM18 20.5C14.96 20.5 12.5 22.96 12.5 26C12.5 29.04 14.96 31.5 18 31.5C21.04 31.5 23.5 29.04 23.5 26C23.5 22.96 21.04 20.5 18 20.5Z"
-        />
-        {/* Letter 'm' */}
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M37 14.5H43V17.2C44.8 15.1 47.4 14 50.5 14C54.2 14 56.8 15.6 58.2 18.4C60.2 15.5 63.2 14 67 14C72.8 14 75 17.5 75 23.5V38.5H69V24.5C69 20.8 67.8 19.2 65 19.2C62 19.2 60.5 21.2 60.5 25.2V38.5H54.5V24.5C54.5 20.8 53.3 19.2 50.5 19.2C47.5 19.2 46 21.2 46 25.2V38.5H40V14.5H37Z"
-        />
-        {/* Letter 'u' */}
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M81 14.5H87V27C87 30.5 88.5 32.8 91.5 32.8C94.5 32.8 96 30.5 96 27V14.5H102V38.5H96.5V35C94.8 37.5 92.2 39 88.5 39C83.5 39 81 35.2 81 28.5V14.5Z"
-        />
-        {/* Letter 'z' */}
-        <path d="M108 14.5H131V20L117 33H131V38.5H108V33L122 20H108V14.5Z" />
-      </g>
-    </svg>
+    <FlagFrame {...p}>
+      <rect width="60" height="13.4" fill="#fff" />
+      <rect y="13.4" width="60" height="13.3" fill="#0039A6" />
+      <rect y="26.7" width="60" height="13.3" fill="#D52B1E" />
+    </FlagFrame>
+  );
+}
+
+// ponytail: Tajik flag without the seven-star crown — reads right at 22px.
+export function FlagTJ(p: P) {
+  return (
+    <FlagFrame {...p}>
+      <rect width="60" height="12" fill="#CC0000" />
+      <rect y="12" width="60" height="16" fill="#fff" />
+      <rect y="28" width="60" height="12" fill="#006600" />
+      <circle cx="30" cy="20" r="4" fill="#F8C800" />
+    </FlagFrame>
+  );
+}
+
+// Brand artwork, lifted straight from the Figma. Two cuts of the same file:
+// the wordmark wherever there is room, the capped "o" on its own where there
+// is not (collapsed sidebar, mobile bar).
+type LogoProps = { className?: string; priority?: boolean };
+
+// Both files are trimmed to their ink, so the CSS height is the height the
+// Figma measures. The navy cap would sink into the dark theme, so lift the
+// whole mark rather than shipping a second export.
+const logoCls = "w-auto shrink-0 dark:brightness-150";
+
+export function Logo({ className, priority }: LogoProps) {
+  return (
+    <Image
+      src="/logo.png"
+      alt="OMUZ"
+      width={354}
+      height={101}
+      priority={priority}
+      className={cn(logoCls, "h-8", className)}
+    />
+  );
+}
+
+export function LogoMark({ className }: LogoProps) {
+  return (
+    <Image
+      src="/logo-mark.png"
+      alt="OMUZ"
+      width={86}
+      height={101}
+      className={cn(logoCls, "h-7", className)}
+    />
   );
 }
