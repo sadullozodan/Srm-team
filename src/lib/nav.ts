@@ -17,6 +17,7 @@ export const NAV: NavItem[] = [
     children: [
       { label: "All students", href: "/students" },
       { label: "Graduates", href: "/students/graduates" },
+      { label: "Left courses", href: "/students/left-courses" },
     ],
   },
   { label: "Groups", icon: "groups", href: "/groups" },

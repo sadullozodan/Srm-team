@@ -1,29 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { CalendarDays, TriangleAlert, User } from "lucide-react";
+import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { CalendarDays, User } from "lucide-react";
 import { NavIcon } from "@/components/icons";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  getGraduates,
-  getGroups,
-  getLeads,
-  getPayments,
-  getStats,
-  getStudents,
-  type DashboardStats,
-  type Graduate,
-  type Student,
-} from "@/lib/api";
-import {
-  sampleEnroll,
-  sampleEnrollRows,
-  sampleGraduates,
-  sampleIncomeDelta,
-  sampleLeads,
-  sampleStats,
-} from "@/lib/sample-dashboard";
+  dashboardApi,
+  graduatesApi,
+  groupsApi,
+  leadsApi,
+  paymentsApi,
+  queryKeys,
+  studentsApi,
+} from "@/lib/api/resources";
+import type {
+  DashboardStatsDto,
+  GraduateDto,
+  ListParams,
+  PagedResult,
+  StudentDto,
+} from "@/lib/api/types";
 import {
   collectionRate,
   enrollSeries,
@@ -39,17 +36,16 @@ import { GroupsCard } from "./groups-card";
 import { IncomeCard } from "./income-card";
 import { Panel } from "../parts";
 
-type DashboardData = {
-  stats: DashboardStats;
-  graduates: Graduate[];
-  leads: MonthPoint[];
-  enroll: MonthPoint[];
-  enrollRows: EnrollRow[];
-  delta: number | null;
-};
-
 export default function DashboardPage() {
-  const { data, isSample, retry } = useDashboard();
+  const stats = useQuery({ queryKey: queryKeys.dashboard, queryFn: dashboardApi.stats });
+
+  // Everything the stats endpoint does not cover. These fill in as they arrive
+  // rather than holding up the whole page.
+  const graduates = useList<GraduateDto>(graduatesApi, "Graduates", 5);
+  const students = useList<StudentDto>(studentsApi, "Students", 6);
+  const leads = useList(leadsApi, "Leads", 500);
+  const payments = useList(paymentsApi, "Payments", 500);
+  const groups = useList(groupsApi, "Groups", 200);
 
   return (
     <div className="space-y-5">
@@ -58,76 +54,43 @@ export default function DashboardPage() {
         <DateField />
       </div>
 
-      {isSample && <SampleNotice onRetry={retry} />}
-      {data ? <Widgets data={data} /> : <LoadingSkeleton />}
+      {stats.isError ? (
+        <Panel className="p-6 text-sm text-destructive">
+          Couldn&apos;t load dashboard data
+          {stats.error instanceof Error ? `: ${stats.error.message}` : "."}
+        </Panel>
+      ) : stats.isPending ? (
+        <LoadingSkeleton />
+      ) : (
+        <Widgets
+          stats={stats.data}
+          graduates={graduates}
+          leads={leadsSeries(leads)}
+          enroll={enrollSeries(groups)}
+          enrollRows={students.map(toEnrollRow)}
+          delta={incomeDelta(payments)}
+        />
+      )}
     </div>
   );
 }
 
-/**
- * Loads every endpoint the dashboard has, in parallel. If the API is
- * unreachable — right now the shared account is dead — it falls back to sample
- * data so the page still renders, and says so.
- */
-function useDashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [isSample, setIsSample] = useState(false);
-  const [attempt, setAttempt] = useState(0);
+/** Every list endpoint shares one shape, so one hook covers all of them. */
+function useList<T>(
+  api: { list: (params: ListParams) => Promise<PagedResult<T>> },
+  resource: string,
+  pageSize: number,
+) {
+  const params = { pageSize };
+  const query = useQuery({
+    queryKey: queryKeys.list(resource, params),
+    queryFn: () => api.list(params),
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const [stats, graduates, leads, students, payments, groups] = await Promise.all([
-          getStats(),
-          getGraduates(),
-          getLeads(),
-          getStudents(),
-          getPayments(),
-          getGroups(),
-        ]);
-        if (cancelled) return;
-
-        setData({
-          stats,
-          graduates,
-          leads: leadsSeries(leads),
-          enroll: enrollSeries(groups),
-          enrollRows: students.map(toEnrollRow),
-          delta: incomeDelta(payments),
-        });
-        setIsSample(false);
-      } catch {
-        if (cancelled) return;
-
-        setData({
-          stats: sampleStats,
-          graduates: sampleGraduates,
-          leads: sampleLeads,
-          enroll: sampleEnroll,
-          enrollRows: sampleEnrollRows,
-          delta: sampleIncomeDelta,
-        });
-        setIsSample(true);
-      }
-    }
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [attempt]);
-
-  function retry() {
-    setAttempt(attempt + 1);
-  }
-
-  return { data, isSample, retry };
+  return query.data?.items ?? [];
 }
 
-function toEnrollRow(student: Student): EnrollRow {
+function toEnrollRow(student: StudentDto): EnrollRow {
   return {
     id: student.id,
     name: student.fullName ?? "—",
@@ -136,9 +99,21 @@ function toEnrollRow(student: Student): EnrollRow {
   };
 }
 
-function Widgets({ data }: { data: DashboardData }) {
-  const { stats, graduates, leads, enroll, enrollRows, delta } = data;
-
+function Widgets({
+  stats,
+  graduates,
+  leads,
+  enroll,
+  enrollRows,
+  delta,
+}: {
+  stats: DashboardStatsDto;
+  graduates: GraduateDto[];
+  leads: MonthPoint[];
+  enroll: MonthPoint[];
+  enrollRows: EnrollRow[];
+  delta: number | null;
+}) {
   return (
     <>
       <div className="grid gap-5 lg:grid-cols-2">
@@ -251,22 +226,6 @@ function DateField() {
 function toDots(isoDate: string) {
   const [year, month, day] = isoDate.split("-");
   return `${day}.${month}.${year}`;
-}
-
-/** Nobody should mistake the sample numbers below for real ones. */
-function SampleNotice({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-600">
-      <TriangleAlert className="size-4 shrink-0" />
-      <span className="flex-1">
-        Showing sample data — could not sign in to the API. Check the credentials
-        in <code>.env.local</code>.
-      </span>
-      <Button size="sm" variant="outline" onClick={onRetry}>
-        Try again
-      </Button>
-    </div>
-  );
 }
 
 function LoadingSkeleton() {

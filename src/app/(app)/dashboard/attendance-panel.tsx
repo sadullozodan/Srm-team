@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { ChevronRight, Pencil } from "lucide-react";
-import type { DashboardStats } from "@/lib/api";
+import type { DashboardStatsDto } from "@/lib/api/types";
 import { absentRows } from "@/lib/mock-dashboard";
 import { Panel, TableHead } from "../parts";
 import { cn } from "@/lib/utils";
 
-type Attendance = DashboardStats["attendance"];
+type Attendance = DashboardStatsDto["attendance"];
 
 export function AttendancePanel({ attendance }: { attendance: Attendance }) {
   return (

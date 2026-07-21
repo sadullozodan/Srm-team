@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Bell, ChevronDown, Moon, Search, Sun, User } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Moon, Search, Sun, User } from "lucide-react";
 import { LANGS, type LangCode } from "@/lib/langs";
 import { NotificationPanel } from "@/components/notifications";
+import { useAuth } from "@/lib/auth/context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -59,15 +60,50 @@ export function Header() {
 
         <Separator orientation="vertical" className="mx-1 hidden h-6! sm:block" />
 
-        <button aria-label="Account" className="rounded-full">
-          <Avatar className="size-9">
-            <AvatarFallback className="bg-muted text-muted-foreground">
-              <User className="size-5" />
-            </AvatarFallback>
-          </Avatar>
-        </button>
+        <AccountMenu />
       </div>
     </header>
+  );
+}
+
+function AccountMenu() {
+  const { user, logout } = useAuth();
+  const initials = (user?.fullName ?? user?.userName ?? "")
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<button aria-label="Account" className="rounded-full" />}
+      >
+        <Avatar className="size-9">
+          <AvatarFallback className="bg-secondary text-primary">
+            {initials || <User className="size-5" />}
+          </AvatarFallback>
+        </Avatar>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <div className="px-2 py-1.5">
+          <p className="truncate text-sm font-medium">
+            {user?.fullName ?? user?.userName ?? "Account"}
+          </p>
+          {user?.roles && user.roles.length > 0 && (
+            <p className="truncate text-xs text-muted-foreground">
+              {user.roles.join(", ")}
+            </p>
+          )}
+        </div>
+        <DropdownMenuItem onClick={logout} className="text-destructive">
+          <LogOut className="size-4" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { ChevronRight, ClipboardList, Send } from "lucide-react";
 import { NavIcon } from "@/components/icons";
-import type { GroupCard } from "@/lib/api";
+import type { GroupCardDto } from "@/lib/api/types";
 import { CardTitle, Empty, Panel, money } from "../parts";
 
-export function GroupsCard({ count, groups }: { count: number; groups: GroupCard[] }) {
+export function GroupsCard({ count, groups }: { count: number; groups: GroupCardDto[] }) {
   return (
     <Panel className="p-5">
       <div className="flex items-center justify-between">
@@ -27,7 +27,7 @@ export function GroupsCard({ count, groups }: { count: number; groups: GroupCard
   );
 }
 
-function GroupRow({ group }: { group: GroupCard }) {
+function GroupRow({ group }: { group: GroupCardDto }) {
   return (
     <li className="flex items-center gap-3 rounded-xl bg-muted/60 px-3 py-3">
       <Send className="size-5 shrink-0 text-sky-500" />

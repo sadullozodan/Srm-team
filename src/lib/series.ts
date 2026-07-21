@@ -1,4 +1,4 @@
-import type { DashboardStats, Group, Lead, Payment } from "./api";
+import type { DashboardStatsDto, GroupDto, LeadDto, PaymentDto } from "./api/types";
 
 export const MONTHS = [
   "Jan",
@@ -39,7 +39,7 @@ export function monthIndex(value: string | null | undefined): number | null {
 }
 
 /** Leads per month, from GET /api/Leads. */
-export function leadsSeries(leads: Lead[]): MonthPoint[] {
+export function leadsSeries(leads: LeadDto[]): MonthPoint[] {
   const year = emptyYear();
 
   for (const lead of leads) {
@@ -56,7 +56,7 @@ export function leadsSeries(leads: Lead[]): MonthPoint[] {
  * ponytail: the closest real signal available. EnrollmentDto has no enrolled-at
  * date, so a true per-enrollment series needs the backend (see BACKEND-GAPS.md).
  */
-export function enrollSeries(groups: Group[]): MonthPoint[] {
+export function enrollSeries(groups: GroupDto[]): MonthPoint[] {
   const year = emptyYear();
 
   for (const group of groups) {
@@ -68,7 +68,7 @@ export function enrollSeries(groups: Group[]): MonthPoint[] {
 }
 
 /** Percent change in money collected, this month against last. */
-export function incomeDelta(payments: Payment[], today = new Date()): number | null {
+export function incomeDelta(payments: PaymentDto[], today = new Date()): number | null {
   const totalFor = (year: number, month: number) =>
     payments
       .filter((payment) => {
@@ -87,7 +87,7 @@ export function incomeDelta(payments: Payment[], today = new Date()): number | n
 }
 
 /** Share of billable money actually collected: income vs income + debt. */
-export function collectionRate(stats: DashboardStats): number {
+export function collectionRate(stats: DashboardStatsDto): number {
   const billed = stats.incomeThisMonth + stats.totalDebt;
   if (billed === 0) return 0;
   return Math.round((stats.incomeThisMonth / billed) * 100);

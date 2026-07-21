@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "OMUZ education CRM",
 };
 
+// Root layout owns global providers only. The authenticated app chrome lives in
+// the (app) route group so the (auth) login screen can render without it.
 export default function RootLayout({
   children,
 }: Readonly<{

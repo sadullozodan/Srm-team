@@ -1,10 +1,10 @@
 "use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { Graduate } from "@/lib/api";
+import type { GraduateDto } from "@/lib/api/types";
 import { CardTitle, Empty, Panel, SeeMore, TableHead, initials, longDate } from "../parts";
 
-export function GraduatesCard({ count, rows }: { count: number; rows: Graduate[] }) {
+export function GraduatesCard({ count, rows }: { count: number; rows: GraduateDto[] }) {
   return (
     <Panel className="p-5">
       <div className="flex items-center justify-between">
