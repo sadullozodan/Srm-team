@@ -1,20 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil } from "lucide-react";
-import type { DashboardStatsDto, StudentDto } from "@/lib/api/types";
+import { useQuery } from "@tanstack/react-query";
+import { dashboardApi, queryKeys } from "@/lib/api/resources";
+import type { DashboardStatsDto } from "@/lib/api/types";
 import { Empty, Panel, TableHead } from "../parts";
 import { cn } from "@/lib/utils";
 
 type Attendance = DashboardStatsDto["attendance"];
 
-export function AttendancePanel({
-  attendance,
-  students,
-}: {
-  attendance: Attendance;
-  students: StudentDto[];
-}) {
+/** yyyy-mm-dd in local time — `toISOString` would shift the day near midnight. */
+function today() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+export function AttendancePanel({ attendance }: { attendance: Attendance }) {
+  const date = today();
+
+  const { data, isPending } = useQuery({
+    queryKey: queryKeys.dashboardAbsentees(date),
+    queryFn: () => dashboardApi.absentees(date),
+  });
+
+  const absentees = data ?? [];
+
   return (
     <Panel className="flex flex-col p-5">
       <div className="grid gap-3 sm:grid-cols-3">
@@ -27,36 +39,34 @@ export function AttendancePanel({
         <table className="w-full text-sm">
           <TableHead columns={["Full name", "Phone", "Reason"]} />
           <tbody>
-            {students.length === 0 && (
+            {!isPending && absentees.length === 0 && (
               <tr>
                 <td colSpan={3}>
-                  <Empty>No students yet</Empty>
+                  <Empty>Everyone is in today</Empty>
                 </td>
               </tr>
             )}
 
-            {students.map((student) => (
-              <tr key={student.id} className="border-b align-top last:border-0">
+            {absentees.map((absentee) => (
+              <tr key={absentee.studentId} className="border-b align-top last:border-0">
                 <td className="px-3 py-3">
                   <Link
-                    href={`/students/${student.id}`}
+                    href={`/students/${absentee.studentId}`}
                     className="font-semibold hover:underline"
                   >
-                    {student.fullName ?? "—"}
+                    {absentee.studentName ?? "—"}
                   </Link>
-                  <p className="text-primary">{student.groups?.[0] ?? "No group"}</p>
+                  <p className="text-primary">{absentee.groupName ?? "No group"}</p>
                 </td>
 
                 <td className="px-3 py-3 whitespace-nowrap">
-                  {phonesOf(student).map((phone) => (
-                    <p key={phone}>{phone}</p>
-                  ))}
+                  {(absentee.phones ?? []).length === 0
+                    ? "—"
+                    : absentee.phones!.map((phone) => <p key={phone}>{phone}</p>)}
                 </td>
 
-                {/* ponytail: nothing records an absence reason — the pencil is
-                    where one would be written once the backend has it. */}
-                <td className="px-3 py-3">
-                  <Pencil className="size-4 text-primary" />
+                <td className="px-3 py-3 text-muted-foreground">
+                  <span className="line-clamp-2">{absentee.reason || "—"}</span>
                 </td>
               </tr>
             ))}
@@ -65,12 +75,6 @@ export function AttendancePanel({
       </div>
     </Panel>
   );
-}
-
-function phonesOf(student: StudentDto) {
-  const numbers = [student.phoneNumber, ...(student.phones ?? []).map((p) => p.number)];
-  const listed = numbers.filter((number): number is string => !!number);
-  return listed.length > 0 ? [...new Set(listed)] : ["—"];
 }
 
 function Pill({ label, value, tone }: { label: string; value: number; tone: string }) {

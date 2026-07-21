@@ -4,9 +4,19 @@
 
 import { apiFetch, toQuery } from "./client";
 import type {
+  AbsenteeDto,
+  AdvanceDto,
   AuthResponse,
   BranchDto,
+  BudgetDto,
   CourseDto,
+  DebtorDto,
+  ExpenseDto,
+  LeftCoursesPointDto,
+  MentorLevelDto,
+  NotificationDto,
+  PositionWriteDto,
+  SalaryDto,
   EnrollmentDto,
   CourseWriteDto,
   DailyAttendanceDto,
@@ -67,7 +77,18 @@ export const groupsApi = crud<GroupDto, GroupWriteDto>("Groups");
 export const employeesApi = crud<EmployeeDto, EmployeeWriteDto>("Employees");
 export const coursesApi = crud<CourseDto, CourseWriteDto>("Courses");
 export const branchesApi = crud<BranchDto, unknown>("Branches");
-export const positionsApi = crud<PositionDto, unknown>("Positions");
+export const positionsApi = crud<PositionDto, PositionWriteDto>("Positions");
+
+// Accounting. Every one of these is a plain paged list controller, so the
+// pages under /accounting differ only in their columns. (`paymentsApi` is
+// declared with the dashboard resources below — the income card reads it too.)
+export const advancesApi = crud<AdvanceDto, unknown>("Advances");
+export const budgetsApi = crud<BudgetDto, unknown>("Budgets");
+export const debtorsApi = crud<DebtorDto, unknown>("Debtors");
+export const expensesApi = crud<ExpenseDto, unknown>("Expenses");
+export const salariesApi = crud<SalaryDto, unknown>("Salaries");
+
+export const mentorLevelsApi = crud<MentorLevelDto, unknown>("MentorLevels");
 
 // Read-only from the dashboard's point of view.
 export const leadsApi = crud<LeadDto, unknown>("Leads");
@@ -102,6 +123,25 @@ export const dashboardApi = {
     apiFetch<DailyAttendanceDto[]>(
       `/api/Dashboard/attendance${toQuery({ year, month })}`,
     ),
+  // date is a plain yyyy-mm-dd day, not a timestamp.
+  absentees: (date: string) =>
+    apiFetch<AbsenteeDto[]>(`/api/Dashboard/absentees${toQuery({ date })}`),
+  leftCourses: (year: number) =>
+    apiFetch<LeftCoursesPointDto[]>(
+      `/api/Dashboard/left-courses${toQuery({ year })}`,
+    ),
+};
+
+export const notificationsApi = {
+  list: (params: ListParams = {}) =>
+    apiFetch<PagedResult<NotificationDto>>(
+      `/api/Notifications${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+  unreadCount: () => apiFetch<number>("/api/Notifications/unread-count"),
+  markRead: (id: string) =>
+    apiFetch<void>(`/api/Notifications/${id}/read`, { method: "PUT" }),
+  markAllRead: () =>
+    apiFetch<void>("/api/Notifications/read-all", { method: "PUT" }),
 };
 
 // Journal is a nested tree (group → weeks → lessons → attendance) edited in place.
@@ -138,6 +178,10 @@ export const queryKeys = {
   dashboard: ["dashboard", "stats"] as const,
   dashboardAttendance: (year: number, month: number) =>
     ["dashboard", "attendance", year, month] as const,
+  dashboardAbsentees: (date: string) => ["dashboard", "absentees", date] as const,
+  dashboardLeftCourses: (year: number) =>
+    ["dashboard", "left-courses", year] as const,
+  notifications: ["notifications"] as const,
   list: (resource: string, params?: ListParams) =>
     params ? ([resource, "list", params] as const) : ([resource, "list"] as const),
   detail: (resource: string, id: string) => [resource, "detail", id] as const,

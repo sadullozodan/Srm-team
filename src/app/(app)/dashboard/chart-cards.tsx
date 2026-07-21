@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ListFilter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dashboardApi, queryKeys } from "@/lib/api/resources";
-import { attendanceSeries, type MonthPoint } from "@/lib/series";
+import { attendanceSeries, leftCoursesSeries, type MonthPoint } from "@/lib/series";
 import { AttendanceChart, LeadsChart, LeftCoursesChart } from "./charts";
 import { CardTitle, Panel, Stepper, useMonthPicker } from "../parts";
 
@@ -52,17 +53,27 @@ export function AttendanceCard() {
 }
 
 export function LeftCoursesCard() {
+  const [year, setYear] = useState(new Date().getFullYear());
+
+  const { data } = useQuery({
+    queryKey: queryKeys.dashboardLeftCourses(year),
+    queryFn: () => dashboardApi.leftCourses(year),
+  });
+
   return (
     <Panel className="p-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <CardTitle>Left courses</CardTitle>
-        <Button variant="outline" className="gap-2 rounded-xl">
-          <ListFilter className="size-4" />
-          Show list
-        </Button>
+        <div className="flex items-center gap-2">
+          <Stepper label={`${year} y`} onStep={(delta) => setYear(year + delta)} />
+          <Button variant="outline" className="gap-2 rounded-xl" render={<Link href="/students/left-courses" />}>
+            <ListFilter className="size-4" />
+            Show list
+          </Button>
+        </div>
       </div>
       <div className="mt-4">
-        <LeftCoursesChart />
+        <LeftCoursesChart data={leftCoursesSeries(data ?? [])} />
       </div>
     </Panel>
   );

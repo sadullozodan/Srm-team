@@ -42,8 +42,7 @@ export default function DashboardPage() {
   // Everything the stats endpoint does not cover. These fill in as they arrive
   // rather than holding up the whole page.
   const graduates = useList<GraduateDto>(graduatesApi, "Graduates", 5);
-  // One students call feeds two widgets: the list beside the attendance pills
-  // and the six most recent under the Enroll chart.
+  // The six most recent, listed under the Enroll chart.
   const students = useList<StudentDto>(studentsApi, "Students", 20);
   const leads = useList(leadsApi, "Leads", 500);
   const payments = useList(paymentsApi, "Payments", 500);
@@ -67,7 +66,6 @@ export default function DashboardPage() {
         <Widgets
           stats={stats.data}
           graduates={graduates}
-          students={students}
           leads={leadsSeries(leads)}
           enroll={enrollSeries(groups)}
           enrollRows={students.slice(0, 6).map(toEnrollRow)}
@@ -105,7 +103,6 @@ function toEnrollRow(student: StudentDto): EnrollRow {
 function Widgets({
   stats,
   graduates,
-  students,
   leads,
   enroll,
   enrollRows,
@@ -113,7 +110,6 @@ function Widgets({
 }: {
   stats: DashboardStatsDto;
   graduates: GraduateDto[];
-  students: StudentDto[];
   leads: MonthPoint[];
   enroll: MonthPoint[];
   enrollRows: EnrollRow[];
@@ -144,7 +140,7 @@ function Widgets({
           <GroupsCard count={stats.groupsCount} groups={stats.groups ?? []} />
         </div>
 
-        <AttendancePanel attendance={stats.attendance} students={students} />
+        <AttendancePanel attendance={stats.attendance} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">

@@ -9,6 +9,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  Braces,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
@@ -16,6 +17,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Star,
   Trash2,
 } from "lucide-react";
 import { employeesApi, queryKeys } from "@/lib/api/resources";
@@ -92,10 +94,20 @@ export default function EmployeesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Employees</h1>
-        <Button size="lg" className="gap-1.5" render={<Link href="/employees/new" />}>
-          <Plus className="size-4" />
-          Add new
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button variant="outline" render={<Link href="/employees/positions" />}>
+            <Braces className="size-4" />
+            Position
+          </Button>
+          <Button variant="outline" render={<Link href="/employees/mentor-levels" />}>
+            <Star className="size-4 fill-current text-amber-500" />
+            Mentor levels
+          </Button>
+          <Button size="lg" className="gap-1.5" render={<Link href="/employees/new" />}>
+            <Plus className="size-4" />
+            Add new
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

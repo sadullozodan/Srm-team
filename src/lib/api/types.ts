@@ -328,6 +328,11 @@ export interface PositionDto {
   color: string | null;
 }
 
+export interface PositionWriteDto {
+  name: string;
+  color?: string | null;
+}
+
 // ---- Branches ----
 export interface BranchDto {
   id: string;
@@ -379,15 +384,115 @@ export interface LeadDto {
   registerMonth: string | null;
 }
 
-// ---- Payments ----
+// ---- Accounting ----
+export type PaymentStatus = "NotPaid" | "Active" | "Prepayment" | "Paid";
+export type AdvanceStatus = "Pending" | "Approved" | "Denied" | "Done";
+export type DebtStatus = "InProgress" | "Paid";
+export type ExpenseCategory =
+  | "Tax"
+  | "OfficeExpenses"
+  | "Marketing"
+  | "Employees"
+  | "Other";
+
 export interface PaymentDto {
   id: string;
+  studentId: string;
   studentName: string | null;
+  groupId: string | null;
   groupName: string | null;
+  branchId: string | null;
+  branchName: string | null;
   amount: number;
   paid: number;
   discount: number;
   date: string;
+  status: PaymentStatus;
+}
+
+export interface AdvanceDto {
+  id: string;
+  employeeId: string;
+  employeeName: string | null;
+  year: number;
+  month: number;
+  amount: number;
+  description: string | null;
+  status: AdvanceStatus;
+}
+
+export interface BudgetDto {
+  id: string;
+  categoryName: string | null;
+  fromDate: string;
+  toDate: string;
+  amountAllocated: number;
+  amountSpent: number;
+  branchId: string | null;
+  branchName: string | null;
+  status: ActivationStatus;
+}
+
+export interface DebtorDto {
+  id: string;
+  studentId: string;
+  fullName: string | null;
+  fromDate: string;
+  toDate: string;
+  totalDebtAmount: number;
+  paymentPerMonth: number;
+  totalPaidAmount: number;
+  notes: string | null;
+  status: DebtStatus;
+}
+
+export interface ExpenseDto {
+  id: string;
+  parentId: string | null;
+  category: ExpenseCategory;
+  name: string | null;
+  amount: number;
+  recipient: string | null;
+  branchId: string | null;
+  branchName: string | null;
+  date: string;
+  status: ActivationStatus;
+}
+
+export interface SalaryDto {
+  id: string;
+  employeeId: string;
+  employeeName: string | null;
+  total: number;
+  prepaid: number;
+  remaining: number;
+  paid: number;
+  year: number;
+  month: number;
+  status: ActivationStatus;
+}
+
+// ---- Mentor levels ----
+export type MentorLevelType =
+  | "Intern"
+  | "Junior1"
+  | "Junior2"
+  | "Junior3"
+  | "Middle1"
+  | "Middle2"
+  | "Middle3"
+  | "Senior1"
+  | "Senior2"
+  | "Senior3";
+
+export interface MentorLevelDto {
+  id: string;
+  employeeId: string;
+  employeeName: string | null;
+  year: number;
+  month: number;
+  level: MentorLevelType;
+  hourRate: number;
 }
 
 // ---- Graduates ----
@@ -405,4 +510,29 @@ export interface DailyAttendanceDto {
   day: number;
   late: number;
   absent: number;
+}
+
+export interface LeftCoursesPointDto {
+  month: number;
+  left: number;
+  returned: number;
+}
+
+// Who was away today, and why — the table under the Present/Absent/Late pills.
+export interface AbsenteeDto {
+  studentId: string;
+  studentName: string | null;
+  groupId: string | null;
+  groupName: string | null;
+  phones: string[] | null;
+  reason: string | null;
+}
+
+// ---- Notifications ----
+export interface NotificationDto {
+  id: string;
+  title: string | null;
+  message: string | null;
+  isRead: boolean;
+  createdAt: string;
 }

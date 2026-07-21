@@ -23,42 +23,49 @@ there are working credentials.)
 | Enroll table | `GET /api/Students` |
 | Employed graduates | `stats.employedGraduatesCount`, `GET /api/Graduates` |
 | Attendance chart | `GET /api/Dashboard/attendance?year=&month=` |
+| Today's absentees table | `GET /api/Dashboard/absentees?date=` |
+| Left courses chart | `GET /api/Dashboard/left-courses?year=` |
+| Notification bell | `GET /api/Notifications`, `PUT .../read`, `.../read-all` |
 
 Shaping lives in `src/lib/series.ts` and is covered by `npm run check:api`.
 
+## Accounting and employees
+
+Every one of these is the same paged list controller (`Page`, `PageSize`,
+`Search`, `Status`), so the pages share one scaffold in
+`src/app/(app)/accounting/parts.tsx`.
+
+| Page | Source |
+| --- | --- |
+| `/accounting` | `GET /api/Dashboard/stats` for the three totals |
+| `/accounting/payments` | `GET /api/Payments` |
+| `/accounting/debtors` | `GET /api/Debtors` |
+| `/accounting/budget` | `GET /api/Budgets` |
+| `/accounting/expenses` | `GET /api/Expenses` |
+| `/accounting/salary` | `GET /api/Salaries` |
+| `/accounting/avans` | `GET /api/Advances` |
+| `/employees/mentor-levels` | `GET /api/MentorLevels` |
+| `/employees/positions` | `GET/POST/PUT/DELETE /api/Positions` |
+
 ## Missing
 
-### 1. Today's absent students, and why
+### 1. Net, and income against expense over time
 
-The table under the Present/Absent/Late pills lists real students from
-`GET /api/Students`, but it cannot filter them to *today's absentees* and the
-Reason column is always empty — nothing returns a student and an absence reason
-together, and `GET /api/Journal/lessons/{lessonId}/attendance` needs a lesson id
-the dashboard has not got.
-
-```
-GET /api/Dashboard/absentees?date=2024-08-28
-→ [{ studentId, studentName, groupId, groupName, phones: string[], reason }]
-```
-
-### 2. Left courses per month
-
-Powers the bar chart. `EnrollmentStatus.Left` exists but there is no
-enrollments list endpoint, and nothing records *when* a status changed.
+The Figma has a Net view and an income-vs-expense chart. Both need money
+totalled per month; `GET /api/Payments` and `GET /api/Expenses` are flat paged
+lists with no aggregate and no date filter, so building either client-side means
+pulling every row. Not built.
 
 ```
-GET /api/Dashboard/left-courses?year=2024
-→ [{ month: 1..12, left, returned }]
+GET /api/Dashboard/cashflow?year=2024
+→ [{ month: 1..12, income, expense, net }]
 ```
 
-### 3. Notifications
+### 2. Write endpoints for accounting
 
-The bell panel and the mobile Notification tab are display-only.
-
-```
-GET /api/Notifications
-→ [{ id, from, text, sentAt, read }]
-```
+Every accounting list is read-only in the UI. The controllers do have
+`POST`/`PUT`/`DELETE`, but the Figma's create and edit dialogs were mock-only,
+so nothing is wired to them yet — this is UI work, not a backend gap.
 
 ## Would improve what already works
 
@@ -72,4 +79,6 @@ GET /api/Notifications
 - **A monthly income target on `DashboardStatsDto`** — the ring shows collection
   rate (income vs income + debt) because there is nothing to measure against.
 - **Date filters** — no list endpoint accepts a date range, so the date picker
-  and the month/year steppers are local state and filter nothing.
+  and the accounting month steppers are local state and filter nothing. The
+  dashboard's attendance and left-courses steppers are the exception: those two
+  endpoints take a period.

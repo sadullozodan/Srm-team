@@ -3,6 +3,7 @@ import type {
   DashboardStatsDto,
   GroupDto,
   LeadDto,
+  LeftCoursesPointDto,
   PaymentDto,
 } from "./api/types";
 
@@ -115,6 +116,26 @@ export function attendanceSeries(
       day: String(day).padStart(2, "0"),
       late: point?.late ?? 0,
       absent: point?.absent ?? 0,
+    };
+  });
+}
+
+export type LeftCoursesPoint = { month: string; left: number; returned: number };
+
+/**
+ * Students who left or came back, per month, from GET /api/Dashboard/left-courses.
+ * Same treatment as the attendance series: the year is laid out in full so a
+ * month with no departures reads zero instead of being missing from the axis.
+ */
+export function leftCoursesSeries(points: LeftCoursesPointDto[]): LeftCoursesPoint[] {
+  const byMonth = new Map(points.map((point) => [point.month, point]));
+
+  return MONTHS.map((month, index) => {
+    const point = byMonth.get(index + 1);
+    return {
+      month,
+      left: point?.left ?? 0,
+      returned: point?.returned ?? 0,
     };
   });
 }

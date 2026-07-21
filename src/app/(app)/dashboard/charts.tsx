@@ -15,8 +15,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { leftCoursesByMonth } from "@/lib/mock-dashboard";
-import type { DayPoint, MonthPoint } from "@/lib/series";
+import type { DayPoint, LeftCoursesPoint, MonthPoint } from "@/lib/series";
 
 const axis = { tickLine: false, axisLine: false, tickMargin: 8 } as const;
 const grid = { vertical: false, strokeDasharray: "0" } as const;
@@ -129,10 +128,10 @@ const leftConfig = {
   returned: { label: "Returned", color: "#0ea5e9" },
 } satisfies ChartConfig;
 
-export function LeftCoursesChart() {
+export function LeftCoursesChart({ data }: { data: LeftCoursesPoint[] }) {
   return (
     <ChartContainer config={leftConfig} className="aspect-auto h-50 w-full">
-      <BarChart data={leftCoursesByMonth} margin={{ left: -16, right: 8, top: 8 }}>
+      <BarChart data={data} margin={{ left: -16, right: 8, top: 8 }}>
         <CartesianGrid {...grid} />
         <XAxis dataKey="month" {...axis} />
         <YAxis {...axis} />

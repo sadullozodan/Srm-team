@@ -9,6 +9,7 @@ import {
   enrollSeries,
   incomeDelta,
   leadsSeries,
+  leftCoursesSeries,
   monthIndex,
 } from "./series.ts";
 
@@ -48,6 +49,12 @@ assert.equal(attendanceSeries([], 2025, 1).length, 28, "February 2025 is not");
 const withRecords = attendanceSeries([{ day: 3, late: 2, absent: 1 }], 2024, 0);
 assert.deepEqual(withRecords[2], { day: "03", late: 2, absent: 1 }, "day 3 lands on index 2");
 assert.equal(withRecords[0].late, 0, "days without records stay zero");
+
+// Same rule for the year: a month the API omits is a zero bar, not a gap.
+const leftCourses = leftCoursesSeries([{ month: 4, left: 7, returned: 2 }]);
+assert.equal(leftCourses.length, 12, "always a full year");
+assert.deepEqual(leftCourses[3], { month: "Apr", left: 7, returned: 2 }, "month 4 is April");
+assert.deepEqual(leftCourses[0], { month: "Jan", left: 0, returned: 0 }, "missing month reads zero");
 
 const stats = { incomeThisMonth: 12580, totalDebt: 1398 } as DashboardStatsDto;
 assert.equal(collectionRate(stats), 90, "income against income + debt");
