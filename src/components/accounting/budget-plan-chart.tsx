@@ -51,14 +51,14 @@ const BudgetCustomTooltip = ({ active, payload, label }: CustomTooltipProps) => 
     const spentItem = payload.find((item) => item.dataKey === "spent");
 
     return (
-      <div className="bg-[#181928] text-white rounded-xl p-3 shadow-2xl border border-[#2e3048] text-xs space-y-2 min-w-[170px] z-20">
-        <p className="font-bold text-slate-200 border-b border-[#2e3048] pb-1">
+      <div className="bg-white dark:bg-[#181928] text-slate-800 dark:text-white rounded-xl p-3 shadow-xl border border-slate-200 dark:border-[#2e3048] text-xs space-y-2 min-w-[170px] z-20">
+        <p className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-[#2e3048] pb-1">
           {label}
         </p>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-[#22c55e]" />
-            <span className="text-slate-300 font-medium">Amount Allocated:</span>
+            <span className="text-slate-600 dark:text-slate-300 font-medium">Amount Allocated:</span>
           </div>
           <span className="font-bold text-[#22c55e]">
             {allocatedItem?.value !== undefined
@@ -69,7 +69,7 @@ const BudgetCustomTooltip = ({ active, payload, label }: CustomTooltipProps) => 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-[#ef4444]" />
-            <span className="text-slate-300 font-medium">Amount Spent:</span>
+            <span className="text-slate-600 dark:text-slate-300 font-medium">Amount Spent:</span>
           </div>
           <span className="font-bold text-[#ef4444]">
             {spentItem?.value !== undefined
@@ -98,35 +98,35 @@ export function BudgetPlanChart({
   }, []);
 
   return (
-    <div className="w-full bg-[#131422] rounded-2xl p-5 border border-[#23253b] text-white">
+    <div className="w-full bg-white dark:bg-[#131422] rounded-2xl p-5 border border-slate-200/80 dark:border-[#23253b] shadow-xs text-slate-800 dark:text-white transition-colors">
       {/* Top Header Legend */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-6 text-xs font-semibold">
           <div className="flex items-center gap-2">
             <span className="size-2.5 rounded-full bg-[#22c55e]" />
-            <span className="text-slate-300">Amount allocated</span>
+            <span className="text-slate-700 dark:text-slate-300">Amount allocated</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="size-2.5 rounded-full bg-[#ef4444]" />
-            <span className="text-slate-300">Amount spent</span>
+            <span className="text-slate-700 dark:text-slate-300">Amount spent</span>
           </div>
         </div>
       </div>
 
       {/* Explicit Parent Height Container for ResponsiveContainer */}
-      <div className="w-full h-[300px]">
+      <div className="w-full h-[270px]">
         {mounted && (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
               margin={{ top: 20, right: 15, left: 0, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#25273c" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-[#25273c]" vertical={false} />
               <XAxis
                 dataKey="month"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: "#64748b", fontSize: 11 }}
                 dy={8}
               />
               <YAxis
@@ -134,11 +134,11 @@ export function BudgetPlanChart({
                 ticks={[0, 10000, 20000, 30000]}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: "#64748b", fontSize: 11 }}
               />
               <Tooltip
                 content={<BudgetCustomTooltip />}
-                cursor={{ stroke: "#475569", strokeDasharray: "3 3" }}
+                cursor={{ stroke: "#94a3b8", strokeDasharray: "3 3" }}
               />
               <Line
                 type="monotone"

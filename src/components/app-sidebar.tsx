@@ -44,11 +44,11 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 px-1 py-1 text-primary transition-opacity hover:opacity-90"
+          className="flex items-center group-data-[collapsible=icon]:justify-center px-1 py-1 text-primary transition-all duration-200 hover:opacity-90"
         >
-          {/* Full wordmark when the rail is open, capped "o" when it is not. */}
-          <Logo className="h-8 w-auto group-data-[collapsible=icon]:hidden" />
-          <LogoMark className="hidden size-7 shrink-0 group-data-[collapsible=icon]:block" />
+          {/* Full logo when sidebar is open, centered icon when collapsed */}
+          <Logo className="h-8 w-auto group-data-[collapsible=icon]:hidden transition-opacity" />
+          <LogoMark className="hidden h-8 w-8 shrink-0 group-data-[collapsible=icon]:block mx-auto transition-opacity" />
         </Link>
       </SidebarHeader>
 

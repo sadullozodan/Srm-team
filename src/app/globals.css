@@ -142,4 +142,13 @@
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   }
+  select option {
+    background-color: var(--card);
+    color: var(--foreground);
+    padding: 8px 12px;
+  }
+  .dark select option {
+    background-color: #191d2b;
+    color: #e7e9f2;
+  }
 }

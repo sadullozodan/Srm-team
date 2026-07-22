@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { BudgetPlanChart } from "./budget-plan-chart";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface BudgetItem {
   id: number;
@@ -156,22 +157,13 @@ export function BudgetPlanPanel() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
         <div className="flex flex-wrap items-center gap-4">
           {/* Status Dropdown */}
-          <div className="relative w-44">
-            <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-              Status
-            </label>
-            <div className="relative flex items-center">
-              <select
-                value={tableStatus}
-                onChange={(e) => setTableStatus(e.target.value)}
-                className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-              >
-                <option value="All status">All status</option>
-                <option value="Ative">Ative</option>
-              </select>
-              <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-            </div>
-          </div>
+          <CustomSelect
+            label="Status"
+            value={tableStatus}
+            onChange={setTableStatus}
+            options={["All status", "Ative"]}
+            className="w-44"
+          />
 
           {/* Date Picker */}
           <div className="relative w-44">
@@ -267,22 +259,12 @@ export function BudgetPlanPanel() {
               {/* Top Row: Status & Amount */}
               <div className="grid grid-cols-2 gap-4">
                 {/* Status */}
-                <div className="relative">
-                  <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                    Status
-                  </label>
-                  <div className="relative flex items-center">
-                    <select
-                      value={formStatus}
-                      onChange={(e) => setFormStatus(e.target.value)}
-                      className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
+                <CustomSelect
+                  label="Status"
+                  value={formStatus}
+                  onChange={setFormStatus}
+                  options={["Active", "Inactive"]}
+                />
 
                 {/* Amount */}
                 <div className="relative">
@@ -300,25 +282,12 @@ export function BudgetPlanPanel() {
               </div>
 
               {/* Middle Row: Category */}
-              <div className="relative">
-                <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                  Category
-                </label>
-                <div className="relative flex items-center">
-                  <select
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-                  >
-                    <option value="">Choose category</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Office expenses">Office expenses</option>
-                    <option value="Tax">Tax</option>
-                    <option value="Employees">Employees</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
+              <CustomSelect
+                label="Category"
+                value={formCategory || "Choose category"}
+                onChange={setFormCategory}
+                options={["Choose category", "Marketing", "Office expenses", "Tax", "Employees"]}
+              />
 
               {/* Bottom Row: From & To */}
               <div className="grid grid-cols-2 gap-4">

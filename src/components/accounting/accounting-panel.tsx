@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { IncomeExpenseChart } from "./income-expense-chart";
 import { StudentsPaymentDonutChart } from "./students-payment-donut-chart";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 export function AccountingPanel() {
   const pathname = usePathname();
@@ -42,74 +43,64 @@ export function AccountingPanel() {
           Accounting
         </h1>
 
-        {/* Branch Selector Dropdown matching screenshot */}
-        <div className="relative">
-          <label className="absolute -top-2 left-3 bg-slate-50 dark:bg-card px-1 text-[10px] text-slate-400 font-medium z-10">
-            Branch
-          </label>
-          <div className="relative flex items-center">
-            <select
-              value={selectedBranch}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              className="appearance-none px-3.5 py-1.5 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 pr-8 cursor-pointer shadow-xs"
-            >
-              <option value="All branches">All branches</option>
-              <option value="Sadbarg">Sadbarg</option>
-              <option value="Profsous">Profsous</option>
-            </select>
-            <ChevronDown className="absolute right-2.5 size-3.5 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
+        {/* Custom Styled Branch Selector Dropdown */}
+        <CustomSelect
+          label="Branch"
+          value={selectedBranch}
+          onChange={setSelectedBranch}
+          options={["All branches", "Sadbarg", "Profsous"]}
+          className="w-40"
+        />
       </div>
 
       {/* 2. Key Performance Indicator (KPI) Gradient Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total payment */}
-        <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#2ecc71] via-[#22c55e] to-[#10b981] text-white shadow-xs">
-          <div className="text-xs font-medium text-emerald-100 opacity-90">
+        <div className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#2ecc71] via-[#22c55e] to-[#10b981] text-white shadow-xs hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer">
+          <div className="text-xs font-medium text-emerald-100 opacity-90 group-hover:opacity-100 transition-opacity">
             Total payment
           </div>
           <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             20 500 s
           </div>
           {/* Watermark Icon (Subtle Translucent) */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
-            <DollarSign className="size-6 text-white opacity-40 stroke-[2.2]" />
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none group-hover:scale-115 group-hover:rotate-6 transition-transform duration-300">
+            <DollarSign className="size-6 text-white opacity-40 group-hover:opacity-70 stroke-[2.2] transition-opacity" />
           </div>
         </div>
 
         {/* Paid amount */}
-        <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#a855f7] via-[#9333ea] to-[#8b5cf6] text-white shadow-xs">
-          <div className="text-xs font-medium text-purple-100 opacity-90">
+        <div className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#a855f7] via-[#9333ea] to-[#8b5cf6] text-white shadow-xs hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer">
+          <div className="text-xs font-medium text-purple-100 opacity-90 group-hover:opacity-100 transition-opacity">
             Paid amount
           </div>
           <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             11 000 s
           </div>
           {/* Watermark Icon (Subtle Translucent) */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
-            <PiggyBank className="size-6 text-white opacity-40 stroke-[1.8]" />
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none group-hover:scale-115 group-hover:rotate-6 transition-transform duration-300">
+            <PiggyBank className="size-6 text-white opacity-40 group-hover:opacity-70 stroke-[1.8] transition-opacity" />
           </div>
         </div>
 
         {/* Not paid */}
-        <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#f97316] via-[#ff7043] to-[#fb923c] text-white shadow-xs">
-          <div className="text-xs font-medium text-orange-100 opacity-90">
+        <div className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#f97316] via-[#ff7043] to-[#fb923c] text-white shadow-xs hover:shadow-lg hover:shadow-orange-500/20 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer">
+          <div className="text-xs font-medium text-orange-100 opacity-90 group-hover:opacity-100 transition-opacity">
             Not paid
           </div>
           <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
             5 000 s
           </div>
           {/* Watermark Icon (Subtle Translucent) */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
-            <Frown className="size-6 text-white opacity-40 stroke-[1.8]" />
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none group-hover:scale-115 group-hover:rotate-6 transition-transform duration-300">
+            <Frown className="size-6 text-white opacity-40 group-hover:opacity-70 stroke-[1.8] transition-opacity" />
           </div>
         </div>
 
         {/* Net (Clickable Link to /accounting/net) */}
         <Link
           href="/accounting/net"
-          className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#38bdf8] via-[#0284c7] to-[#60a5fa] text-white shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer block"
+          className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#38bdf8] via-[#0284c7] to-[#60a5fa] text-white shadow-xs hover:shadow-lg hover:shadow-sky-500/20 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer block"
         >
           <div className="text-xs font-medium text-sky-100 opacity-90 group-hover:opacity-100 transition-opacity">
             Net
@@ -118,8 +109,8 @@ export function AccountingPanel() {
             5 000 s
           </div>
           {/* Watermark Icon (Subtle Translucent) */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none group-hover:scale-110 transition-transform">
-            <Smile className="size-6 text-white opacity-40 stroke-[1.8]" />
+          <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none group-hover:scale-115 group-hover:rotate-6 transition-transform duration-300">
+            <Smile className="size-6 text-white opacity-40 group-hover:opacity-70 stroke-[1.8] transition-opacity" />
           </div>
         </Link>
       </div>
@@ -137,17 +128,17 @@ export function AccountingPanel() {
             <Link
               key={action.label}
               href={action.href}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-2xs hover:shadow-xs hover:border-indigo-200 transition-all group"
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-indigo-500/40 dark:hover:border-indigo-500/50 transition-all duration-200 group"
             >
               <div className="flex items-center gap-3">
-                <div className="size-9 rounded-full bg-[#5842f4] text-white flex items-center justify-center shrink-0">
+                <div className="size-9 rounded-full bg-[#5842f4] text-white flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-200">
                   <Icon className="size-4 stroke-[2.5]" />
                 </div>
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {action.label}
                 </span>
               </div>
-              <ChevronRight className="size-4 text-[#5842f4] group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="size-4 text-[#5842f4] group-hover:translate-x-1 transition-transform duration-200" />
             </Link>
           );
         })}

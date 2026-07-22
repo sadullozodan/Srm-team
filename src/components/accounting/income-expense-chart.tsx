@@ -121,7 +121,7 @@ export function IncomeExpenseChart({
       </div>
 
       {/* Chart Canvas */}
-      <div className="w-full h-[340px]">
+      <div className="w-full h-[260px]">
         {mounted && (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 15, right: 15, left: 0, bottom: 5 }}>
