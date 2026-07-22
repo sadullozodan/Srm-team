@@ -31,6 +31,11 @@ import type {
   RoleDto,
   RoleWriteDto,
   PaymentDto,
+  DebtorDto,
+  BudgetDto,
+  ExpenseDto,
+  SalaryDto,
+  AdvanceDto,
   GroupDto,
   GroupWriteDto,
   ListParams,
@@ -86,6 +91,11 @@ export const positionsApi = crud<PositionDto, unknown>("Positions");
 // Read-only from the dashboard's point of view.
 export const leadsApi = crud<LeadDto, LeadWriteDto>("Leads");
 export const paymentsApi = crud<PaymentDto, unknown>("Payments");
+export const debtorsApi = crud<DebtorDto, unknown>("Debtors");
+export const budgetsApi = crud<BudgetDto, unknown>("Budgets");
+export const expensesApi = crud<ExpenseDto, unknown>("Expenses");
+export const salariesApi = crud<SalaryDto, unknown>("Salaries");
+export const advancesApi = crud<AdvanceDto, unknown>("Advances");
 export const graduatesApi = crud<GraduateDto, GraduateWriteDto>("Graduates");
 export const jobsApi = crud<JobDto, JobWriteDto>("Jobs");
 export const timetableApi = crud<ScheduleEntryDto, ScheduleEntryWriteDto>("Timetable");

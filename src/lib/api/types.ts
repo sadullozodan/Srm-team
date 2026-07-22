@@ -527,15 +527,87 @@ export interface RoleWriteDto {
   description?: string | null;
 }
 
-// ---- Payments ----
+// ---- Accounting ----
+export type PaymentStatus = "NotPaid" | "Active" | "Prepayment" | "Paid";
+export type DebtStatus = "InProgress" | "Paid";
+export type ExpenseCategory = "Tax" | "OfficeExpenses" | "Marketing" | "Employees" | "Other";
+export type AdvanceStatus = "Pending" | "Approved" | "Denied" | "Done";
+
 export interface PaymentDto {
   id: string;
+  studentId: string;
   studentName: string | null;
+  groupId: string;
   groupName: string | null;
+  branchId: string | null;
+  branchName: string | null;
   amount: number;
   paid: number;
   discount: number;
   date: string;
+  status: PaymentStatus;
+}
+
+export interface DebtorDto {
+  id: string;
+  studentId: string;
+  fullName: string | null;
+  fromDate: string;
+  toDate: string;
+  totalDebtAmount: number;
+  paymentPerMonth: number;
+  totalPaidAmount: number;
+  notes: string | null;
+  status: DebtStatus;
+}
+
+export interface BudgetDto {
+  id: string;
+  categoryName: string | null;
+  fromDate: string;
+  toDate: string;
+  amountAllocated: number;
+  amountSpent: number;
+  branchId: string | null;
+  branchName: string | null;
+  status: ActivationStatus;
+}
+
+export interface ExpenseDto {
+  id: string;
+  parentId: string | null;
+  category: ExpenseCategory;
+  name: string | null;
+  amount: number;
+  recipient: string | null;
+  branchId: string | null;
+  branchName: string | null;
+  date: string;
+  status: ActivationStatus;
+}
+
+export interface SalaryDto {
+  id: string;
+  employeeId: string;
+  employeeName: string | null;
+  total: number;
+  prepaid: number;
+  remaining: number;
+  paid: number;
+  year: number;
+  month: number;
+  status: ActivationStatus;
+}
+
+export interface AdvanceDto {
+  id: string;
+  employeeId: string;
+  employeeName: string | null;
+  year: number;
+  month: number;
+  amount: number;
+  description: string | null;
+  status: AdvanceStatus;
 }
 
 // ---- Graduates ----
