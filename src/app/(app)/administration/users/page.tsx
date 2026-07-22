@@ -4,15 +4,17 @@ import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, Power, Search, Trash2 } from "lucide-react";
 import { usersApi, queryKeys } from "@/lib/api/resources";
-import type { ActivationStatus, UserDto } from "@/lib/api/types";
+import type { ActivationStatus, RoleType, UserDto } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusVariant: Record<ActivationStatus, "success" | "muted"> = { Active: "success", Inactive: "muted" };
+const ROLES: RoleType[] = ["SuperAdmin", "Admin", "Manager", "Accountant", "Mentor", "Developer", "Student"];
 
 export default function UsersPage() {
   const [searchInput, setSearchInput] = useState("");
@@ -40,6 +42,10 @@ export default function UsersPage() {
   });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => usersApi.remove(id),
+    onSuccess: invalidate,
+  });
+  const rolesMutation = useMutation({
+    mutationFn: (vars: { id: string; role: string }) => usersApi.setRoles(vars.id, [vars.role]),
     onSuccess: invalidate,
   });
 
@@ -91,7 +97,16 @@ export default function UsersPage() {
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.fullName ?? "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{u.userName ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{u.roles?.join(", ") || "—"}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={u.roles?.[0] ?? ""}
+                        onChange={(e) => rolesMutation.mutate({ id: u.id, role: e.target.value })}
+                        className="h-8 w-36"
+                      >
+                        <option value="" disabled>Set role…</option>
+                        {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </Select>
+                    </TableCell>
                     <TableCell><Badge variant={statusVariant[u.status]}>{u.status}</Badge></TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">

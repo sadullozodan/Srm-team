@@ -111,6 +111,21 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
+// Turn any thrown error into a user-facing message, with clearer copy for the
+// common auth cases (403 = the role isn't allowed, 401 = session gone).
+export function getApiErrorMessage(error: unknown, fallback = "Something went wrong."): string {
+  if (error instanceof ApiError) {
+    if (error.status === 403) {
+      return "You don't have permission to view this — your account role isn't allowed here.";
+    }
+    if (error.status === 401) {
+      return "Your session has expired. Please sign in again.";
+    }
+    return error.message || fallback;
+  }
+  return error instanceof Error ? error.message : fallback;
+}
+
 // Serialize list filters into a query string, dropping empty values.
 export function toQuery(params: Record<string, string | number | undefined | null>): string {
   const search = new URLSearchParams();
