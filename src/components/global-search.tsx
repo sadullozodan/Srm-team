@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2, Search } from "lucide-react";
 import { searchApi } from "@/lib/api/resources";
 import type { GlobalSearchResultDto, SearchHit } from "@/lib/api/types";
+import { useT } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ const SECTIONS: Section[] = [
 
 export function GlobalSearch() {
   const router = useRouter();
+  const t = useT();
   const [input, setInput] = useState("");
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -64,7 +66,7 @@ export function GlobalSearch() {
       <Input
         type="search"
         value={input}
-        placeholder="Search students, groups, courses…"
+        placeholder={t("Search students, groups, courses…")}
         onChange={(e) => {
           setInput(e.target.value);
           setOpen(true);

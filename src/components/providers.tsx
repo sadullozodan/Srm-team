@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth/context";
+import { LangProvider } from "@/lib/i18n";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // One client per browser session, created lazily so it survives re-renders
@@ -27,7 +28,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <AuthProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <LangProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </LangProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

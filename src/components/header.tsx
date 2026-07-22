@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { Bell, ChevronDown, LogOut, Moon, Sun, User } from "lucide-react";
-import { LANGS, type LangCode } from "@/lib/langs";
+import { LANGS } from "@/lib/langs";
+import { useLang } from "@/lib/i18n";
 import { NotificationPanel } from "@/components/notifications";
 import { GlobalSearch } from "@/components/global-search";
 import { useAuth } from "@/lib/auth/context";
@@ -61,6 +62,7 @@ export function Header() {
 
 function AccountMenu() {
   const { user, logout } = useAuth();
+  const { t } = useLang();
   const initials = (user?.fullName ?? user?.userName ?? "")
     .split(" ")
     .map((part) => part[0])
@@ -93,7 +95,7 @@ function AccountMenu() {
         </div>
         <DropdownMenuItem onClick={logout} className="text-destructive">
           <LogOut className="size-4" />
-          Sign out
+          {t("Sign out")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -102,13 +104,43 @@ function AccountMenu() {
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+
+  function toggle() {
+    const next = resolvedTheme === "dark" ? "light" : "dark";
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { ready: Promise<void> };
+    };
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // No View Transitions support (or reduced motion) → just switch.
+    if (!doc.startViewTransition || reduce) {
+      setTheme(next);
+      return;
+    }
+
+    // Reveal the new theme as a circle growing from the centre of the screen.
+    const x = window.innerWidth / 2;
+    const y = window.innerHeight / 2;
+    const end = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+
+    const transition = doc.startViewTransition(() => flushSync(() => setTheme(next)));
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${end}px at ${x}px ${y}px)`],
+        },
+        { duration: 500, easing: "ease-in-out", pseudoElement: "::view-transition-new(root)" },
+      );
+    });
+  }
+
   return (
     <Button
       variant="ghost"
       size="icon"
       className="rounded-full text-primary"
       aria-label="Toggle theme"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      onClick={toggle}
     >
       <Sun className="dark:hidden" />
       <Moon className="hidden dark:block" />
@@ -117,7 +149,7 @@ export function ThemeToggle() {
 }
 
 export function LangMenu() {
-  const [lang, setLang] = useState<LangCode>("EN");
+  const { lang, setLang } = useLang();
   const current = LANGS.find((l) => l.code === lang)!;
   return (
     <DropdownMenu>
