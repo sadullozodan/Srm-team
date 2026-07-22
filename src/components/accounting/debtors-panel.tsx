@@ -2,16 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Upload,
-  Plus,
-  Search,
-  ChevronDown,
-  Calendar,
-  SquarePen,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Upload, Plus, Search, ChevronDown, Calendar, SquarePen, X } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface DebtorRow {
   id: number;
@@ -138,23 +130,13 @@ export function DebtorsPanel() {
         </div>
 
         {/* Status */}
-        <div className="relative">
-          <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-            Status
-          </label>
-          <div className="relative flex items-center">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-            >
-              <option value="All status">All status</option>
-              <option value="Inprogress">Inprogress</option>
-              <option value="Paid">Paid</option>
-            </select>
-            <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
+        <CustomSelect
+          label="Status"
+          value={selectedStatus}
+          onChange={setSelectedStatus}
+          options={["All status", "Inprogress", "Paid"]}
+          className="w-full"
+        />
 
         {/* Date */}
         <div className="relative">
@@ -280,23 +262,13 @@ export function DebtorsPanel() {
               className="space-y-4"
             >
               {/* Debtor Dropdown */}
-              <div className="relative">
-                <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                  Debtor
-                </label>
-                <div className="relative flex items-center">
-                  <select
-                    value={modalDebtor}
-                    onChange={(e) => setModalDebtor(e.target.value)}
-                    className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-                  >
-                    <option value="">Choose debtor</option>
-                    <option value="Dilovar Karimov">Dilovar Karimov</option>
-                    <option value="Tojiev Olimjon">Tojiev Olimjon</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
+              <CustomSelect
+                label="Debtor"
+                value={modalDebtor || "Choose debtor"}
+                onChange={(val) => setModalDebtor(val === "Choose debtor" ? "" : val)}
+                options={["Choose debtor", "Dilovar Karimov", "Tojiev Olimjon"]}
+                className="w-full"
+              />
 
               {/* Two-column row: From & To Date Pickers */}
               <div className="grid grid-cols-2 gap-4">
@@ -442,23 +414,13 @@ export function DebtorsPanel() {
                     </div>
 
                     {/* Type */}
-                    <div className="relative">
-                      <label className="absolute -top-2.5 left-3 bg-white dark:bg-slate-800 px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                        Type
-                      </label>
-                      <div className="relative flex items-center">
-                        <select
-                          value={newTransType}
-                          onChange={(e) => setNewTransType(e.target.value)}
-                          className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-                        >
-                          <option value="">Choose type</option>
-                          <option value="Cash">Cash</option>
-                          <option value="Alif">Alif</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                      </div>
-                    </div>
+                    <CustomSelect
+                      label="Type"
+                      value={newTransType || "Choose type"}
+                      onChange={(val) => setNewTransType(val === "Choose type" ? "" : val)}
+                      options={["Choose type", "Cash", "Alif"]}
+                      className="w-full"
+                    />
                   </div>
 
                   {/* Row 2: Comment */}

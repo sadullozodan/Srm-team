@@ -11,6 +11,7 @@ import {
   X,
   Download,
 } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { AccountantAreaChart } from "./accountant-area-chart";
 
 interface AccountantRow {
@@ -109,42 +110,22 @@ export function AccountantPanel() {
       {/* 3. Filters Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 max-w-2xl">
         {/* Status */}
-        <div className="relative">
-          <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-            Status
-          </label>
-          <div className="relative flex items-center">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-            >
-              <option value="All status">All status</option>
-              <option value="Inprogress">Inprogress</option>
-              <option value="Archive">Archive</option>
-            </select>
-            <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
+        <CustomSelect
+          label="Status"
+          value={selectedStatus}
+          onChange={setSelectedStatus}
+          options={["All status", "Inprogress", "Archive"]}
+          className="w-full"
+        />
 
         {/* Branch */}
-        <div className="relative">
-          <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-            Branch
-          </label>
-          <div className="relative flex items-center">
-            <select
-              value={selectedBranch}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-            >
-              <option value="All branches">All branches</option>
-              <option value="Sadbarg">Sadbarg</option>
-              <option value="Profsous">Profsous</option>
-            </select>
-            <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
+        <CustomSelect
+          label="Branch"
+          value={selectedBranch}
+          onChange={setSelectedBranch}
+          options={["All branches", "Sadbarg", "Profsous"]}
+          className="w-full"
+        />
 
         {/* Date */}
         <div className="relative">

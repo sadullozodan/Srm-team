@@ -14,7 +14,7 @@ import { EventModal } from "./event-modal";
 import { DayPopover } from "./day-popover";
 
 export function TimetablePanel() {
-  const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
 
   // Day Overflow Popover state

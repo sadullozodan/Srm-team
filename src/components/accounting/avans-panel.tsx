@@ -14,6 +14,7 @@ import {
   Trash2,
   Check,
 } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface AvansRowData {
   id: number;
@@ -192,23 +193,13 @@ export function AvansPanel() {
         </div>
 
         {/* Status */}
-        <div className="relative">
-          <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-            Status
-          </label>
-          <div className="relative flex items-center">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-            >
-              <option value="All status">All status</option>
-              <option value="Approved">Approved</option>
-              <option value="Denied">Denied</option>
-            </select>
-            <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
+        <CustomSelect
+          label="Status"
+          value={selectedStatus}
+          onChange={setSelectedStatus}
+          options={["All status", "Approved", "Denied"]}
+          className="w-full"
+        />
 
         {/* Date */}
         <div className="relative">

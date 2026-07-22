@@ -22,6 +22,7 @@ import {
   BookOpen,
   UserCheck,
 } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 export interface Employee {
   id: number;
@@ -339,34 +340,22 @@ export function EmployeesPanel() {
           </div>
 
           {/* Position Dropdown */}
-          <div className="relative flex items-center">
-            <select
-              value={positionFilter}
-              onChange={(e) => setPositionFilter(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-            >
-              <option value="All positions">All positions</option>
-              <option value="Admin">Admin</option>
-              <option value="Manager">Manager</option>
-              <option value="Developer">Developer</option>
-              <option value="Mentor">Mentor</option>
-            </select>
-            <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-          </div>
+          <CustomSelect
+            label="Position"
+            value={positionFilter}
+            onChange={setPositionFilter}
+            options={["All positions", "Admin", "Manager", "Developer", "Mentor"]}
+            className="w-full"
+          />
 
           {/* Status Dropdown */}
-          <div className="relative flex items-center">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-            >
-              <option value="All status">All status</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-            <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-          </div>
+          <CustomSelect
+            label="Status"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={["All status", "Active", "Inactive"]}
+            className="w-full"
+          />
         </div>
 
         {/* View Toggle Group */}
@@ -730,23 +719,19 @@ export function EmployeesPanel() {
               {/* Inline Change Mentor Level Form */}
               {isMentorLevelEditing && (
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center gap-3 animate-in fade-in duration-200">
-                  <div className="relative flex-1">
-                    <label className="absolute -top-2.5 left-3 bg-white dark:bg-slate-800 px-1 text-[10px] font-medium text-slate-500 z-10">
-                      Change level
-                    </label>
-                    <select
-                      value={selectedMentorLevelOption}
-                      onChange={(e) => setSelectedMentorLevelOption(e.target.value)}
-                      className="w-full px-3 py-2 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200 appearance-none pr-8 cursor-pointer"
-                    >
-                      <option value="Junior 1 - 20 som">Junior 1 - 20 som</option>
-                      <option value="Junior 2 - 25 som">Junior 2 - 25 som</option>
-                      <option value="Middle 1 - 30 som">Middle 1 - 30 som</option>
-                      <option value="Middle 2 - 35 som">Middle 2 - 35 som</option>
-                      <option value="Senior 1 - 45 som">Senior 1 - 45 som</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-2.5 size-4 text-slate-400 pointer-events-none" />
-                  </div>
+                  <CustomSelect
+                    label="Change level"
+                    value={selectedMentorLevelOption}
+                    onChange={setSelectedMentorLevelOption}
+                    options={[
+                      "Junior 1 - 20 som",
+                      "Junior 2 - 25 som",
+                      "Middle 1 - 30 som",
+                      "Middle 2 - 35 som",
+                      "Senior 1 - 45 som",
+                    ]}
+                    className="flex-1"
+                  />
 
                   <button
                     onClick={() => {

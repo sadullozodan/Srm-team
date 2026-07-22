@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Upload, ChevronDown, Calendar } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface NetRowData {
   id: number;
@@ -135,24 +136,13 @@ export function NetViewPanel() {
       {/* 2. Filters Bar: Category & Date with Floating Labels */}
       <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-1 max-w-xl">
         {/* Category */}
-        <div className="relative flex-1 min-w-[180px]">
-          <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-            Category
-          </label>
-          <div className="relative flex items-center">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-            >
-              <option value="All category">All category</option>
-              <option value="Student">Student</option>
-              <option value="Mentor">Mentor</option>
-              <option value="Income tax">Income tax</option>
-            </select>
-            <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
+        <CustomSelect
+          label="Category"
+          value={selectedCategory}
+          onChange={setSelectedCategory}
+          options={["All category", "Student", "Mentor", "Income tax"]}
+          className="flex-1 min-w-[180px]"
+        />
 
         {/* Date */}
         <div className="relative flex-1 min-w-[180px]">

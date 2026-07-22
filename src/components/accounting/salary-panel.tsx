@@ -14,6 +14,7 @@ import {
   ArrowUp,
   Check,
 } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface SalaryRowData {
   id: number;
@@ -232,25 +233,13 @@ export function SalaryPanel() {
         </div>
 
         {/* Month */}
-        <div className="relative flex-1 min-w-[180px]">
-          <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-            Month
-          </label>
-          <div className="relative flex items-center">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-9 cursor-pointer"
-            >
-              <option value="All month">All month</option>
-              <option value="November">November</option>
-              <option value="December">December</option>
-              <option value="January">January</option>
-              <option value="February">February</option>
-            </select>
-            <Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
+        <CustomSelect
+          label="Month"
+          value={selectedMonth}
+          onChange={setSelectedMonth}
+          options={["All month", "November", "December", "January", "February"]}
+          className="flex-1 min-w-[180px]"
+        />
       </div>
 
       {/* 3. Main Data Table */}

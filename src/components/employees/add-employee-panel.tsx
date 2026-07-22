@@ -2,15 +2,8 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Calendar,
-  ChevronDown,
-  ChevronUp,
-  Check,
-  Trash2,
-  FilePlus,
-} from "lucide-react";
+import { FilePlus, ArrowLeft, Calendar, ChevronDown, ChevronUp, Check, Trash2 } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 const POSITION_OPTIONS = ["Director", "Manager", "Developer", "Mentor"];
 
@@ -279,25 +272,13 @@ export function AddEmployeePanel() {
             </div>
 
             {/* Branch Dropdown */}
-            <div className="relative">
-              {branch && (
-                <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                  Branch
-                </label>
-              )}
-              <div className="relative flex items-center">
-                <select
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
-                  className="w-full appearance-none px-3.5 py-2.5 text-xs font-medium bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-8 cursor-pointer"
-                >
-                  <option value="">Branch</option>
-                  <option value="Sadbarg">Sadbarg</option>
-                  <option value="Profsous">Profsous</option>
-                </select>
-                <ChevronDown className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-              </div>
-            </div>
+            <CustomSelect
+              label={branch ? "Branch" : undefined}
+              value={branch || "Branch"}
+              onChange={(val) => setBranch(val === "Branch" ? "" : val)}
+              options={["Branch", "Sadbarg", "Profsous"]}
+              className="w-full"
+            />
 
             {/* Telegram user name */}
             <div className="relative">
