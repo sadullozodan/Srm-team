@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Bell, ChevronDown, LogOut, Moon, Search, Sun, User } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Moon, Sun, User } from "lucide-react";
 import { LANGS, type LangCode } from "@/lib/langs";
 import { NotificationPanel } from "@/components/notifications";
+import { GlobalSearch } from "@/components/global-search";
 import { useAuth } from "@/lib/auth/context";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,14 +23,7 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 bg-background px-4 md:px-6">
       <SidebarTrigger className="text-primary" />
 
-      <div className="relative w-full max-w-md">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search..."
-          className="h-11 rounded-full bg-card pl-9"
-        />
-      </div>
+      <GlobalSearch />
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         {/* Lang + notifications live in the bottom tab bar on mobile. */}

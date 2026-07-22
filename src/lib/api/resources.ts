@@ -46,6 +46,24 @@ import type {
   SetAttendanceRequest,
   SetWeekResultRequest,
   WeekResultDto,
+  JobDto,
+  JobWriteDto,
+  ScheduleEntryDto,
+  RewardDto,
+  PermissionDto,
+  LogDto,
+  LogParams,
+  UserDto,
+  RoleDto,
+  RolePermissionsDto,
+  GlobalSearchResultDto,
+  ProfileDto,
+  UpdateProfileRequest,
+  MonthlyIncomeDto,
+  IncomeByCourseDto,
+  IncomeByBranchDto,
+  TokenAccountDto,
+  SmsMailingDto,
 } from "./types";
 
 export interface CrudApi<TDto, TWrite> {
@@ -171,6 +189,92 @@ export const journalApi = {
   deleteWeek: (weekId: string) =>
     apiFetch<void>(`/api/Journal/weeks/${weekId}`, { method: "DELETE" }),
 };
+
+// ---- Level-up modules (testchaos) ----
+export const jobsApi = crud<JobDto, JobWriteDto>("Jobs");
+export const graduatesFullApi = crud<GraduateDto, unknown>("Graduates");
+export const timetableApi = crud<ScheduleEntryDto, unknown>("Timetable");
+export const rewardsApi = crud<RewardDto, unknown>("Rewards");
+
+export const smsMailingsApi = {
+  key: "SmsMailings",
+  list: (params: ListParams = {}) =>
+    apiFetch<PagedResult<SmsMailingDto>>(
+      `/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+  send: (body: unknown) => apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
+};
+
+export const permissionsApi = {
+  key: "Permissions",
+  list: (params: PermissionParams = {}) =>
+    apiFetch<PagedResult<PermissionDto>>(
+      `/api/Permissions${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+};
+
+export const logsApi = {
+  key: "Logs",
+  list: (params: LogParams = {}) =>
+    apiFetch<PagedResult<LogDto>>(
+      `/api/Logs${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+};
+
+export const usersApi = {
+  key: "Users",
+  list: (params: ListParams = {}) =>
+    apiFetch<PagedResult<UserDto>>(
+      `/api/Users${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+  get: (id: string) => apiFetch<UserDto>(`/api/Users/${id}`),
+  create: (body: unknown) => apiFetch<UserDto>("/api/Users", { method: "POST", json: body }),
+  update: (id: string, body: unknown) => apiFetch<UserDto>(`/api/Users/${id}`, { method: "PUT", json: body }),
+  updateRoles: (id: string, roleIds: string[]) =>
+    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roleIds } }),
+  setStatus: (id: string, status: number) =>
+    apiFetch<UserDto>(`/api/Users/${id}/status`, { method: "PUT", json: { status } }),
+  resetPassword: (id: string) =>
+    apiFetch<void>(`/api/Users/${id}/reset-password`, { method: "POST", json: {} }),
+  remove: (id: string) => apiFetch<void>(`/api/Users/${id}`, { method: "DELETE" }),
+};
+
+export const rolesFullApi = {
+  ...crud<RoleDto, unknown>("Roles"),
+  getPermissions: (id: string) => apiFetch<RolePermissionsDto>(`/api/Roles/${id}/permissions`),
+  setPermissions: (id: string, permissionIds: string[]) =>
+    apiFetch<RolePermissionsDto>(`/api/Roles/${id}/permissions`, {
+      method: "PUT",
+      json: { permissionIds },
+    }),
+};
+
+export const searchApi = {
+  search: (q: string) => apiFetch<GlobalSearchResultDto>(`/api/Search${toQuery({ q, limit: 5 })}`),
+};
+
+export const profileApi = {
+  get: () => apiFetch<ProfileDto>("/api/Profile"),
+  update: (body: UpdateProfileRequest) => apiFetch<ProfileDto>("/api/Profile", { method: "PUT", json: body }),
+};
+
+export const reportsApi = {
+  incomeByMonth: (year?: number) =>
+    apiFetch<MonthlyIncomeDto[]>(`/api/Reports/income-by-month${toQuery({ year })}`),
+  incomeByCourse: () => apiFetch<IncomeByCourseDto[]>("/api/Reports/income-by-course"),
+  incomeByBranch: () => apiFetch<IncomeByBranchDto[]>("/api/Reports/income-by-branch"),
+  csvUrl: (name: "students" | "payments" | "leads") => `/api/Reports/${name}.csv`,
+};
+
+export const tokensApi = {
+  grant: (body: { studentId: string; amount: number; reason?: string }) =>
+    apiFetch<TokenAccountDto>("/api/Tokens/grant", { method: "POST", json: body }),
+  studentBalance: (studentId: string) => apiFetch<TokenAccountDto>(`/api/Tokens/students/${studentId}`),
+};
+
+interface PermissionParams extends ListParams {
+  group?: string;
+}
 
 // Query-key helpers keep useQuery/invalidation consistent across the app.
 export const queryKeys = {

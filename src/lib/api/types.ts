@@ -48,8 +48,10 @@ export interface ListParams {
 }
 
 // ---- Auth ----
+// Login is by phone: the backend's LoginRequest field is `phone`, the same
+// bare-digit shape registration stored.
 export interface LoginRequest {
-  userName: string;
+  phone: string;
   password: string;
 }
 
@@ -379,7 +381,11 @@ export interface LeadDto {
   id: string;
   fullName: string | null;
   phone: string | null;
+  courseId: string | null;
   courseName: string | null;
+  utmSource: string | null;
+  occupation: LeadOccupation | null;
+  type: LeadType;
   // Free text, not a date: "June", "2024-06", "jun" have all been seen.
   registerMonth: string | null;
 }
@@ -498,11 +504,16 @@ export interface MentorLevelDto {
 // ---- Graduates ----
 export interface GraduateDto {
   id: string;
+  studentId: string;
   studentName: string | null;
+  groupId: string | null;
   groupName: string | null;
-  age: number;
+  age: number | null;
   dateOfIssue: string;
   workPlace: string | null;
+  serialNumber: string | null;
+  certificateIssued: boolean;
+  status: GraduateStatus;
 }
 
 // ---- Dashboard charts ----
@@ -535,4 +546,221 @@ export interface NotificationDto {
   message: string | null;
   isRead: boolean;
   createdAt: string;
+}
+
+// ---- Jobs ----
+export interface JobDto {
+  id: string;
+  title: string | null;
+  company: string | null;
+  description: string | null;
+  location: string | null;
+  salary: number | null;
+  graduateId: string | null;
+  graduateName: string | null;
+  status: JobStatus;
+}
+
+export interface JobWriteDto {
+  title: string;
+  company?: string | null;
+  description?: string | null;
+  location?: string | null;
+  salary?: number | null;
+  graduateId?: string | null;
+  status: JobStatus;
+}
+
+// ---- SMS mailings ----
+export type SmsTargetType = "Group" | "Students" | "Mentors" | "Leads" | "Graduates";
+
+export interface SmsTemplateDto {
+  id: string;
+  title: string | null;
+  body: string | null;
+}
+
+export interface SmsRecipientDto {
+  name: string | null;
+  phone: string | null;
+  delivered: boolean;
+}
+
+export interface SmsMailingDto {
+  id: string;
+  title: string | null;
+  body: string | null;
+  targetType: SmsTargetType;
+  sentAt: string;
+  recipientCount: number;
+  recipients: SmsRecipientDto[] | null;
+}
+
+// ---- Administration: Users ----
+export interface UserDto {
+  id: string;
+  fullName: string | null;
+  userName: string | null;
+  type: string | null;
+  roles: string[] | null;
+  status: ActivationStatus;
+  studentId: string | null;
+  employeeId: string | null;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+export interface RoleDto {
+  id: string;
+  name: string | null;
+  type: RoleType;
+  description: string | null;
+}
+
+export interface PermissionDto {
+  id: string;
+  name: string | null;
+  group: string | null;
+}
+
+export interface RolePermissionsDto {
+  roleId: string;
+  permissionIds: string[];
+}
+
+// ---- Administration: Logs ----
+export interface LogDto {
+  id: string;
+  action: string | null;
+  actorName: string | null;
+  entityType: string | null;
+  description: string | null;
+  success: boolean;
+  createdAt: string;
+}
+
+export interface LogParams extends ListParams {
+  from?: string;
+  to?: string;
+}
+
+// ---- Timetable ----
+export type LessonType = "Lecture" | "Practice" | "Exam";
+export type DayName =
+  | "Sunday"
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday";
+
+export interface ScheduleEntryDto {
+  id: string;
+  groupId: string | null;
+  groupName: string | null;
+  mentorId: string | null;
+  mentorName: string | null;
+  title: string | null;
+  type: LessonType;
+  day: DayName;
+  date: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  room: string | null;
+  color: string | null;
+}
+
+// ---- Tokens & rewards (gamification) ----
+export interface TokenAccountDto {
+  studentId: string;
+  studentName: string | null;
+  balance: number;
+}
+
+export type RewardRedemptionStatus = "Pending" | "Fulfilled" | "Rejected" | "Cancelled";
+
+export interface RewardDto {
+  id: string;
+  name: string | null;
+  description: string | null;
+  cost: number;
+  imageUrl: string | null;
+  stock: number | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface RewardRedemptionDto {
+  id: string;
+  studentId: string;
+  studentName: string | null;
+  rewardId: string;
+  rewardName: string | null;
+  cost: number;
+  status: RewardRedemptionStatus;
+  note: string | null;
+  createdAt: string;
+  processedAt: string | null;
+}
+
+// ---- Profile ----
+export type Language = "Ru" | "En" | "Tj";
+export type NotificationChannel = "Sms" | "Telegram";
+
+export interface ProfileDto {
+  id: string;
+  userName: string | null;
+  fullName: string | null;
+  roles: string[] | null;
+  studentId: string | null;
+  employeeId: string | null;
+  kind: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  photoUrl: string | null;
+  preferredLanguage: Language;
+  preferredChannel: NotificationChannel;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+export interface UpdateProfileRequest {
+  fullName: string;
+  preferredLanguage: Language;
+  preferredChannel: NotificationChannel;
+}
+
+// ---- Global search ----
+export interface SearchHit {
+  id: string;
+  title: string | null;
+  subtitle: string | null;
+}
+
+export interface GlobalSearchResultDto {
+  students: SearchHit[];
+  groups: SearchHit[];
+  employees: SearchHit[];
+  leads: SearchHit[];
+  courses: SearchHit[];
+}
+
+// ---- Reports ----
+export interface MonthlyIncomeDto {
+  month: number;
+  total: number;
+}
+
+export interface IncomeByCourseDto {
+  courseId: string;
+  courseTitle: string | null;
+  total: number;
+  payments: number;
+}
+
+export interface IncomeByBranchDto {
+  branchId: string | null;
+  branchName: string | null;
+  total: number;
 }

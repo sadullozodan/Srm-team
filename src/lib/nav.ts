@@ -56,6 +56,7 @@ export const NAV: NavItem[] = [
   },
   { label: "Branches", icon: "branches", href: "/branches" },
   { label: "Jobs", icon: "jobs", href: "/jobs" },
+  { label: "Tokens", icon: "tokens", href: "/tokens" },
   { label: "SMS mailings", icon: "sms", href: "/sms" },
 ];
 
