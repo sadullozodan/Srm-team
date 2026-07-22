@@ -14,8 +14,9 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated, isLoading } = useAuth();
 
-  const [fullName, setFullName] = useState("");
-  const [userName, setUserName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,11 +38,11 @@ export default function RegisterPage() {
 
     setSubmitting(true);
     try {
-      await register({ fullName, userName, password });
+      await register({ firstName, lastName, phone, password });
       router.replace("/");
     } catch (err) {
       if (err instanceof ApiError) {
-        // Registration failures (duplicate username, weak password) come back as 400.
+        // Duplicate phone / weak password come back as 400 with field details.
         setError(err.message || "Couldn't create the account.");
       } else {
         setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -69,34 +70,53 @@ export default function RegisterPage() {
           className="rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label htmlFor="fullName" className="text-sm font-medium">
-                Full name
-              </label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                autoComplete="name"
-                required
-                className="h-10"
-                placeholder="Enter your full name"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label htmlFor="firstName" className="text-sm font-medium">
+                  First name
+                </label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  autoComplete="given-name"
+                  required
+                  className="h-10"
+                  placeholder="First name"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="lastName" className="text-sm font-medium">
+                  Last name
+                </label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  autoComplete="family-name"
+                  required
+                  className="h-10"
+                  placeholder="Last name"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="userName" className="text-sm font-medium">
-                Username
+              <label htmlFor="phone" className="text-sm font-medium">
+                Phone number
               </label>
               <Input
-                id="userName"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                autoComplete="username"
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                autoComplete="tel"
                 required
                 className="h-10"
-                placeholder="Choose a username"
+                placeholder="e.g. 900000001"
               />
+              <p className="text-xs text-muted-foreground">
+                You&apos;ll sign in with this phone number.
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -146,7 +166,7 @@ export default function RegisterPage() {
             </div>
 
             {error && (
-              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm whitespace-pre-line text-destructive">
                 {error}
               </p>
             )}

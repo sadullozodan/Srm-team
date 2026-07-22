@@ -54,9 +54,13 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  fullName: string;
-  userName: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   password: string;
+  birthDate?: string | null;
+  address?: string | null;
+  parentPhone?: string | null;
 }
 
 export interface RefreshRequest {

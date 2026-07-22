@@ -65,7 +65,7 @@ export default function LoginPage() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="userName" className="text-sm font-medium">
-                Username
+                Phone number
               </label>
               <Input
                 id="userName"
@@ -74,7 +74,7 @@ export default function LoginPage() {
                 autoComplete="username"
                 required
                 className="h-10"
-                placeholder="Enter your username"
+                placeholder="e.g. 900000001"
               />
             </div>
 
