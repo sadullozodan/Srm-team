@@ -16,6 +16,20 @@ import type {
   GraduateDto,
   GraduateWriteDto,
   LeadDto,
+  LeadWriteDto,
+  JobDto,
+  JobWriteDto,
+  ScheduleEntryDto,
+  ScheduleEntryWriteDto,
+  SmsMailingDto,
+  SendSmsRequest,
+  SmsTemplateDto,
+  SmsTemplateWriteDto,
+  UserDto,
+  PermissionDto,
+  PermissionWriteDto,
+  RoleDto,
+  RoleWriteDto,
   PaymentDto,
   GroupDto,
   GroupWriteDto,
@@ -70,9 +84,36 @@ export const branchesApi = crud<BranchDto, BranchWriteDto>("Branches");
 export const positionsApi = crud<PositionDto, unknown>("Positions");
 
 // Read-only from the dashboard's point of view.
-export const leadsApi = crud<LeadDto, unknown>("Leads");
+export const leadsApi = crud<LeadDto, LeadWriteDto>("Leads");
 export const paymentsApi = crud<PaymentDto, unknown>("Payments");
 export const graduatesApi = crud<GraduateDto, GraduateWriteDto>("Graduates");
+export const jobsApi = crud<JobDto, JobWriteDto>("Jobs");
+export const timetableApi = crud<ScheduleEntryDto, ScheduleEntryWriteDto>("Timetable");
+export const permissionsApi = crud<PermissionDto, PermissionWriteDto>("Permissions");
+export const rolesApi = crud<RoleDto, RoleWriteDto>("Roles");
+export const smsTemplatesApi = crud<SmsTemplateDto, SmsTemplateWriteDto>("SmsTemplates");
+
+// SMS mailings: send + read-only history.
+export const smsApi = {
+  history: (params: ListParams = {}) =>
+    apiFetch<PagedResult<SmsMailingDto>>(`/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`),
+  send: (body: SendSmsRequest) =>
+    apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
+};
+
+// Users are managed (list/get/delete) with dedicated role/status/password actions.
+export const usersApi = {
+  list: (params: ListParams = {}) =>
+    apiFetch<PagedResult<UserDto>>(`/api/Users${toQuery(params as Record<string, string | number | undefined | null>)}`),
+  get: (id: string) => apiFetch<UserDto>(`/api/Users/${id}`),
+  remove: (id: string) => apiFetch<void>(`/api/Users/${id}`, { method: "DELETE" }),
+  setRoles: (id: string, roles: string[]) =>
+    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roles } }),
+  setStatus: (id: string, status: string) =>
+    apiFetch<UserDto>(`/api/Users/${id}/status`, { method: "PUT", json: { status } }),
+  resetPassword: (id: string, newPassword: string) =>
+    apiFetch<void>(`/api/Users/${id}/reset-password`, { method: "POST", json: { newPassword } }),
+};
 
 // Enrollments are addressed by student or group, not a flat list.
 export const enrollmentsApi = {
