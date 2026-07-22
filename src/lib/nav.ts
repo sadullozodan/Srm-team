@@ -37,6 +37,7 @@ export const NAV: NavItem[] = [
     icon: "administration",
     children: [
       { label: "Users", href: "/administration/users" },
+      { label: "Roles", href: "/administration/roles" },
       { label: "Permission", href: "/administration/permission" },
       { label: "Logs", href: "/administration/logs" },
     ],

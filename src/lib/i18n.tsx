@@ -27,6 +27,7 @@ const DICT: Record<string, Entry> = {
   Clients: { RU: "Клиенты", TJ: "Муштариён" },
   Administration: { RU: "Администрирование", TJ: "Маъмурият" },
   Users: { RU: "Пользователи", TJ: "Корбарон" },
+  Roles: { RU: "Роли", TJ: "Нақшҳо" },
   Permission: { RU: "Права", TJ: "Ҳуқуқҳо" },
   Logs: { RU: "Журнал действий", TJ: "Сабтҳо" },
   Accounting: { RU: "Бухгалтерия", TJ: "Ҳисобдорӣ" },
@@ -48,6 +49,7 @@ const DICT: Record<string, Entry> = {
     TJ: "Ҷустуҷӯи донишҷӯён, гурӯҳҳо…",
   },
   "Sign out": { RU: "Выйти", TJ: "Баромад" },
+  Profile: { RU: "Профиль", TJ: "Профил" },
   Account: { RU: "Аккаунт", TJ: "Ҳисоб" },
   Notifications: { RU: "Уведомления", TJ: "Огоҳиномаҳо" },
 };

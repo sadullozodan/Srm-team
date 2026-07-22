@@ -12,7 +12,7 @@ import {
   Trash2,
   UserRound,
 } from "lucide-react";
-import { enrollmentsApi, studentsApi, queryKeys } from "@/lib/api/resources";
+import { enrollmentsApi, overviewApi, studentsApi, queryKeys } from "@/lib/api/resources";
 import type {
   ContractStatus,
   EnrollmentDto,
@@ -128,6 +128,7 @@ export default function StudentProfilePage() {
       ) : isPending ? (
         <ProfileSkeleton />
       ) : (
+        <>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
           <div className="space-y-6">
             <Card>
@@ -224,8 +225,93 @@ export default function StudentProfilePage() {
             </CardContent>
           </Card>
         </div>
+        <ActivitySection studentId={id} />
+        </>
       )}
     </div>
+  );
+}
+
+function ActivitySection({ studentId }: { studentId: string }) {
+  const { data, isPending, isError } = useQuery({
+    queryKey: ["students", studentId, "overview"],
+    queryFn: () => overviewApi.student(studentId),
+    enabled: !!studentId,
+  });
+
+  if (isError) return null;
+
+  const money = (n: number) => `${new Intl.NumberFormat("ru-RU").format(n)} c`;
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold tracking-tight">Activity</h2>
+
+      {/* KPI stats */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Stat label="Tokens" value={isPending ? "…" : `${data?.tokenBalance ?? 0}`} accent="text-amber-500" />
+        <Stat label="Total paid" value={isPending ? "…" : money(data?.totalPaid ?? 0)} accent="text-emerald-500" />
+        <Stat label="Attendance" value={isPending ? "…" : `${data?.attendance.rate ?? 0}%`} accent="text-primary" />
+        <Stat label="Absences" value={isPending ? "…" : `${data?.attendance.absent ?? 0}`} accent="text-rose-500" />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Timeline */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4 text-base font-semibold">Timeline</h3>
+            {isPending ? (
+              <Skeleton className="h-40 w-full rounded-xl" />
+            ) : (data?.timeline ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">No activity yet.</p>
+            ) : (
+              <ol className="relative space-y-4 border-l border-border pl-5">
+                {data!.timeline.map((item, i) => (
+                  <li key={i} className="relative">
+                    <span className="absolute top-1 -left-[23px] size-2.5 rounded-full bg-primary ring-4 ring-background" />
+                    <p className="text-sm font-medium">{item.text}</p>
+                    <p className="text-[11px] text-muted-foreground">{formatDate(item.at)}</p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Payment history */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4 text-base font-semibold">Payments</h3>
+            {isPending ? (
+              <Skeleton className="h-40 w-full rounded-xl" />
+            ) : (data?.payments ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">No payments yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {data!.payments.slice(0, 8).map((p) => (
+                  <div key={p.id} className="flex items-center justify-between border-b border-border py-2 last:border-0">
+                    <span className="text-xs text-muted-foreground">{formatDate(p.date)}</span>
+                    <span className="text-sm font-semibold">{money(p.paid)}</span>
+                    <Badge variant={p.status === "Paid" ? "success" : "muted"}>{p.status}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <Card>
+      <CardContent className="p-4 text-center">
+        <p className={`text-2xl font-black ${accent}`}>{value}</p>
+        <p className="mt-1 text-xs font-medium text-muted-foreground">{label}</p>
+      </CardContent>
+    </Card>
   );
 }
 

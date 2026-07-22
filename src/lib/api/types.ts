@@ -746,6 +746,77 @@ export interface GlobalSearchResultDto {
   courses: SearchHit[];
 }
 
+// ---- Overview aggregates (rich detail cards) ----
+export interface OverviewAttendanceDto {
+  present: number;
+  absent: number;
+  late: number;
+  rate: number;
+}
+
+export interface TimelineItemDto {
+  at: string;
+  type: string;
+  text: string;
+}
+
+export interface OverviewEnrollmentDto {
+  groupId: string;
+  groupName: string | null;
+  status: EnrollmentStatus;
+  enrolledAt: string;
+}
+
+export interface OverviewPaymentDto {
+  id: string;
+  amount: number;
+  paid: number;
+  date: string;
+  status: PaymentStatus;
+}
+
+export interface StudentOverviewDto {
+  id: string;
+  fullName: string | null;
+  phoneNumber: string | null;
+  email: string | null;
+  photoUrl: string | null;
+  status: StudentStatus;
+  branchName: string | null;
+  tokenBalance: number;
+  totalPaid: number;
+  enrollments: OverviewEnrollmentDto[];
+  payments: OverviewPaymentDto[];
+  attendance: OverviewAttendanceDto;
+  timeline: TimelineItemDto[];
+}
+
+export interface OverviewRosterItemDto {
+  studentId: string;
+  fullName: string | null;
+  phoneNumber: string | null;
+  status: EnrollmentStatus;
+  hasAccount: boolean;
+}
+
+export interface GroupOverviewDto {
+  id: string;
+  name: string | null;
+  courseTitle: string | null;
+  branchName: string | null;
+  status: GroupStatus;
+  startDate: string;
+  endDate: string;
+  days: string | null;
+  room: string | null;
+  mentors: string[];
+  studentsActive: number;
+  studentsLeft: number;
+  totalPaid: number;
+  attendance: OverviewAttendanceDto;
+  roster: OverviewRosterItemDto[];
+}
+
 // ---- Reports ----
 export interface MonthlyIncomeDto {
   month: number;

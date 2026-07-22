@@ -64,6 +64,8 @@ import type {
   IncomeByBranchDto,
   TokenAccountDto,
   SmsMailingDto,
+  StudentOverviewDto,
+  GroupOverviewDto,
 } from "./types";
 
 export interface CrudApi<TDto, TWrite> {
@@ -267,9 +269,15 @@ export const reportsApi = {
 };
 
 export const tokensApi = {
+  me: () => apiFetch<TokenAccountDto>("/api/Tokens/me"),
   grant: (body: { studentId: string; amount: number; reason?: string }) =>
     apiFetch<TokenAccountDto>("/api/Tokens/grant", { method: "POST", json: body }),
   studentBalance: (studentId: string) => apiFetch<TokenAccountDto>(`/api/Tokens/students/${studentId}`),
+};
+
+export const overviewApi = {
+  student: (id: string) => apiFetch<StudentOverviewDto>(`/api/students/${id}/overview`),
+  group: (id: string) => apiFetch<GroupOverviewDto>(`/api/groups/${id}/overview`),
 };
 
 interface PermissionParams extends ListParams {
