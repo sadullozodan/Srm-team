@@ -6,6 +6,7 @@ import { apiFetch, toQuery } from "./client";
 import type {
   AuthResponse,
   BranchDto,
+  BranchWriteDto,
   CourseDto,
   EnrollmentDto,
   CourseWriteDto,
@@ -13,6 +14,7 @@ import type {
   EmployeeDto,
   EmployeeWriteDto,
   GraduateDto,
+  GraduateWriteDto,
   LeadDto,
   PaymentDto,
   GroupDto,
@@ -33,6 +35,7 @@ import type {
   SetAttendanceRequest,
   SetWeekResultRequest,
   WeekResultDto,
+  TokenAccountDto,
 } from "./types";
 
 export interface CrudApi<TDto, TWrite> {
@@ -63,13 +66,13 @@ export const studentsApi = crud<StudentDto, StudentWriteDto>("Students");
 export const groupsApi = crud<GroupDto, GroupWriteDto>("Groups");
 export const employeesApi = crud<EmployeeDto, EmployeeWriteDto>("Employees");
 export const coursesApi = crud<CourseDto, CourseWriteDto>("Courses");
-export const branchesApi = crud<BranchDto, unknown>("Branches");
+export const branchesApi = crud<BranchDto, BranchWriteDto>("Branches");
 export const positionsApi = crud<PositionDto, unknown>("Positions");
 
 // Read-only from the dashboard's point of view.
 export const leadsApi = crud<LeadDto, unknown>("Leads");
 export const paymentsApi = crud<PaymentDto, unknown>("Payments");
-export const graduatesApi = crud<GraduateDto, unknown>("Graduates");
+export const graduatesApi = crud<GraduateDto, GraduateWriteDto>("Graduates");
 
 // Enrollments are addressed by student or group, not a flat list.
 export const enrollmentsApi = {
@@ -89,6 +92,11 @@ export const authApi = {
 
 export const dashboardApi = {
   stats: () => apiFetch<DashboardStatsDto>("/api/Dashboard/stats"),
+};
+
+// Coins/tokens — a student's balance (role-based; only students have an account).
+export const tokensApi = {
+  me: () => apiFetch<TokenAccountDto>("/api/Tokens/me"),
 };
 
 // Journal is a nested tree (group → weeks → lessons → attendance) edited in place.

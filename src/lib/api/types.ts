@@ -326,6 +326,14 @@ export interface BranchDto {
   status: ActivationStatus;
 }
 
+export interface BranchWriteDto {
+  title: string;
+  city?: string | null;
+  district?: string | null;
+  address?: string | null;
+  status: ActivationStatus;
+}
+
 // ---- Courses ----
 export interface CourseDto {
   id: string;
@@ -343,6 +351,13 @@ export interface CourseWriteDto {
   durationMonths: number;
   logoUrl?: string | null;
   description?: string | null;
+}
+
+// ---- Tokens / coins (role-based: students earn coins) ----
+export interface TokenAccountDto {
+  studentId: string;
+  studentName: string | null;
+  balance: number;
 }
 
 // ---- Errors ----
@@ -381,9 +396,25 @@ export interface PaymentDto {
 // ---- Graduates ----
 export interface GraduateDto {
   id: string;
+  studentId: string;
   studentName: string | null;
+  groupId: string | null;
   groupName: string | null;
-  age: number;
+  age: number | null;
   dateOfIssue: string;
   workPlace: string | null;
+  serialNumber: string | null;
+  certificateIssued: boolean;
+  status: GraduateStatus;
+}
+
+export interface GraduateWriteDto {
+  studentId: string;
+  groupId?: string | null;
+  age?: number | null;
+  dateOfIssue: string;
+  workPlace?: string | null;
+  serialNumber?: string | null;
+  certificateIssued: boolean;
+  status: GraduateStatus;
 }

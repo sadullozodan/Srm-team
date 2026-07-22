@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Bell, ChevronDown, LogOut, Moon, Search, Sun, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Bell, ChevronDown, Coins, LogOut, Moon, Search, Sun, User } from "lucide-react";
 import { LANGS, type LangCode } from "@/lib/langs";
 import { NotificationPanel } from "@/components/notifications";
 import { useAuth } from "@/lib/auth/context";
+import { tokensApi } from "@/lib/api/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -56,6 +58,8 @@ export function Header() {
           </DropdownMenu>
         </div>
 
+        <CoinBalance />
+
         <ThemeToggle />
 
         <Separator orientation="vertical" className="mx-1 hidden h-6! sm:block" />
@@ -63,6 +67,32 @@ export function Header() {
         <AccountMenu />
       </div>
     </header>
+  );
+}
+
+// Coins are a student-only concept, so the balance shows only when the signed-in
+// user is a student. `GET /api/Tokens/me` is skipped entirely for other roles.
+function CoinBalance() {
+  const { user } = useAuth();
+  const isStudent = !!user?.studentId || (user?.roles?.includes("Student") ?? false);
+
+  const { data } = useQuery({
+    queryKey: ["tokens", "me"],
+    queryFn: tokensApi.me,
+    enabled: isStudent,
+    staleTime: 60 * 1000,
+  });
+
+  if (!isStudent) return null;
+
+  return (
+    <div
+      className="flex h-10 items-center gap-1.5 rounded-full bg-amber-500/15 px-3 font-semibold text-amber-600 dark:text-amber-400"
+      title="Your coins"
+    >
+      <Coins className="size-4" />
+      <span className="tabular-nums">{data?.balance ?? 0}</span>
+    </div>
   );
 }
 
