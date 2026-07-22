@@ -610,6 +610,69 @@ export interface AdvanceDto {
   status: AdvanceStatus;
 }
 
+export interface PaymentWriteDto {
+  studentId: string;
+  groupId?: string | null;
+  branchId?: string | null;
+  amount: number;
+  paid: number;
+  discount: number;
+  date: string;
+  status: PaymentStatus;
+}
+
+export interface DebtorWriteDto {
+  studentId?: string | null;
+  fullName: string;
+  fromDate: string;
+  toDate: string;
+  totalDebtAmount: number;
+  paymentPerMonth: number;
+  totalPaidAmount: number;
+  notes?: string | null;
+  status: DebtStatus;
+}
+
+export interface BudgetWriteDto {
+  categoryName: string;
+  fromDate: string;
+  toDate: string;
+  amountAllocated: number;
+  amountSpent: number;
+  branchId?: string | null;
+  status: ActivationStatus;
+}
+
+export interface ExpenseWriteDto {
+  category: ExpenseCategory;
+  name: string;
+  amount: number;
+  recipient?: string | null;
+  branchId?: string | null;
+  date: string;
+  status: ActivationStatus;
+}
+
+export interface SalaryWriteDto {
+  employeeId: string;
+  total: number;
+  prepaid: number;
+  remaining: number;
+  paid: number;
+  year: number;
+  month: number;
+  status: ActivationStatus;
+}
+
+export interface AdvanceWriteDto {
+  employeeId: string;
+  year: number;
+  month: number;
+  amount: number;
+  description?: string | null;
+  status: AdvanceStatus;
+}
+
 // ---- Graduates ----
 export interface GraduateDto {
   id: string;

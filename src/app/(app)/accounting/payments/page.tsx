@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import Link from "next/link";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { paymentsApi, queryKeys } from "@/lib/api/resources";
-import type { PaymentStatus } from "@/lib/api/types";
+import type { PaymentDto, PaymentStatus } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -30,17 +32,31 @@ export default function PaymentsPage() {
     return () => clearTimeout(id);
   }, [searchInput]);
 
+  const queryClient = useQueryClient();
   const statusParam = status ? STATUS_ORDER.indexOf(status) : undefined;
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.list("Payments", { pageSize: 200, search, status: statusParam }),
     queryFn: () => paymentsApi.list({ pageSize: 200, search, status: statusParam }),
     placeholderData: keepPreviousData,
   });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => paymentsApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["Payments"] }),
+  });
+  function handleDelete(p: PaymentDto) {
+    if (window.confirm(`Delete payment for ${p.studentName ?? "student"}?`)) deleteMutation.mutate(p.id);
+  }
   const rows = data?.items ?? [];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight text-foreground">Payments</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Payments</h1>
+        <Button size="lg" className="gap-1.5" render={<Link href="/accounting/payments/new" />}>
+          <Plus className="size-4" />
+          Add new
+        </Button>
+      </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-56 flex-1">
@@ -69,15 +85,16 @@ export default function PaymentsPage() {
                 <TableHead>Discount</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isPending ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i} className="hover:bg-transparent">{Array.from({ length: 7 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>)}</TableRow>
+                  <TableRow key={i} className="hover:bg-transparent">{Array.from({ length: 8 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>)}</TableRow>
                 ))
               ) : rows.length === 0 ? (
-                <TableRow className="hover:bg-transparent"><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">No payments found.</TableCell></TableRow>
+                <TableRow className="hover:bg-transparent"><TableCell colSpan={8} className="py-10 text-center text-muted-foreground">No payments found.</TableCell></TableRow>
               ) : (
                 rows.map((p) => (
                   <TableRow key={p.id}>
@@ -88,6 +105,12 @@ export default function PaymentsPage() {
                     <TableCell className="text-muted-foreground">{p.discount ? money(p.discount) : "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{new Date(p.date).toLocaleDateString("en-GB")}</TableCell>
                     <TableCell><Badge variant={statusVariant[p.status]}>{p.status}</Badge></TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/accounting/payments/${p.id}/edit`} />}><Pencil className="size-4 text-primary" /></Button>
+                        <Button variant="ghost" size="icon-sm" aria-label="Delete" onClick={() => handleDelete(p)}><Trash2 className="size-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
