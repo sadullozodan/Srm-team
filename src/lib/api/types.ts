@@ -49,7 +49,7 @@ export interface ListParams {
 
 // ---- Auth ----
 export interface LoginRequest {
-  userName: string;
+  phone: string;
   password: string;
 }
 
