@@ -31,9 +31,9 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      // The backend still calls this field userName, and it matches the stored
-      // digits literally — so a "+" or a space here reads as a wrong password.
-      await login({ userName: normalizePhone(phone), password });
+      // The backend matches the stored digits literally — so a "+" or a space
+      // here reads as a wrong password. Normalize to the bare 992… form first.
+      await login({ phone: normalizePhone(phone), password });
       router.replace("/");
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
