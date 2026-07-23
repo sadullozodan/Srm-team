@@ -114,6 +114,18 @@ export function ThemeToggle() {
 
   function toggle() {
     const next = resolvedTheme === "dark" ? "light" : "dark";
+
+    // Apply the theme SYNCHRONOUSLY so the View Transition captures the new
+    // colors. next-themes swaps the <html> class in a passive effect, which
+    // flushSync does not flush in time — so we toggle the class ourselves and
+    // let setTheme keep next-themes' own state consistent.
+    const applyTheme = () => {
+      const root = document.documentElement;
+      root.classList.toggle("dark", next === "dark");
+      root.style.colorScheme = next;
+      setTheme(next);
+    };
+
     const doc = document as Document & {
       startViewTransition?: (cb: () => void) => { ready: Promise<void> };
     };
@@ -121,7 +133,7 @@ export function ThemeToggle() {
 
     // No View Transitions support (or reduced motion) → just switch.
     if (!doc.startViewTransition || reduce) {
-      setTheme(next);
+      applyTheme();
       return;
     }
 
@@ -130,13 +142,13 @@ export function ThemeToggle() {
     const y = window.innerHeight / 2;
     const end = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
 
-    const transition = doc.startViewTransition(() => flushSync(() => setTheme(next)));
+    const transition = doc.startViewTransition(() => flushSync(applyTheme));
     transition.ready.then(() => {
       document.documentElement.animate(
         {
           clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${end}px at ${x}px ${y}px)`],
         },
-        { duration: 500, easing: "ease-in-out", pseudoElement: "::view-transition-new(root)" },
+        { duration: 550, easing: "ease-in-out", pseudoElement: "::view-transition-new(root)" },
       );
     });
   }
