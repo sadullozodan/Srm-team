@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { Bell, ChevronDown, LogOut, Moon, Sun, User } from "lucide-react";
 import { LANGS } from "@/lib/langs";
@@ -114,43 +113,42 @@ export function ThemeToggle() {
 
   function toggle() {
     const next = resolvedTheme === "dark" ? "light" : "dark";
-
-    // Apply the theme SYNCHRONOUSLY so the View Transition captures the new
-    // colors. next-themes swaps the <html> class in a passive effect, which
-    // flushSync does not flush in time — so we toggle the class ourselves and
-    // let setTheme keep next-themes' own state consistent.
+    const root = document.documentElement;
     const applyTheme = () => {
-      const root = document.documentElement;
       root.classList.toggle("dark", next === "dark");
       root.style.colorScheme = next;
       setTheme(next);
     };
 
-    const doc = document as Document & {
-      startViewTransition?: (cb: () => void) => { ready: Promise<void> };
-    };
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    // No View Transitions support (or reduced motion) → just switch.
-    if (!doc.startViewTransition || reduce) {
+    if (reduce || typeof document.body.animate !== "function") {
       applyTheme();
       return;
     }
 
-    // Reveal the new theme as a circle growing from the centre of the screen.
+    // Browser-agnostic circular reveal (no View Transitions dependency):
+    // cover the screen with the OLD background, switch the theme underneath,
+    // then shrink the cover to a point at the centre — the new theme is
+    // revealed through a circle growing outward from the middle.
+    const oldBg = getComputedStyle(document.body).backgroundColor || "#ffffff";
+    applyTheme();
+
+    const overlay = document.createElement("div");
+    overlay.style.cssText = `position:fixed;inset:0;z-index:2147483647;pointer-events:none;background:${oldBg};`;
+    document.body.appendChild(overlay);
+
     const x = window.innerWidth / 2;
     const y = window.innerHeight / 2;
-    const end = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+    const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
 
-    const transition = doc.startViewTransition(() => flushSync(applyTheme));
-    transition.ready.then(() => {
-      document.documentElement.animate(
-        {
-          clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${end}px at ${x}px ${y}px)`],
-        },
-        { duration: 550, easing: "ease-in-out", pseudoElement: "::view-transition-new(root)" },
-      );
-    });
+    const anim = overlay.animate(
+      { clipPath: [`circle(${r}px at ${x}px ${y}px)`, `circle(0px at ${x}px ${y}px)`] },
+      { duration: 600, easing: "ease-in-out" },
+    );
+    anim.finished.then(
+      () => overlay.remove(),
+      () => overlay.remove(),
+    );
   }
 
   return (
