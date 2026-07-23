@@ -253,13 +253,14 @@ export function NumberField({
   );
 }
 
-/** Native select wearing the same chrome. Options are supplied as children. */
+import { CustomSelect } from "@/components/ui/custom-select";
+
+/** Custom select box using CustomSelect component. Options are supplied as children or array. */
 export function SelectBox({
   label,
   value,
   onChange,
   children,
-  disabled,
 }: {
   label: string;
   value: string;
@@ -267,18 +268,27 @@ export function SelectBox({
   children: React.ReactNode;
   disabled?: boolean;
 }) {
+  const optionsList: { label: string; value: string }[] = [];
+  if (children) {
+    // Convert option elements to CustomSelectOption objects
+    const childrenArray = Array.isArray(children) ? children : [children];
+    childrenArray.forEach((child: any) => {
+      if (child && child.props) {
+        const val = child.props.value !== undefined ? String(child.props.value) : String(child.props.children);
+        const lbl = String(child.props.children || val);
+        optionsList.push({ label: lbl, value: val });
+      }
+    });
+  }
+
   return (
-    <Field label={label} filled={value !== ""}>
-      <select
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className={cn(fieldCls, "cursor-pointer appearance-none pr-8")}
-      >
-        {children}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 size-4 text-muted-foreground" />
-    </Field>
+    <CustomSelect
+      label={label}
+      value={value}
+      onChange={onChange}
+      options={optionsList}
+      className="w-full"
+    />
   );
 }
 

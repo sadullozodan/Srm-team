@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -17,16 +17,6 @@ export interface IncomeExpenseItem {
   income: number;
   expense: number;
 }
-
-export const MOCK_INCOME_EXPENSE_DATA: IncomeExpenseItem[] = [
-  { month: "Junuary", income: 0, expense: 14000 },
-  { month: "February", income: 8000, expense: 8000 },
-  { month: "March", income: 10000, expense: 23000 },
-  { month: "April", income: 20000, expense: 19000 },
-  { month: "May", income: 22000, expense: 15000 },
-  { month: "June", income: 26000, expense: 10000 },
-  { month: "July", income: 18000, expense: 6000 },
-];
 
 export interface CustomTooltipPayloadItem {
   dataKey?: string | number;
@@ -81,17 +71,27 @@ const IncomeExpenseCustomTooltip = ({ active, payload, label }: CustomTooltipPro
 };
 
 export interface IncomeExpenseChartProps {
-  data?: IncomeExpenseItem[];
+  data: IncomeExpenseItem[];
+  /** The year being shown, and the years the picker offers. */
+  year: number;
+  years: number[];
+  onYearChange: (year: number) => void;
 }
 
-export function IncomeExpenseChart({
-  data = MOCK_INCOME_EXPENSE_DATA,
-}: IncomeExpenseChartProps) {
-  const [mounted, setMounted] = useState(false);
+/** Rounds the axis top up to a clean number so real data isn't clipped. */
+function axisMax(data: IncomeExpenseItem[]) {
+  const peak = Math.max(0, ...data.map((point) => Math.max(point.income, point.expense)));
+  if (peak === 0) return 1000;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(peak)));
+  return Math.ceil(peak / magnitude) * magnitude;
+}
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+export function IncomeExpenseChart({ data, year, years, onYearChange }: IncomeExpenseChartProps) {
+  const top = axisMax(data);
+  // Recharts' ResponsiveContainer needs a real width, so only render it after
+  // mount — this also gives the chart a soft fade-in.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <div className="w-full bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-5">
@@ -108,20 +108,30 @@ export function IncomeExpenseChart({
           </div>
         </div>
 
-        {/* Year Dropdown matching screenshot */}
+        {/* Year picker — the years present in the real data. */}
         <div className="relative">
           <span className="absolute -top-2.5 left-3 bg-white dark:bg-slate-900 px-1 text-[11px] font-medium text-slate-400 z-10">
             Year
           </span>
-          <div className="border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-1.5 bg-white dark:bg-slate-800 flex items-center gap-3 shadow-2xs">
-            <span className="text-sm font-bold text-slate-800 dark:text-slate-100">2023</span>
-            <Calendar className="size-4 text-slate-600 dark:text-slate-300" />
+          <div className="border border-slate-200 dark:border-slate-700 rounded-xl pl-3.5 pr-2 py-1.5 bg-white dark:bg-slate-800 flex items-center gap-2 shadow-2xs">
+            <select
+              value={year}
+              onChange={(event) => onYearChange(Number(event.target.value))}
+              className="appearance-none bg-transparent text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer"
+            >
+              {years.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <Calendar className="size-4 text-slate-600 dark:text-slate-300 pointer-events-none" />
           </div>
         </div>
       </div>
 
       {/* Chart Canvas */}
-      <div className="w-full h-[340px]">
+      <div className="w-full h-[260px]">
         {mounted && (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 15, right: 15, left: 0, bottom: 5 }}>
@@ -134,8 +144,7 @@ export function IncomeExpenseChart({
                 dy={8}
               />
               <YAxis
-                domain={[0, 30000]}
-                ticks={[0, 10000, 20000, 30000]}
+                domain={[0, top]}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "#94a3b8", fontSize: 11 }}

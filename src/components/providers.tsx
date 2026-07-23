@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth/context";
 
+import { InitialLoadingProvider } from "@/components/providers/initial-loading-provider";
+
 export function Providers({ children }: { children: React.ReactNode }) {
   // One client per browser session, created lazily so it survives re-renders
   // but is never shared across requests.
@@ -27,7 +29,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <AuthProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            <InitialLoadingProvider>{children}</InitialLoadingProvider>
+          </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { Loader } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/context";
@@ -31,9 +32,9 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      // The backend still calls this field userName, and it matches the stored
-      // digits literally — so a "+" or a space here reads as a wrong password.
-      await login({ userName: normalizePhone(phone), password });
+      // Matched against the stored digits literally, so a "+" or a space here
+      // reads as a wrong password.
+      await login({ phone: normalizePhone(phone), password });
       router.replace("/");
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -109,7 +110,7 @@ export default function LoginPage() {
         )}
 
         <Button type="submit" className="h-12 w-full" disabled={submitting}>
-          {submitting && <Loader2 className="animate-spin" />}
+          {submitting && <Loader size="sm" />}
           Log in
         </Button>
 

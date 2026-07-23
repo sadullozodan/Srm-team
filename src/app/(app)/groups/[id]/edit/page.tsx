@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader } from "@/components/ui/Loading";
 import { groupsApi, queryKeys } from "@/lib/api/resources";
 import { GroupForm } from "@/components/groups/group-form";
 import { PanelHeader } from "../../../panels";
@@ -28,7 +28,7 @@ export default function EditGroupPage() {
         </div>
       ) : isPending ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="size-6 animate-spin text-primary" />
+          <Loader size="md" />
         </div>
       ) : (
         <GroupForm groupId={id} initial={data} />

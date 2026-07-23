@@ -10,7 +10,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { Loader } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authApi } from "@/lib/api/resources";
@@ -206,7 +207,7 @@ export default function ForgotPasswordPage() {
 
         <div className="flex gap-3">
           <Button type="submit" className="h-12 flex-1" disabled={submitting}>
-            {submitting && <Loader2 className="animate-spin" />}
+            {submitting && <Loader size="sm" />}
             {step === "phone" ? "Send code" : step === "code" ? "Verify" : "Save"}
           </Button>
           <Button
