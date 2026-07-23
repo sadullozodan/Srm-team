@@ -1,4 +1,6 @@
 import type { SVGProps } from "react";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 // Filled OMUZ icon set — matches the Figma (bold, solid icons, not outlines).
 // Negative space uses var(--sidebar) so cutouts read correctly in both themes.
@@ -333,36 +335,53 @@ export function FlagTJ(p: P) {
   );
 }
 
-// OMUZ logo mark — rounded roof/house with antenna dot.
-export function LogoMark(p: P) {
+// Brand artwork, lifted straight from the Figma. Two cuts of the same file:
+// the wordmark wherever there is room, the capped "o" on its own where there
+// is not (collapsed sidebar, mobile bar).
+type LogoProps = { className?: string; priority?: boolean };
+
+export function Logo({ className, priority }: LogoProps) {
   return (
-    <svg
-      width={30}
-      height={30}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...p}
-    >
-      <path
-        d="M16 3.5 27 12v14.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V12L16 3.5Z"
-        fill="currentColor"
-        opacity=".12"
+    <div className={cn("relative inline-flex items-center shrink-0", className)}>
+      <Image
+        src="/logo-purple.png"
+        alt="OMUZ"
+        width={354}
+        height={101}
+        priority={priority}
+        className="block dark:hidden h-8 w-auto object-contain"
       />
-      <path
-        d="m4.5 13 11.5-9 11.5 9"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      <Image
+        src="/logo-white.png"
+        alt="OMUZ"
+        width={354}
+        height={101}
+        priority={priority}
+        className="hidden dark:block h-8 w-auto object-contain"
       />
-      <circle cx="16" cy="19" r="6.5" stroke="currentColor" strokeWidth="2.4" />
-      <path
-        d="M16 6.5v3"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
+    </div>
+  );
+}
+
+export function LogoMark({ className, priority }: LogoProps) {
+  return (
+    <div className={cn("relative inline-flex items-center justify-center shrink-0", className)}>
+      <Image
+        src="/icon-purple.png"
+        alt="OMUZ"
+        width={32}
+        height={32}
+        priority={priority}
+        className="block dark:hidden h-8 w-8 object-contain mx-auto"
       />
-    </svg>
+      <Image
+        src="/icon-white.png"
+        alt="OMUZ"
+        width={32}
+        height={32}
+        priority={priority}
+        className="hidden dark:block h-8 w-8 object-contain mx-auto"
+      />
+    </div>
   );
 }

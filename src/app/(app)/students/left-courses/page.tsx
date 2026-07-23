@@ -8,7 +8,7 @@ import { enrollmentsApi, groupsApi, queryKeys } from "@/lib/api/resources";
 import type { EnrollmentDto } from "@/lib/api/types";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

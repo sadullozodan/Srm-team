@@ -108,7 +108,15 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
 
   if (res.status === 204) return undefined as T;
   const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  if (!text) return undefined as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError(
+      res.status,
+      `Backend API server returned HTML instead of JSON (${res.status} ${res.statusText}). Check NEXT_PUBLIC_API_BASE_URL in .env.local`
+    );
+  }
 }
 
 // Turn any thrown error into a user-facing message, with clearer copy for the

@@ -7,7 +7,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import {
   branchesApi,
   coursesApi,
@@ -17,10 +16,15 @@ import {
 } from "@/lib/api/resources";
 import { ApiError } from "@/lib/api/client";
 import type { GroupDto, GroupStatus, GroupWriteDto } from "@/lib/api/types";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  FormActions,
+  FormError,
+  LabeledField as Field,
+  Panel,
+  SectionTitle,
+} from "@/app/(app)/panels";
 import { cn } from "@/lib/utils";
 
 const STATUSES: GroupStatus[] = ["New", "Started", "Finished", "Cancelled"];
@@ -151,9 +155,9 @@ export function GroupForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardContent className="space-y-5 p-6">
-          <h2 className="text-lg font-semibold">Group details</h2>
+      <Panel>
+        <SectionTitle>Group details</SectionTitle>
+        <div className="space-y-5">
 
           <Field label="Group name" required>
             <Input
@@ -332,50 +336,17 @@ export function GroupForm({
               </p>
             )}
           </Field>
-        </CardContent>
-      </Card>
+        </div>
+      </Panel>
 
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm whitespace-pre-line text-destructive">
-          {error}
-        </p>
-      )}
+      <FormError message={error} />
 
-      <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" className="h-10" disabled={mutation.isPending}>
-          {mutation.isPending && <Loader2 className="animate-spin" />}
-          Save group
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="h-10"
-          onClick={() => router.back()}
-        >
-          Cancel
-        </Button>
-      </div>
+      <FormActions
+        saveLabel={groupId ? "SAVE CHANGES" : "SAVE GROUP"}
+        saving={mutation.isPending}
+        onCancel={() => router.back()}
+      />
     </form>
   );
 }
 
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium">
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </label>
-      {children}
-    </div>
-  );
-}

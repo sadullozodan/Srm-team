@@ -33,7 +33,7 @@ export function MobileNav() {
           aria-label="Menu"
           className={`${tabCls} ${openMobile ? "text-primary" : "text-muted-foreground"}`}
         >
-          <LogoMark className="size-6" />
+          <LogoMark className="h-6" />
           Omuz
         </button>
 

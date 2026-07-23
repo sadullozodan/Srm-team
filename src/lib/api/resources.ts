@@ -4,63 +4,70 @@
 
 import { apiFetch, toQuery } from "./client";
 import type {
-  AuthResponse,
-  BranchDto,
-  BranchWriteDto,
-  CourseDto,
-  EnrollmentDto,
-  CourseWriteDto,
-  DashboardStatsDto,
-  EmployeeDto,
-  EmployeeWriteDto,
-  GraduateDto,
-  GraduateWriteDto,
-  LeadDto,
-  LeadWriteDto,
-  JobDto,
-  JobWriteDto,
-  ScheduleEntryDto,
-  ScheduleEntryWriteDto,
-  SmsMailingDto,
-  SendSmsRequest,
-  SmsTemplateDto,
-  SmsTemplateWriteDto,
-  UserDto,
-  PermissionDto,
-  PermissionWriteDto,
-  RoleDto,
-  RoleWriteDto,
-  PaymentDto,
-  PaymentWriteDto,
-  DebtorDto,
-  DebtorWriteDto,
-  BudgetDto,
-  BudgetWriteDto,
-  ExpenseDto,
-  ExpenseWriteDto,
-  SalaryDto,
-  SalaryWriteDto,
+  AbsenteeDto,
+  AddLessonRequest,
   AdvanceDto,
   AdvanceWriteDto,
+  AttendanceRecordDto,
+  AuthResponse,
+  BranchDto,
+  BudgetDto,
+  BudgetWriteDto,
+  CourseDto,
+  CourseWriteDto,
+  CreateWeekRequest,
+  DailyAttendanceDto,
+  DashboardStatsDto,
+  DebtorDto,
+  DebtorWriteDto,
+  EmployeeDto,
+  EmployeeWriteDto,
+  EnrollmentDto,
+  ExpenseDto,
+  ExpenseWriteDto,
+  ForgotPasswordRequest,
+  GraduateDto,
+  GraduateWriteDto,
   GroupDto,
   GroupWriteDto,
-  ListParams,
-  PositionDto,
-  LoginRequest,
-  RegisterRequest,
-  PagedResult,
-  StudentDto,
-  StudentWriteDto,
-  UserProfileDto,
-  AddLessonRequest,
-  AttendanceRecordDto,
-  CreateWeekRequest,
+  JobDto,
+  JobWriteDto,
   JournalLessonDto,
   JournalWeekDto,
+  LeadDto,
+  LeadWriteDto,
+  LeftCoursesPointDto,
+  ListParams,
+  LoginRequest,
+  MentorLevelDto,
+  NotificationDto,
+  PagedResult,
+  PaymentDto,
+  PaymentWriteDto,
+  PermissionDto,
+  PermissionWriteDto,
+  PositionDto,
+  PositionWriteDto,
+  RegisterRequest,
+  ResetPasswordByCodeRequest,
+  RoleDto,
+  RoleWriteDto,
+  SalaryDto,
+  SalaryWriteDto,
+  ScheduleEntryDto,
+  ScheduleEntryWriteDto,
+  SendSmsRequest,
   SetAttendanceRequest,
   SetWeekResultRequest,
-  WeekResultDto,
+  SmsMailingDto,
+  SmsTemplateDto,
+  SmsTemplateWriteDto,
+  StudentDto,
+  StudentWriteDto,
   TokenAccountDto,
+  UserDto,
+  UserProfileDto,
+  WeekResultDto,
 } from "./types";
 
 export interface CrudApi<TDto, TWrite> {
@@ -91,10 +98,12 @@ export const studentsApi = crud<StudentDto, StudentWriteDto>("Students");
 export const groupsApi = crud<GroupDto, GroupWriteDto>("Groups");
 export const employeesApi = crud<EmployeeDto, EmployeeWriteDto>("Employees");
 export const coursesApi = crud<CourseDto, CourseWriteDto>("Courses");
-export const branchesApi = crud<BranchDto, BranchWriteDto>("Branches");
-export const positionsApi = crud<PositionDto, unknown>("Positions");
+export const branchesApi = crud<BranchDto, unknown>("Branches");
+export const positionsApi = crud<PositionDto, PositionWriteDto>("Positions");
+export const mentorLevelsApi = crud<MentorLevelDto, unknown>("MentorLevels");
 
-// Read-only from the dashboard's point of view.
+// Accounting + module resources. Each is a plain paged list controller.
+// (`paymentsApi` is read by the dashboard income card too.)
 export const leadsApi = crud<LeadDto, LeadWriteDto>("Leads");
 export const paymentsApi = crud<PaymentDto, PaymentWriteDto>("Payments");
 export const debtorsApi = crud<DebtorDto, DebtorWriteDto>("Debtors");
@@ -145,10 +154,39 @@ export const authApi = {
   register: (body: RegisterRequest) =>
     apiFetch<AuthResponse>("/api/Auth/register", { method: "POST", json: body }),
   me: () => apiFetch<UserProfileDto>("/api/Auth/me"),
+  // Password recovery by SMS code: request one, then reset with it.
+  forgotPassword: (body: ForgotPasswordRequest) =>
+    apiFetch<void>("/api/Auth/forgot-password", { method: "POST", json: body }),
+  resetPassword: (body: ResetPasswordByCodeRequest) =>
+    apiFetch<void>("/api/Auth/reset-password", { method: "POST", json: body }),
 };
 
 export const dashboardApi = {
   stats: () => apiFetch<DashboardStatsDto>("/api/Dashboard/stats"),
+  // month is 1-12, as the API counts them.
+  attendance: (year: number, month: number) =>
+    apiFetch<DailyAttendanceDto[]>(
+      `/api/Dashboard/attendance${toQuery({ year, month })}`,
+    ),
+  // date is a plain yyyy-mm-dd day, not a timestamp.
+  absentees: (date: string) =>
+    apiFetch<AbsenteeDto[]>(`/api/Dashboard/absentees${toQuery({ date })}`),
+  leftCourses: (year: number) =>
+    apiFetch<LeftCoursesPointDto[]>(
+      `/api/Dashboard/left-courses${toQuery({ year })}`,
+    ),
+};
+
+export const notificationsApi = {
+  list: (params: ListParams = {}) =>
+    apiFetch<PagedResult<NotificationDto>>(
+      `/api/Notifications${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+  unreadCount: () => apiFetch<number>("/api/Notifications/unread-count"),
+  markRead: (id: string) =>
+    apiFetch<void>(`/api/Notifications/${id}/read`, { method: "PUT" }),
+  markAllRead: () =>
+    apiFetch<void>("/api/Notifications/read-all", { method: "PUT" }),
 };
 
 // Coins/tokens — a student's balance (role-based; only students have an account).
@@ -188,6 +226,12 @@ export const journalApi = {
 export const queryKeys = {
   me: ["me"] as const,
   dashboard: ["dashboard", "stats"] as const,
+  dashboardAttendance: (year: number, month: number) =>
+    ["dashboard", "attendance", year, month] as const,
+  dashboardAbsentees: (date: string) => ["dashboard", "absentees", date] as const,
+  dashboardLeftCourses: (year: number) =>
+    ["dashboard", "left-courses", year] as const,
+  notifications: ["notifications"] as const,
   list: (resource: string, params?: ListParams) =>
     params ? ([resource, "list", params] as const) : ([resource, "list"] as const),
   detail: (resource: string, id: string) => [resource, "detail", id] as const,

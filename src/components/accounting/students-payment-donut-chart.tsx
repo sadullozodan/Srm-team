@@ -1,0 +1,91 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+
+export interface PaymentSegment {
+  name: string;
+  value: number;
+  percentage: string;
+  count: number;
+  color: string;
+}
+
+export interface StudentsPaymentDonutChartProps {
+  data?: PaymentSegment[];
+  totalLabel?: string;
+  totalCount?: number;
+}
+
+export function StudentsPaymentDonutChart({
+  data = [],
+  totalLabel = "Total",
+  totalCount = 0,
+}: StudentsPaymentDonutChartProps) {
+  // Defer the Recharts container to after mount (real width + soft fade-in).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  return (
+    <div className="w-full h-full min-h-[330px] bg-white dark:bg-slate-900/60 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+      {/* Title */}
+      <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
+        Students payment
+      </h3>
+
+      {/* Main Donut Visual */}
+      <div className="relative size-44 sm:size-48 mx-auto flex items-center justify-center shrink-0 my-1">
+        {mounted && (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={74}
+                paddingAngle={2}
+                dataKey="value"
+                stroke="none"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+
+        {/* Center Overlay Text matching screenshot */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+          <span className="text-xs font-medium text-slate-400">
+            {totalLabel}
+          </span>
+          <span className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+            {totalCount}
+          </span>
+        </div>
+      </div>
+
+      {/* Bottom Legend Matching Screenshot */}
+      <div className="space-y-2.5 pt-2">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center justify-between text-xs font-semibold">
+            <div className="flex items-center gap-2">
+              <span
+                className="size-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-slate-600 dark:text-slate-300 font-medium">
+                {item.name}
+              </span>
+            </div>
+            <span className="text-slate-900 dark:text-slate-100 font-extrabold tracking-wide">
+              {item.percentage} - {item.count}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

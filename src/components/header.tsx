@@ -137,7 +137,7 @@ function AccountMenu() {
   );
 }
 
-function ThemeToggle() {
+export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
   return (
     <Button
@@ -153,7 +153,7 @@ function ThemeToggle() {
   );
 }
 
-function LangMenu() {
+export function LangMenu() {
   const [lang, setLang] = useState<LangCode>("EN");
   const current = LANGS.find((l) => l.code === lang)!;
   return (

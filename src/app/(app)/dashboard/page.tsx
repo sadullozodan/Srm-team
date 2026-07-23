@@ -42,7 +42,8 @@ export default function DashboardPage() {
   // Everything the stats endpoint does not cover. These fill in as they arrive
   // rather than holding up the whole page.
   const graduates = useList<GraduateDto>(graduatesApi, "Graduates", 5);
-  const students = useList<StudentDto>(studentsApi, "Students", 6);
+  // The six most recent, listed under the Enroll chart.
+  const students = useList<StudentDto>(studentsApi, "Students", 20);
   const leads = useList(leadsApi, "Leads", 500);
   const payments = useList(paymentsApi, "Payments", 500);
   const groups = useList(groupsApi, "Groups", 200);
@@ -67,7 +68,7 @@ export default function DashboardPage() {
           graduates={graduates}
           leads={leadsSeries(leads)}
           enroll={enrollSeries(groups)}
-          enrollRows={students.map(toEnrollRow)}
+          enrollRows={students.slice(0, 6).map(toEnrollRow)}
           delta={incomeDelta(payments)}
         />
       )}

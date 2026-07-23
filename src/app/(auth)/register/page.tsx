@@ -1,24 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { LogoMark } from "@/components/icons";
+import { Eye, EyeOff } from "lucide-react";
+import { Loader } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/context";
 import { ApiError } from "@/lib/api/client";
+import { normalizePhone } from "@/lib/phone";
+import { AuthTabs } from "../auth-tabs";
+
+// Field order is the Figma's. Everything after `phone` is optional on the
+// backend, so an empty box is sent as null rather than an empty string.
+const FIELDS = [
+  { name: "firstName", label: "First name", type: "text", autoComplete: "given-name", required: true },
+  { name: "lastName", label: "Last name", type: "text", autoComplete: "family-name", required: true },
+  { name: "birthDate", label: "Date of birthday", type: "date", autoComplete: "bday", required: false },
+  { name: "address", label: "Address", type: "text", autoComplete: "street-address", required: false },
+  { name: "phone", label: "Phone", type: "tel", autoComplete: "tel", required: true },
+  { name: "parentPhone", label: "Parent's phone", type: "tel", autoComplete: "off", required: false },
+] as const;
+
+type FieldName = (typeof FIELDS)[number]["name"];
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated, isLoading } = useAuth();
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [values, setValues] = useState<Record<FieldName, string>>({
+    firstName: "",
+    lastName: "",
+    birthDate: "",
+    address: "",
+    phone: "",
+    parentPhone: "",
+  });
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,19 +48,23 @@ export default function RegisterPage() {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
-
-    if (password !== confirm) {
-      setError("Passwords don't match.");
-      return;
-    }
-
     setSubmitting(true);
     try {
-      await register({ firstName, lastName, phone, password });
+      // The phone doubles as the account's userName, so it has to be stored in
+      // the same shape the login screen will send.
+      await register({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phone: normalizePhone(values.phone),
+        password,
+        birthDate: values.birthDate || null,
+        address: values.address || null,
+        parentPhone: values.parentPhone ? normalizePhone(values.parentPhone) : null,
+      });
       router.replace("/");
     } catch (err) {
       if (err instanceof ApiError) {
-        // Duplicate phone / weak password come back as 400 with field details.
+        // Duplicate phone and weak password both come back as 400.
         setError(err.message || "Couldn't create the account.");
       } else {
         setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -53,143 +75,77 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex items-center gap-2 text-primary">
-            <LogoMark />
-            <span className="text-2xl font-bold tracking-tight text-foreground">
-              OMUZ
-            </span>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl bg-card p-6 shadow-sm sm:p-8"
+    >
+      <AuthTabs />
+
+      <div className="mt-8 space-y-4">
+        {FIELDS.map((field) => (
+          <div key={field.name}>
+            <label htmlFor={field.name} className="sr-only">
+              {field.label}
+            </label>
+            <Input
+              id={field.name}
+              type={field.type}
+              value={values[field.name]}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, [field.name]: e.target.value }))
+              }
+              autoComplete={field.autoComplete}
+              required={field.required}
+              maxLength={100}
+              className="h-13"
+              placeholder={field.label}
+            />
           </div>
-          <p className="text-sm text-muted-foreground">Create a new account</p>
+        ))}
+
+        <div className="relative">
+          <label htmlFor="password" className="sr-only">
+            Password
+          </label>
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            required
+            minLength={6}
+            className="h-13 pr-11"
+            placeholder="Password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? (
+              <EyeOff className="size-5" />
+            ) : (
+              <Eye className="size-5" />
+            )}
+          </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-2xl border border-border bg-card p-6 shadow-sm"
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label htmlFor="firstName" className="text-sm font-medium">
-                  First name
-                </label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  autoComplete="given-name"
-                  required
-                  className="h-10"
-                  placeholder="First name"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="lastName" className="text-sm font-medium">
-                  Last name
-                </label>
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  autoComplete="family-name"
-                  required
-                  className="h-10"
-                  placeholder="Last name"
-                />
-              </div>
-            </div>
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            {error}
+          </p>
+        )}
 
-            <div className="space-y-1.5">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Phone number
-              </label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                autoComplete="tel"
-                required
-                className="h-10"
-                placeholder="e.g. 900000001"
-              />
-              <p className="text-xs text-muted-foreground">
-                You&apos;ll sign in with this phone number.
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
-                  required
-                  className="h-10 pr-10"
-                  placeholder="Create a password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="confirm" className="text-sm font-medium">
-                Confirm password
-              </label>
-              <Input
-                id="confirm"
-                type={showPassword ? "text" : "password"}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                autoComplete="new-password"
-                required
-                className="h-10"
-                placeholder="Repeat your password"
-              />
-            </div>
-
-            {error && (
-              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm whitespace-pre-line text-destructive">
-                {error}
-              </p>
-            )}
-
-            <Button
-              type="submit"
-              size="lg"
-              className="h-10 w-full"
-              disabled={submitting}
-            >
-              {submitting && <Loader2 className="animate-spin" />}
-              Create account
-            </Button>
-          </div>
-        </form>
-
-        <p className="mt-5 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/login" className="font-medium text-primary hover:underline">
-            Sign in
-          </Link>
-        </p>
+        <Button type="submit" className="h-12 w-full" disabled={submitting}>
+          {submitting && <Loader size="sm" />}
+          Sign up
+        </Button>
       </div>
-    </div>
+    </form>
   );
 }

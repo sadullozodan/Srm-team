@@ -80,7 +80,10 @@ export function Stepper({
       <StepButton label="Previous" onClick={() => onStep(-1)}>
         <ChevronLeft className="size-4" />
       </StepButton>
-      <span className="min-w-20 text-center text-sm font-medium">{label}</span>
+      {/* Labels are derived from today's date, which the prerender cannot know. */}
+      <span suppressHydrationWarning className="min-w-20 text-center text-sm font-medium">
+        {label}
+      </span>
       <StepButton label="Next" onClick={() => onStep(1)}>
         <ChevronRight className="size-4" />
       </StepButton>
@@ -110,15 +113,20 @@ function StepButton({
 }
 
 /**
- * Month picker state for a Stepper. Wraps around December → January so the
- * cards do not each repeat the same modulo maths.
+ * Month + year state for a Stepper, starting at the current month. Stepping
+ * past December rolls the year, so cards can query a real month.
  */
-export function useMonthStepper(startMonth = 0) {
-  const [offset, setOffset] = useState(startMonth);
-  const index = ((offset % 12) + 12) % 12;
+export function useMonthPicker() {
+  const [date, setDate] = useState(() => new Date());
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-11
 
   return {
-    monthName: MONTHS[index],
-    step: (delta: number) => setOffset(offset + delta),
+    year,
+    month,
+    monthName: MONTHS[month],
+    label: `${MONTHS[month]} ${year}`,
+    step: (delta: number) =>
+      setDate((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1)),
   };
 }

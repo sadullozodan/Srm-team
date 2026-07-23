@@ -1,6 +1,6 @@
 "use client";
 
-import { CardTitle, Panel, Stepper, money, useMonthStepper } from "../parts";
+import { CardTitle, Panel, Stepper, money, useMonthPicker } from "../parts";
 
 export function IncomeCard({
   income,
@@ -11,7 +11,7 @@ export function IncomeCard({
   delta: number | null;
   collected: number;
 }) {
-  const { monthName, step } = useMonthStepper(new Date().getMonth());
+  const { monthName, step } = useMonthPicker();
 
   return (
     <Panel className="flex flex-wrap items-center justify-between gap-6 p-6">

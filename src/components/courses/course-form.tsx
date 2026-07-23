@@ -6,13 +6,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { coursesApi } from "@/lib/api/resources";
 import { ApiError } from "@/lib/api/client";
 import type { CourseDto, CourseWriteDto } from "@/lib/api/types";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  FormActions,
+  FormError,
+  LabeledField as Field,
+  Panel,
+  SectionTitle,
+} from "@/app/(app)/panels";
 
 interface FormState {
   title: string;
@@ -80,10 +85,10 @@ export function CourseForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-        <Card>
-          <CardContent className="space-y-5 p-6">
-            <h2 className="text-lg font-semibold">Course details</h2>
+        <Panel>
+          <SectionTitle>Course details</SectionTitle>
 
+          <div className="space-y-5">
             <Field label="Title" required>
               <Input
                 value={form.title}
@@ -126,13 +131,12 @@ export function CourseForm({
                 placeholder="What does this course cover?"
               />
             </Field>
-          </CardContent>
-        </Card>
+          </div>
+        </Panel>
 
-        <Card className="h-fit">
-          <CardContent className="space-y-4 p-6">
-            <h2 className="text-lg font-semibold">Logo</h2>
-            <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border p-6">
+        <Panel className="h-fit">
+          <SectionTitle>Logo</SectionTitle>
+          <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border p-6">
               {form.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -151,52 +155,17 @@ export function CourseForm({
                 className="h-10"
                 placeholder="Logo URL"
               />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </Panel>
       </div>
 
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm whitespace-pre-line text-destructive">
-          {error}
-        </p>
-      )}
+      <FormError message={error} />
 
-      <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" className="h-10" disabled={mutation.isPending}>
-          {mutation.isPending && <Loader2 className="animate-spin" />}
-          Save course
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="h-10"
-          onClick={() => router.back()}
-        >
-          Cancel
-        </Button>
-      </div>
+      <FormActions
+        saveLabel="SAVE COURSE"
+        saving={mutation.isPending}
+        onCancel={() => router.back()}
+      />
     </form>
-  );
-}
-
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium">
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </label>
-      {children}
-    </div>
   );
 }

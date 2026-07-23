@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, TriangleAlert } from "lucide-react";
+import { Loader } from "@/components/ui/Loading";
+import { TriangleAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth/context";
 import { AppShell } from "@/components/app-shell";
 
@@ -19,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (isLoading || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-primary" />
+        <Loader size="md" />
       </div>
     );
   }

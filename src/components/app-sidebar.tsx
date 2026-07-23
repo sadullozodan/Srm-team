@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { NAV, type NavItem } from "@/lib/nav";
-import { LogoMark, NavIcon } from "./icons";
+import { Logo, LogoMark, NavIcon } from "./icons";
 import {
   Sidebar,
   SidebarContent,
@@ -44,12 +44,11 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 px-1 py-1 text-primary"
+          className="flex items-center group-data-[collapsible=icon]:justify-center px-1 py-1 text-primary transition-all duration-200 hover:opacity-90"
         >
-          <LogoMark className="shrink-0" />
-          <span className="text-2xl font-extrabold tracking-tight group-data-[collapsible=icon]:hidden">
-            OMUZ
-          </span>
+          {/* Full logo when sidebar is open, centered icon when collapsed */}
+          <Logo className="h-8 w-auto group-data-[collapsible=icon]:hidden transition-opacity" />
+          <LogoMark className="hidden h-8 w-8 shrink-0 group-data-[collapsible=icon]:block mx-auto transition-opacity" />
         </Link>
       </SidebarHeader>
 

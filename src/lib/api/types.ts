@@ -49,10 +49,11 @@ export interface ListParams {
 
 // ---- Auth ----
 export interface LoginRequest {
-  userName: string;
+  phone: string;
   password: string;
 }
 
+// Registration is by phone now — no username, no full name.
 export interface RegisterRequest {
   firstName: string;
   lastName: string;
@@ -61,6 +62,17 @@ export interface RegisterRequest {
   birthDate?: string | null;
   address?: string | null;
   parentPhone?: string | null;
+}
+
+export interface ForgotPasswordRequest {
+  phone: string;
+}
+
+// The code arrives by SMS; it is not returned by forgot-password.
+export interface ResetPasswordByCodeRequest {
+  phone: string;
+  code: string;
+  newPassword: string;
 }
 
 export interface RefreshRequest {
@@ -316,6 +328,11 @@ export interface PositionDto {
   color: string | null;
 }
 
+export interface PositionWriteDto {
+  name: string;
+  color?: string | null;
+}
+
 // ---- Branches ----
 export interface BranchDto {
   id: string;
@@ -537,7 +554,7 @@ export interface PaymentDto {
   id: string;
   studentId: string;
   studentName: string | null;
-  groupId: string;
+  groupId: string | null;
   groupName: string | null;
   branchId: string | null;
   branchName: string | null;
@@ -546,6 +563,29 @@ export interface PaymentDto {
   discount: number;
   date: string;
   status: PaymentStatus;
+}
+
+export interface AdvanceDto {
+  id: string;
+  employeeId: string;
+  employeeName: string | null;
+  year: number;
+  month: number;
+  amount: number;
+  description: string | null;
+  status: AdvanceStatus;
+}
+
+export interface BudgetDto {
+  id: string;
+  categoryName: string | null;
+  fromDate: string;
+  toDate: string;
+  amountAllocated: number;
+  amountSpent: number;
+  branchId: string | null;
+  branchName: string | null;
+  status: ActivationStatus;
 }
 
 export interface DebtorDto {
@@ -559,18 +599,6 @@ export interface DebtorDto {
   totalPaidAmount: number;
   notes: string | null;
   status: DebtStatus;
-}
-
-export interface BudgetDto {
-  id: string;
-  categoryName: string | null;
-  fromDate: string;
-  toDate: string;
-  amountAllocated: number;
-  amountSpent: number;
-  branchId: string | null;
-  branchName: string | null;
-  status: ActivationStatus;
 }
 
 export interface ExpenseDto {
@@ -599,15 +627,27 @@ export interface SalaryDto {
   status: ActivationStatus;
 }
 
-export interface AdvanceDto {
+// ---- Mentor levels ----
+export type MentorLevelType =
+  | "Intern"
+  | "Junior1"
+  | "Junior2"
+  | "Junior3"
+  | "Middle1"
+  | "Middle2"
+  | "Middle3"
+  | "Senior1"
+  | "Senior2"
+  | "Senior3";
+
+export interface MentorLevelDto {
   id: string;
   employeeId: string;
   employeeName: string | null;
   year: number;
   month: number;
-  amount: number;
-  description: string | null;
-  status: AdvanceStatus;
+  level: MentorLevelType;
+  hourRate: number;
 }
 
 export interface PaymentWriteDto {
@@ -697,4 +737,36 @@ export interface GraduateWriteDto {
   serialNumber?: string | null;
   certificateIssued: boolean;
   status: GraduateStatus;
+}
+
+// ---- Dashboard charts ----
+export interface DailyAttendanceDto {
+  day: number;
+  late: number;
+  absent: number;
+}
+
+export interface LeftCoursesPointDto {
+  month: number;
+  left: number;
+  returned: number;
+}
+
+// Who was away today, and why — the table under the Present/Absent/Late pills.
+export interface AbsenteeDto {
+  studentId: string;
+  studentName: string | null;
+  groupId: string | null;
+  groupName: string | null;
+  phones: string[] | null;
+  reason: string | null;
+}
+
+// ---- Notifications ----
+export interface NotificationDto {
+  id: string;
+  title: string | null;
+  message: string | null;
+  isRead: boolean;
+  createdAt: string;
 }
