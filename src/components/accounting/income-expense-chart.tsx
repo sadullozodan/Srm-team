@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -88,6 +88,10 @@ function axisMax(data: IncomeExpenseItem[]) {
 
 export function IncomeExpenseChart({ data, year, years, onYearChange }: IncomeExpenseChartProps) {
   const top = axisMax(data);
+  // Recharts' ResponsiveContainer needs a real width, so only render it after
+  // mount — this also gives the chart a soft fade-in.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <div className="w-full bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-5">
@@ -127,8 +131,9 @@ export function IncomeExpenseChart({ data, year, years, onYearChange }: IncomeEx
       </div>
 
       {/* Chart Canvas */}
-      <div className="w-full h-[340px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full h-[260px]">
+        {mounted && (
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 15, right: 15, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-800" vertical={false} />
               <XAxis
@@ -168,6 +173,7 @@ export function IncomeExpenseChart({ data, year, years, onYearChange }: IncomeEx
               />
             </LineChart>
           </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

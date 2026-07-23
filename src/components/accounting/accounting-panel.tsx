@@ -9,10 +9,10 @@ import {
   Frown,
   Smile,
   Wallet,
-  ChevronDown,
   ChevronRight,
   TrendingDown,
 } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 import {
   branchesApi,
   expensesApi,
@@ -99,27 +99,20 @@ export function AccountingPanel() {
           Accounting
         </h1>
 
-        {/* Branch Selector — real branches from /api/Branches. */}
-        <div className="relative">
-          <label className="absolute -top-2 left-3 bg-slate-50 dark:bg-card px-1 text-[10px] text-slate-400 font-medium z-10">
-            Branch
-          </label>
-          <div className="relative flex items-center">
-            <select
-              value={branchId}
-              onChange={(event) => setBranchId(event.target.value)}
-              className="appearance-none px-3.5 py-1.5 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 pr-8 cursor-pointer shadow-xs"
-            >
-              <option value="">All branches</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.title ?? "—"}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2.5 size-3.5 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
+        {/* Custom Styled Branch Selector — real branches from /api/Branches. */}
+        <CustomSelect
+          label="Branch"
+          value={branchId}
+          onChange={setBranchId}
+          options={[
+            { label: "All branches", value: "" },
+            ...branches.map((branch) => ({
+              label: branch.title ?? "—",
+              value: branch.id,
+            })),
+          ]}
+          className="w-40"
+        />
       </div>
 
       {/* 2. KPI Gradient Cards */}
@@ -131,6 +124,7 @@ export function AccountingPanel() {
           icon={DollarSign}
           gradient="from-[#2ecc71] via-[#22c55e] to-[#10b981]"
           labelClass="text-emerald-100"
+          shadowClass="hover:shadow-emerald-500/20"
         />
         <KpiCard
           label="Paid amount"
@@ -139,6 +133,7 @@ export function AccountingPanel() {
           icon={PiggyBank}
           gradient="from-[#a855f7] via-[#9333ea] to-[#8b5cf6]"
           labelClass="text-purple-100"
+          shadowClass="hover:shadow-purple-500/20"
         />
         <KpiCard
           label="Not paid"
@@ -147,6 +142,7 @@ export function AccountingPanel() {
           icon={Frown}
           gradient="from-[#f97316] via-[#ff7043] to-[#fb923c]"
           labelClass="text-orange-100"
+          shadowClass="hover:shadow-orange-500/20"
         />
         <KpiCard
           label="Net"
@@ -155,6 +151,8 @@ export function AccountingPanel() {
           icon={Smile}
           gradient="from-[#38bdf8] via-[#0284c7] to-[#60a5fa]"
           labelClass="text-sky-100"
+          shadowClass="hover:shadow-sky-500/20"
+          href="/accounting/net"
         />
       </div>
 
@@ -171,17 +169,17 @@ export function AccountingPanel() {
             <Link
               key={action.label}
               href={action.href}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-2xs hover:shadow-xs hover:border-indigo-200 transition-all group"
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-indigo-500/40 dark:hover:border-indigo-500/50 transition-all duration-200 group"
             >
               <div className="flex items-center gap-3">
-                <div className="size-9 rounded-full bg-[#5842f4] text-white flex items-center justify-center shrink-0">
+                <div className="size-9 rounded-full bg-[#5842f4] text-white flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-200">
                   <Icon className="size-4 stroke-[2.5]" />
                 </div>
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {action.label}
                 </span>
               </div>
-              <ChevronRight className="size-4 text-[#5842f4] group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="size-4 text-[#5842f4] group-hover:translate-x-1 transition-transform duration-200" />
             </Link>
           );
         })}
@@ -355,32 +353,34 @@ interface KpiCardProps {
   icon: React.ComponentType<{ className?: string }>;
   gradient: string;
   labelClass: string;
+  /** Per-card coloured hover glow, e.g. "hover:shadow-emerald-500/20". */
+  shadowClass: string;
   href?: string;
 }
 
-function KpiCard({ label, value, loading, icon: Icon, gradient, labelClass, href }: KpiCardProps) {
+function KpiCard({ label, value, loading, icon: Icon, gradient, labelClass, shadowClass, href }: KpiCardProps) {
   const body = (
     <>
-      <div className={`text-xs font-medium opacity-90 ${labelClass}`}>{label}</div>
+      <div className={`text-xs font-medium opacity-90 group-hover:opacity-100 transition-opacity ${labelClass}`}>
+        {label}
+      </div>
       {loading ? (
         <div className="mt-2 h-8 w-24 rounded bg-white/30 animate-pulse" />
       ) : (
         <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">{value}</div>
       )}
-      <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none">
-        <Icon className="size-6 text-white opacity-40" />
+      {/* Watermark Icon (Subtle Translucent) */}
+      <div className="absolute top-1/2 -translate-y-1/2 right-3.5 size-12 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center pointer-events-none group-hover:scale-115 group-hover:rotate-6 transition-transform duration-300">
+        <Icon className="size-6 text-white opacity-40 group-hover:opacity-70 transition-opacity" />
       </div>
     </>
   );
 
-  const className = `relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r ${gradient} text-white shadow-xs`;
+  const className = `group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r ${gradient} text-white shadow-xs hover:shadow-lg ${shadowClass} hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer`;
 
   if (href) {
     return (
-      <Link
-        href={href}
-        className={`${className} block hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all`}
-      >
+      <Link href={href} className={`${className} block`}>
         {body}
       </Link>
     );

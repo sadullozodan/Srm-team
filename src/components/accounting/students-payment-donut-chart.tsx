@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 export interface PaymentSegment {
@@ -22,6 +22,10 @@ export function StudentsPaymentDonutChart({
   totalLabel = "Total",
   totalCount = 0,
 }: StudentsPaymentDonutChartProps) {
+  // Defer the Recharts container to after mount (real width + soft fade-in).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
     <div className="w-full h-full min-h-[330px] bg-white dark:bg-slate-900/60 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       {/* Title */}
@@ -30,8 +34,9 @@ export function StudentsPaymentDonutChart({
       </h3>
 
       {/* Main Donut Visual */}
-      <div className="relative size-48 sm:size-52 mx-auto flex items-center justify-center shrink-0 my-2">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="relative size-44 sm:size-48 mx-auto flex items-center justify-center shrink-0 my-1">
+        {mounted && (
+          <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={data}
@@ -49,6 +54,7 @@ export function StudentsPaymentDonutChart({
               </Pie>
             </PieChart>
           </ResponsiveContainer>
+        )}
 
         {/* Center Overlay Text matching screenshot */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
