@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { Loader } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/context";
@@ -141,7 +142,7 @@ export default function RegisterPage() {
         )}
 
         <Button type="submit" className="h-12 w-full" disabled={submitting}>
-          {submitting && <Loader2 className="animate-spin" />}
+          {submitting && <Loader size="sm" />}
           Sign up
         </Button>
       </div>

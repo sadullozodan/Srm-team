@@ -142,4 +142,60 @@
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   }
+  select option {
+    background-color: var(--card);
+    color: var(--foreground);
+    padding: 8px 12px;
+  }
+  .dark select option {
+    background-color: #191d2b;
+    color: #e7e9f2;
+  }
 }
+
+/* Animated 3-Tier Isometric Stacked Loader */
+@keyframes layerTopFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-7px) scale(1.03);
+    opacity: 0.9;
+  }
+}
+
+@keyframes layerMidFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(-4px) scale(1.02);
+    opacity: 0.95;
+  }
+}
+
+@keyframes layerBotFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translateY(-2px) scale(1.01);
+    opacity: 0.8;
+  }
+}
+
+.animate-layer-top {
+  animation: layerTopFloat 2s ease-in-out infinite;
+}
+
+.animate-layer-mid {
+  animation: layerMidFloat 2s ease-in-out 0.2s infinite;
+}
+
+.animate-layer-bot {
+  animation: layerBotFloat 2s ease-in-out 0.4s infinite;
+}
+

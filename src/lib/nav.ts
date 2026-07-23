@@ -46,10 +46,7 @@ export const NAV: NavItem[] = [
     icon: "accounting",
     children: [
       { label: "Overview", href: "/accounting" },
-      { label: "Payment's", href: "/accounting/payments" },
-      { label: "Debtors", href: "/accounting/debtors" },
       { label: "Budget", href: "/accounting/budget" },
-      { label: "Expenses", href: "/accounting/expenses" },
       { label: "Salary", href: "/accounting/salary" },
       { label: "Avans", href: "/accounting/avans" },
     ],
