@@ -144,26 +144,42 @@
   }
 }
 
-/* Theme switch: reveal the new theme as a circle from the centre.
-   The clip animation is driven imperatively in ThemeToggle; here we just drop
-   the default cross-fade so only the circular wipe shows. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
+/* Theme switch: reveal the new theme through a circular hole that grows from a
+   point (the screen centre). ThemeToggle drops an overlay holding the OLD
+   background on top, switches the theme underneath, then this mask punches a
+   transparent circle whose radius (--theme-reveal) animates outward, so the new
+   theme is revealed growing from the centre. Real content, every browser. */
+@property --theme-reveal {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
 }
-::view-transition-old(root) {
-  z-index: 0;
+.theme-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  --theme-reveal: 0px;
+  -webkit-mask-image: radial-gradient(
+    circle var(--theme-reveal) at var(--tx, 50%) var(--ty, 50%),
+    rgba(0, 0, 0, 0) 98%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--theme-reveal) at var(--tx, 50%) var(--ty, 50%),
+    rgba(0, 0, 0, 0) 98%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  animation: theme-reveal-grow 620ms ease-in-out forwards;
 }
-::view-transition-new(root) {
-  z-index: 1;
+@keyframes theme-reveal-grow {
+  to {
+    --theme-reveal: var(--theme-reveal-end, 100vmax);
+  }
 }
-
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
+  .theme-reveal {
+    display: none;
   }
 }
 

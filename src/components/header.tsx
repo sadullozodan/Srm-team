@@ -121,34 +121,33 @@ export function ThemeToggle() {
     };
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || typeof document.body.animate !== "function") {
+    if (reduce) {
       applyTheme();
       return;
     }
 
     // Browser-agnostic circular reveal (no View Transitions dependency):
-    // cover the screen with the OLD background, switch the theme underneath,
-    // then shrink the cover to a point at the centre — the new theme is
-    // revealed through a circle growing outward from the middle.
+    // hold the OLD background on an overlay, switch the theme underneath, then
+    // grow a transparent circle out of that overlay from the centre so the new
+    // theme is revealed outward. The mask + growth live in globals.css.
     const oldBg = getComputedStyle(document.body).backgroundColor || "#ffffff";
     applyTheme();
-
-    const overlay = document.createElement("div");
-    overlay.style.cssText = `position:fixed;inset:0;z-index:2147483647;pointer-events:none;background:${oldBg};`;
-    document.body.appendChild(overlay);
 
     const x = window.innerWidth / 2;
     const y = window.innerHeight / 2;
     const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
 
-    const anim = overlay.animate(
-      { clipPath: [`circle(${r}px at ${x}px ${y}px)`, `circle(0px at ${x}px ${y}px)`] },
-      { duration: 600, easing: "ease-in-out" },
-    );
-    anim.finished.then(
-      () => overlay.remove(),
-      () => overlay.remove(),
-    );
+    const overlay = document.createElement("div");
+    overlay.className = "theme-reveal";
+    overlay.style.background = oldBg;
+    overlay.style.setProperty("--tx", `${x}px`);
+    overlay.style.setProperty("--ty", `${y}px`);
+    overlay.style.setProperty("--theme-reveal-end", `${r}px`);
+    document.body.appendChild(overlay);
+
+    const cleanup = () => overlay.remove();
+    overlay.addEventListener("animationend", cleanup, { once: true });
+    window.setTimeout(cleanup, 1500);
   }
 
   return (
