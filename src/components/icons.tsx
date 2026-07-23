@@ -28,7 +28,8 @@ export type IconName =
   | "accounting"
   | "branches"
   | "jobs"
-  | "sms";
+  | "sms"
+  | "tokens";
 
 function Home(p: P) {
   return (
@@ -247,6 +248,16 @@ function Sms(p: P) {
   );
 }
 
+function Tokens(p: P) {
+  return (
+    <svg {...base(p)}>
+      <ellipse cx="12" cy="6.5" rx="7.5" ry="3" fill="currentColor" />
+      <path d="M4.5 6.5v5c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-5" fill="currentColor" opacity=".8" />
+      <path d="M4.5 11.5v5c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-5" fill="currentColor" opacity=".6" />
+    </svg>
+  );
+}
+
 const REGISTRY: Record<IconName, (p: P) => React.ReactElement> = {
   home: Home,
   students: Students,
@@ -260,6 +271,7 @@ const REGISTRY: Record<IconName, (p: P) => React.ReactElement> = {
   branches: Branches,
   jobs: Jobs,
   sms: Sms,
+  tokens: Tokens,
 };
 
 export function NavIcon({ name, ...p }: { name: IconName } & P) {
