@@ -62,14 +62,14 @@ export default function LoginPage() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl bg-card p-6 shadow-sm sm:p-8"
+      className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
     >
       <AuthTabs />
 
       <div className="mt-8 space-y-4">
-        <div>
-          <label htmlFor="phone" className="sr-only">
-            Phone
+        <div className="space-y-1.5">
+          <label htmlFor="phone" className="text-sm font-medium text-foreground">
+            Phone number
           </label>
           <Input
             id="phone"
@@ -80,36 +80,34 @@ export default function LoginPage() {
             autoComplete="tel"
             required
             className="h-13"
-            placeholder="Phone number"
+            placeholder="992 90 123 45 67"
           />
         </div>
 
-        <div className="relative">
-          <label htmlFor="password" className="sr-only">
+        <div className="space-y-1.5">
+          <label htmlFor="password" className="text-sm font-medium text-foreground">
             Password
           </label>
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-            className="h-13 pr-11"
-            placeholder="Password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label={showPassword ? "Hide password" : "Show password"}
-          >
-            {showPassword ? (
-              <EyeOff className="size-5" />
-            ) : (
-              <Eye className="size-5" />
-            )}
-          </button>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+              className="h-13 pr-11"
+              placeholder="Enter your password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+            </button>
+          </div>
         </div>
 
         {error && (

@@ -76,15 +76,16 @@ export default function RegisterPage() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl bg-card p-6 shadow-sm sm:p-8"
+      className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
     >
       <AuthTabs />
 
       <div className="mt-8 space-y-4">
         {FIELDS.map((field) => (
-          <div key={field.name}>
-            <label htmlFor={field.name} className="sr-only">
+          <div key={field.name} className="space-y-1.5">
+            <label htmlFor={field.name} className="text-sm font-medium text-foreground">
               {field.label}
+              {field.required && <span className="text-primary"> *</span>}
             </label>
             <Input
               id={field.name}
@@ -97,38 +98,36 @@ export default function RegisterPage() {
               required={field.required}
               maxLength={100}
               className="h-13"
-              placeholder={field.label}
             />
           </div>
         ))}
 
-        <div className="relative">
-          <label htmlFor="password" className="sr-only">
+        <div className="space-y-1.5">
+          <label htmlFor="password" className="text-sm font-medium text-foreground">
             Password
+            <span className="text-primary"> *</span>
           </label>
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="new-password"
-            required
-            minLength={6}
-            className="h-13 pr-11"
-            placeholder="Password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label={showPassword ? "Hide password" : "Show password"}
-          >
-            {showPassword ? (
-              <EyeOff className="size-5" />
-            ) : (
-              <Eye className="size-5" />
-            )}
-          </button>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+              minLength={6}
+              className="h-13 pr-11"
+              placeholder="At least 6 characters"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+            </button>
+          </div>
         </div>
 
         {error && (

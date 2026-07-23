@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl bg-card p-6 shadow-sm sm:p-8"
+      className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
     >
       <h1 className="text-lg font-semibold">{screen.title}</h1>
 
@@ -128,9 +128,9 @@ export default function ForgotPasswordPage() {
 
       <div className="mt-6 space-y-4">
         {step === "phone" && (
-          <div>
-            <label htmlFor="phone" className="sr-only">
-              Phone
+          <div className="space-y-1.5">
+            <label htmlFor="phone" className="text-sm font-medium text-foreground">
+              Phone number
             </label>
             <Input
               id="phone"
@@ -141,14 +141,14 @@ export default function ForgotPasswordPage() {
               required
               maxLength={30}
               className="h-13"
-              placeholder="Phone"
+              placeholder="992 90 123 45 67"
             />
           </div>
         )}
 
         {step === "code" && (
-          <div>
-            <label htmlFor="code" className="sr-only">
+          <div className="space-y-1.5">
+            <label htmlFor="code" className="text-sm font-medium text-foreground">
               Verification code
             </label>
             <Input
@@ -239,30 +239,32 @@ function PasswordField({
   onToggle: () => void;
 }) {
   return (
-    <div className="relative">
-      <label htmlFor={id} className="sr-only">
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="text-sm font-medium text-foreground">
         {label}
       </label>
-      <Input
-        id={id}
-        type={show ? "text" : "password"}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete="new-password"
-        required
-        minLength={6}
-        maxLength={100}
-        className="h-13 pr-11"
-        placeholder={label}
-      />
-      <button
-        type="button"
-        onClick={onToggle}
-        className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-        aria-label={show ? "Hide password" : "Show password"}
-      >
-        {show ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
-      </button>
+      <div className="relative">
+        <Input
+          id={id}
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete="new-password"
+          required
+          minLength={6}
+          maxLength={100}
+          className="h-13 pr-11"
+          placeholder="At least 6 characters"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          aria-label={show ? "Hide password" : "Show password"}
+        >
+          {show ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+        </button>
+      </div>
     </div>
   );
 }
