@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GrantTokensButton } from "@/components/grant-tokens";
 
 const statusVariant: Record<StudentStatus, "success" | "muted" | "warning"> = {
   Active: "success",
@@ -225,14 +226,15 @@ export default function StudentProfilePage() {
             </CardContent>
           </Card>
         </div>
-        <ActivitySection studentId={id} />
+        <ActivitySection studentId={id} studentName={fullName(data)} />
         </>
       )}
     </div>
   );
 }
 
-function ActivitySection({ studentId }: { studentId: string }) {
+function ActivitySection({ studentId, studentName }: { studentId: string; studentName: string }) {
+  const queryClient = useQueryClient();
   const { data, isPending, isError } = useQuery({
     queryKey: ["students", studentId, "overview"],
     queryFn: () => overviewApi.student(studentId),
@@ -245,7 +247,17 @@ function ActivitySection({ studentId }: { studentId: string }) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold tracking-tight">Activity</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold tracking-tight">Activity</h2>
+        <GrantTokensButton
+          studentId={studentId}
+          studentName={studentName}
+          onGranted={() => {
+            queryClient.invalidateQueries({ queryKey: ["students", studentId, "overview"] });
+            queryClient.invalidateQueries({ queryKey: ["tokens", "me"] });
+          }}
+        />
+      </div>
 
       {/* KPI stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

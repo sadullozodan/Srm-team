@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [waking, setWaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Already signed in? Skip the form.
@@ -26,10 +27,20 @@ export default function LoginPage() {
     if (!isLoading && isAuthenticated) router.replace("/");
   }, [isLoading, isAuthenticated, router]);
 
+  // Wake the API early: free hosting (Render) spins the service down after
+  // inactivity, and the first request can take ~50s. Ping /health on mount so
+  // it's warming up while the user types.
+  useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (base) fetch(`${base}/health`, { mode: "cors" }).catch(() => {});
+  }, []);
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setSubmitting(true);
+    // If the request drags on, it's almost always a cold start — say so.
+    const wakeHint = setTimeout(() => setWaking(true), 4000);
     try {
       // The backend matches the stored digits literally — so a "+" or a space
       // here reads as a wrong password. Normalize to the bare 992… form first.
@@ -42,6 +53,8 @@ export default function LoginPage() {
         setError(err instanceof Error ? err.message : "Something went wrong.");
       }
     } finally {
+      clearTimeout(wakeHint);
+      setWaking(false);
       setSubmitting(false);
     }
   }
@@ -108,9 +121,16 @@ export default function LoginPage() {
           </p>
         )}
 
+        {waking && !error && (
+          <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
+            Waking the server up — free hosting sleeps after inactivity, so the first sign-in can take up
+            to a minute. Hang tight…
+          </p>
+        )}
+
         <Button type="submit" className="h-12 w-full" disabled={submitting}>
           {submitting && <Loader2 className="animate-spin" />}
-          Log in
+          {submitting ? "Signing in…" : "Log in"}
         </Button>
 
         <Link
