@@ -37,6 +37,7 @@ export const NAV: NavItem[] = [
     icon: "administration",
     children: [
       { label: "Users", href: "/administration/users" },
+      { label: "Roles", href: "/administration/roles" },
       { label: "Permission", href: "/administration/permission" },
       { label: "Logs", href: "/administration/logs" },
     ],
@@ -52,10 +53,13 @@ export const NAV: NavItem[] = [
       { label: "Expenses", href: "/accounting/expenses" },
       { label: "Salary", href: "/accounting/salary" },
       { label: "Avans", href: "/accounting/avans" },
+      { label: "Accountant", href: "/accounting/accountant" },
+      { label: "Net", href: "/accounting/net" },
     ],
   },
   { label: "Branches", icon: "branches", href: "/branches" },
   { label: "Jobs", icon: "jobs", href: "/jobs" },
+  { label: "Tokens", icon: "tokens", href: "/tokens" },
   { label: "SMS mailings", icon: "sms", href: "/sms" },
 ];
 

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Bell, ChevronDown, LogOut, Moon, Search, Sun, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Bell, ChevronDown, Coins, LogOut, Moon, Search, Sun, User } from "lucide-react";
 import { LANGS, type LangCode } from "@/lib/langs";
-import { NotificationPanel, useUnreadNotificationCount } from "@/components/notifications";
+import { NotificationPanel } from "@/components/notifications";
 import { useAuth } from "@/lib/auth/context";
+import { tokensApi } from "@/lib/api/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -19,8 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const { data: unreadCount = 0 } = useUnreadNotificationCount();
-
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 bg-background px-4 md:px-6">
       <SidebarTrigger className="text-primary" />
@@ -50,13 +50,15 @@ export function Header() {
                 />
               }
             >
-              <NotificationBell count={unreadCount} />
+              <Bell className="text-primary" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-95 overflow-hidden p-0">
               <NotificationPanel />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        <CoinBalance />
 
         <ThemeToggle />
 
@@ -68,16 +70,29 @@ export function Header() {
   );
 }
 
-function NotificationBell({ count }: { count: number }) {
+// Coins are a student-only concept, so the balance shows only when the signed-in
+// user is a student. `GET /api/Tokens/me` is skipped entirely for other roles.
+function CoinBalance() {
+  const { user } = useAuth();
+  const isStudent = !!user?.studentId || (user?.roles?.includes("Student") ?? false);
+
+  const { data } = useQuery({
+    queryKey: ["tokens", "me"],
+    queryFn: tokensApi.me,
+    enabled: isStudent,
+    staleTime: 60 * 1000,
+  });
+
+  if (!isStudent) return null;
+
   return (
-    <span className="relative inline-flex">
-      <Bell className="text-primary" />
-      {count > 0 && (
-        <span className="absolute -top-2 -right-2 min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
-    </span>
+    <div
+      className="flex h-10 items-center gap-1.5 rounded-full bg-amber-500/15 px-3 font-semibold text-amber-600 dark:text-amber-400"
+      title="Your coins"
+    >
+      <Coins className="size-4" />
+      <span className="tabular-nums">{data?.balance ?? 0}</span>
+    </div>
   );
 }
 

@@ -9,8 +9,11 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "OMUZ",
+  title: "CRM OMUZ",
   description: "OMUZ education CRM",
+  icons: {
+    icon: "/omuz-mark.svg",
+  },
 };
 
 // Root layout owns global providers only. The authenticated app chrome lives in

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { NAV, type NavItem } from "@/lib/nav";
+import { useT } from "@/lib/i18n";
 import { Logo, LogoMark, NavIcon } from "./icons";
 import {
   Sidebar,
@@ -29,6 +30,7 @@ const menuBtnCls = "h-10   gap-3 text-[15px] font-medium";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const t = useT();
 
   // Groups open by default when they contain the active route.
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
@@ -44,11 +46,11 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 px-1 py-1 text-primary transition-opacity hover:opacity-90"
+          className="flex items-center group-data-[collapsible=icon]:justify-center px-1 py-1 text-primary transition-all duration-200 hover:opacity-90"
         >
-          {/* Full wordmark when the rail is open, capped "o" when it is not. */}
-          <Logo className="h-9 group-data-[collapsible=icon]:hidden" />
-          <LogoMark className="hidden group-data-[collapsible=icon]:block" />
+          {/* Full logo when sidebar is open, centered icon when collapsed */}
+          <Logo className="h-8 w-auto group-data-[collapsible=icon]:hidden transition-opacity" />
+          <LogoMark className="hidden h-8 w-8 shrink-0 group-data-[collapsible=icon]:block mx-auto transition-opacity" />
         </Link>
       </SidebarHeader>
 
@@ -71,7 +73,7 @@ export function AppSidebar() {
                         }
                       >
                         <NavIcon name={item.icon} className="size-5!" />
-                        <span>{item.label}</span>
+                        <span>{t(item.label)}</span>
                         <ChevronDown
                           className={`ml-auto transition-transform duration-200 group-data-[collapsible=icon]:hidden ${
                             isOpen ? "rotate-180" : ""
@@ -86,7 +88,7 @@ export function AppSidebar() {
                                 isActive={pathname === child.href}
                                 render={<Link href={child.href} />}
                               >
-                                {child.label}
+                                {t(child.label)}
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
@@ -107,7 +109,7 @@ export function AppSidebar() {
                       render={<Link href={href} />}
                     >
                       <NavIcon name={item.icon} className="size-5!" />
-                      <span>{item.label}</span>
+                      <span>{t(item.label)}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

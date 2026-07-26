@@ -5,52 +5,81 @@
 import { apiFetch, toQuery } from "./client";
 import type {
   AbsenteeDto,
+  AddLessonRequest,
   AdvanceDto,
+  AdvanceWriteDto,
+  AttendanceRecordDto,
   AuthResponse,
   BranchDto,
   BudgetDto,
+  BudgetWriteDto,
   CourseDto,
-  DebtorDto,
-  ExpenseDto,
-  LeftCoursesPointDto,
-  MentorLevelDto,
-  NotificationDto,
-  NotificationWriteDto,
-  PositionWriteDto,
-  SalaryDto,
-  SendSmsRequest,
-  EnrollmentDto,
   CourseWriteDto,
+  CreateWeekRequest,
   DailyAttendanceDto,
   DashboardStatsDto,
+  DebtorDto,
+  DebtorWriteDto,
   EmployeeDto,
   EmployeeWriteDto,
+  EnrollmentDto,
+  ExpenseDto,
+  ExpenseWriteDto,
   ForgotPasswordRequest,
-  ResetPasswordByCodeRequest,
   GraduateDto,
-  LeadDto,
-  PaymentDto,
+  GraduateWriteDto,
   GroupDto,
   GroupWriteDto,
-  ListParams,
-  PositionDto,
-  LoginRequest,
-  RegisterRequest,
-  PagedResult,
-  StudentDto,
-  StudentWriteDto,
-  UserProfileDto,
-  AddLessonRequest,
-  AttendanceRecordDto,
-  CreateWeekRequest,
+  JobDto,
+  JobWriteDto,
   JournalLessonDto,
   JournalWeekDto,
+  LeadDto,
+  LeadWriteDto,
+  LeftCoursesPointDto,
+  ListParams,
+  LoginRequest,
+  MentorLevelDto,
+  NotificationDto,
+  PagedResult,
+  PaymentDto,
+  PaymentWriteDto,
+  PermissionDto,
+  PermissionWriteDto,
+  PositionDto,
+  PositionWriteDto,
+  RegisterRequest,
+  ResetPasswordByCodeRequest,
+  RoleDto,
+  RoleWriteDto,
+  SalaryDto,
+  SalaryWriteDto,
+  ScheduleEntryDto,
+  ScheduleEntryWriteDto,
+  SendSmsRequest,
   SetAttendanceRequest,
   SetWeekResultRequest,
   SmsMailingDto,
   SmsTemplateDto,
   SmsTemplateWriteDto,
+  StudentDto,
+  StudentWriteDto,
+  TokenAccountDto,
+  UserDto,
+  UserProfileDto,
   WeekResultDto,
+  RewardDto,
+  LogDto,
+  LogParams,
+  RolePermissionsDto,
+  GlobalSearchResultDto,
+  ProfileDto,
+  UpdateProfileRequest,
+  MonthlyIncomeDto,
+  IncomeByCourseDto,
+  IncomeByBranchDto,
+  StudentOverviewDto,
+  GroupOverviewDto,
 } from "./types";
 
 export interface CrudApi<TDto, TWrite> {
@@ -83,22 +112,45 @@ export const employeesApi = crud<EmployeeDto, EmployeeWriteDto>("Employees");
 export const coursesApi = crud<CourseDto, CourseWriteDto>("Courses");
 export const branchesApi = crud<BranchDto, unknown>("Branches");
 export const positionsApi = crud<PositionDto, PositionWriteDto>("Positions");
-
-// Accounting. Every one of these is a plain paged list controller, so the
-// pages under /accounting differ only in their columns. (`paymentsApi` is
-// declared with the dashboard resources below — the income card reads it too.)
-export const advancesApi = crud<AdvanceDto, unknown>("Advances");
-export const budgetsApi = crud<BudgetDto, unknown>("Budgets");
-export const debtorsApi = crud<DebtorDto, unknown>("Debtors");
-export const expensesApi = crud<ExpenseDto, unknown>("Expenses");
-export const salariesApi = crud<SalaryDto, unknown>("Salaries");
-
 export const mentorLevelsApi = crud<MentorLevelDto, unknown>("MentorLevels");
 
-// Read-only from the dashboard's point of view.
-export const leadsApi = crud<LeadDto, unknown>("Leads");
-export const paymentsApi = crud<PaymentDto, unknown>("Payments");
-export const graduatesApi = crud<GraduateDto, unknown>("Graduates");
+// Accounting + module resources. Each is a plain paged list controller.
+// (`paymentsApi` is read by the dashboard income card too.)
+export const leadsApi = crud<LeadDto, LeadWriteDto>("Leads");
+export const paymentsApi = crud<PaymentDto, PaymentWriteDto>("Payments");
+export const debtorsApi = crud<DebtorDto, DebtorWriteDto>("Debtors");
+export const budgetsApi = crud<BudgetDto, BudgetWriteDto>("Budgets");
+export const expensesApi = crud<ExpenseDto, ExpenseWriteDto>("Expenses");
+export const salariesApi = crud<SalaryDto, SalaryWriteDto>("Salaries");
+export const advancesApi = crud<AdvanceDto, AdvanceWriteDto>("Advances");
+export const graduatesApi = crud<GraduateDto, GraduateWriteDto>("Graduates");
+export const jobsApi = crud<JobDto, JobWriteDto>("Jobs");
+export const timetableApi = crud<ScheduleEntryDto, ScheduleEntryWriteDto>("Timetable");
+export const permissionsApi = crud<PermissionDto, PermissionWriteDto>("Permissions");
+export const rolesApi = crud<RoleDto, RoleWriteDto>("Roles");
+export const smsTemplatesApi = crud<SmsTemplateDto, SmsTemplateWriteDto>("SmsTemplates");
+
+// SMS mailings: send + read-only history.
+export const smsApi = {
+  history: (params: ListParams = {}) =>
+    apiFetch<PagedResult<SmsMailingDto>>(`/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`),
+  send: (body: SendSmsRequest) =>
+    apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
+};
+
+// Users are managed (list/get/delete) with dedicated role/status/password actions.
+export const usersApi = {
+  list: (params: ListParams = {}) =>
+    apiFetch<PagedResult<UserDto>>(`/api/Users${toQuery(params as Record<string, string | number | undefined | null>)}`),
+  get: (id: string) => apiFetch<UserDto>(`/api/Users/${id}`),
+  remove: (id: string) => apiFetch<void>(`/api/Users/${id}`, { method: "DELETE" }),
+  setRoles: (id: string, roles: string[]) =>
+    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roles } }),
+  setStatus: (id: string, status: string) =>
+    apiFetch<UserDto>(`/api/Users/${id}/status`, { method: "PUT", json: { status } }),
+  resetPassword: (id: string, newPassword: string) =>
+    apiFetch<void>(`/api/Users/${id}/reset-password`, { method: "POST", json: { newPassword } }),
+};
 
 // Enrollments are addressed by student or group, not a flat list.
 export const enrollmentsApi = {
@@ -142,25 +194,12 @@ export const notificationsApi = {
     apiFetch<PagedResult<NotificationDto>>(
       `/api/Notifications${toQuery(params as Record<string, string | number | undefined | null>)}`,
     ),
-  create: (body: NotificationWriteDto) =>
-    apiFetch<NotificationDto>("/api/Notifications", { method: "POST", json: body }),
   unreadCount: () => apiFetch<number>("/api/Notifications/unread-count"),
   markRead: (id: string) =>
     apiFetch<void>(`/api/Notifications/${id}/read`, { method: "PUT" }),
   markAllRead: () =>
     apiFetch<void>("/api/Notifications/read-all", { method: "PUT" }),
 };
-
-export const smsMailingsApi = {
-  send: (body: SendSmsRequest) =>
-    apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
-  history: (params: ListParams = {}) =>
-    apiFetch<PagedResult<SmsMailingDto>>(
-      `/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`,
-    ),
-};
-
-export const smsTemplatesApi = crud<SmsTemplateDto, SmsTemplateWriteDto>("SmsTemplates");
 
 // Journal is a nested tree (group → weeks → lessons → attendance) edited in place.
 export const journalApi = {
@@ -190,6 +229,70 @@ export const journalApi = {
     apiFetch<void>(`/api/Journal/weeks/${weekId}`, { method: "DELETE" }),
 };
 
+// ---- Level-up modules (testchaos) ----
+export const graduatesFullApi = crud<GraduateDto, unknown>("Graduates");
+export const rewardsApi = crud<RewardDto, unknown>("Rewards");
+
+export const smsMailingsApi = {
+  key: "SmsMailings",
+  list: (params: ListParams = {}) =>
+    apiFetch<PagedResult<SmsMailingDto>>(
+      `/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+  send: (body: unknown) => apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
+};
+
+export const logsApi = {
+  key: "Logs",
+  list: (params: LogParams = {}) =>
+    apiFetch<PagedResult<LogDto>>(
+      `/api/Logs${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+};
+
+export const rolesFullApi = {
+  ...crud<RoleDto, unknown>("Roles"),
+  getPermissions: (id: string) => apiFetch<RolePermissionsDto>(`/api/Roles/${id}/permissions`),
+  setPermissions: (id: string, permissionIds: string[]) =>
+    apiFetch<RolePermissionsDto>(`/api/Roles/${id}/permissions`, {
+      method: "PUT",
+      json: { permissionIds },
+    }),
+};
+
+export const searchApi = {
+  search: (q: string) => apiFetch<GlobalSearchResultDto>(`/api/Search${toQuery({ q, limit: 5 })}`),
+};
+
+export const profileApi = {
+  get: () => apiFetch<ProfileDto>("/api/Profile"),
+  update: (body: UpdateProfileRequest) => apiFetch<ProfileDto>("/api/Profile", { method: "PUT", json: body }),
+};
+
+export const reportsApi = {
+  incomeByMonth: (year?: number) =>
+    apiFetch<MonthlyIncomeDto[]>(`/api/Reports/income-by-month${toQuery({ year })}`),
+  incomeByCourse: () => apiFetch<IncomeByCourseDto[]>("/api/Reports/income-by-course"),
+  incomeByBranch: () => apiFetch<IncomeByBranchDto[]>("/api/Reports/income-by-branch"),
+  csvUrl: (name: "students" | "payments" | "leads") => `/api/Reports/${name}.csv`,
+};
+
+export const tokensApi = {
+  me: () => apiFetch<TokenAccountDto>("/api/Tokens/me"),
+  grant: (body: { studentId: string; amount: number; reason?: string }) =>
+    apiFetch<TokenAccountDto>("/api/Tokens/grant", { method: "POST", json: body }),
+  studentBalance: (studentId: string) => apiFetch<TokenAccountDto>(`/api/Tokens/students/${studentId}`),
+};
+
+export const overviewApi = {
+  student: (id: string) => apiFetch<StudentOverviewDto>(`/api/students/${id}/overview`),
+  group: (id: string) => apiFetch<GroupOverviewDto>(`/api/groups/${id}/overview`),
+};
+
+interface PermissionParams extends ListParams {
+  group?: string;
+}
+
 // Query-key helpers keep useQuery/invalidation consistent across the app.
 export const queryKeys = {
   me: ["me"] as const,
@@ -200,9 +303,6 @@ export const queryKeys = {
   dashboardLeftCourses: (year: number) =>
     ["dashboard", "left-courses", year] as const,
   notifications: ["notifications"] as const,
-  notificationsUnreadCount: ["notifications", "unread-count"] as const,
-  smsHistory: (params?: ListParams) =>
-    params ? (["SmsMailings", "history", params] as const) : (["SmsMailings", "history"] as const),
   list: (resource: string, params?: ListParams) =>
     params ? ([resource, "list", params] as const) : ([resource, "list"] as const),
   detail: (resource: string, id: string) => [resource, "detail", id] as const,

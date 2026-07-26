@@ -28,7 +28,8 @@ export type IconName =
   | "accounting"
   | "branches"
   | "jobs"
-  | "sms";
+  | "sms"
+  | "tokens";
 
 function Home(p: P) {
   return (
@@ -247,6 +248,16 @@ function Sms(p: P) {
   );
 }
 
+function Tokens(p: P) {
+  return (
+    <svg {...base(p)}>
+      <ellipse cx="12" cy="6.5" rx="7.5" ry="3" fill="currentColor" />
+      <path d="M4.5 6.5v5c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-5" fill="currentColor" opacity=".8" />
+      <path d="M4.5 11.5v5c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-5" fill="currentColor" opacity=".6" />
+    </svg>
+  );
+}
+
 const REGISTRY: Record<IconName, (p: P) => React.ReactElement> = {
   home: Home,
   students: Students,
@@ -260,6 +271,7 @@ const REGISTRY: Record<IconName, (p: P) => React.ReactElement> = {
   branches: Branches,
   jobs: Jobs,
   sms: Sms,
+  tokens: Tokens,
 };
 
 export function NavIcon({ name, ...p }: { name: IconName } & P) {
@@ -340,32 +352,48 @@ export function FlagTJ(p: P) {
 // is not (collapsed sidebar, mobile bar).
 type LogoProps = { className?: string; priority?: boolean };
 
-// Both files are trimmed to their ink, so the CSS height is the height the
-// Figma measures. The navy cap would sink into the dark theme, so lift the
-// whole mark rather than shipping a second export.
-const logoCls = "w-auto shrink-0 dark:brightness-150";
-
 export function Logo({ className, priority }: LogoProps) {
   return (
-    <Image
-      src="/logo.png"
-      alt="OMUZ"
-      width={354}
-      height={101}
-      priority={priority}
-      className={cn(logoCls, "h-8", className)}
-    />
+    <div className={cn("relative inline-flex items-center shrink-0", className)}>
+      <Image
+        src="/logo-purple.png"
+        alt="OMUZ"
+        width={354}
+        height={101}
+        priority={priority}
+        className="block dark:hidden h-8 w-auto object-contain"
+      />
+      <Image
+        src="/logo-white.png"
+        alt="OMUZ"
+        width={354}
+        height={101}
+        priority={priority}
+        className="hidden dark:block h-8 w-auto object-contain"
+      />
+    </div>
   );
 }
 
-export function LogoMark({ className }: LogoProps) {
+export function LogoMark({ className, priority }: LogoProps) {
   return (
-    <Image
-      src="/logo-mark.png"
-      alt="OMUZ"
-      width={86}
-      height={101}
-      className={cn(logoCls, "h-7", className)}
-    />
+    <div className={cn("relative inline-flex items-center justify-center shrink-0", className)}>
+      <Image
+        src="/icon-purple.png"
+        alt="OMUZ"
+        width={32}
+        height={32}
+        priority={priority}
+        className="block dark:hidden h-8 w-8 object-contain mx-auto"
+      />
+      <Image
+        src="/icon-white.png"
+        alt="OMUZ"
+        width={32}
+        height={32}
+        priority={priority}
+        className="hidden dark:block h-8 w-8 object-contain mx-auto"
+      />
+    </div>
   );
 }
