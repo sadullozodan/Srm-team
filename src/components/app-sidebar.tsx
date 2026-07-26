@@ -25,8 +25,7 @@ function isChildActive(item: NavItem, pathname: string) {
   return (item.children ?? []).some((c) => c.href === pathname);
 }
 
-// Taller rows + larger icons to match the Figma proportions.
-const menuBtnCls = "h-10   gap-3 text-[15px] font-medium";
+const menuBtnCls = "h-10 gap-3 rounded-xl text-[14px] font-semibold tracking-[-0.01em]";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -43,12 +42,11 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="floating" collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="p-3 pb-2">
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 px-1 py-1 text-primary transition-opacity hover:opacity-90"
+          className="flex h-11 items-center gap-2 rounded-xl px-2 text-primary transition-colors hover:bg-sidebar-accent"
         >
-          {/* Full wordmark when the rail is open, capped "o" when it is not. */}
           <Logo className="h-8 w-auto group-data-[collapsible=icon]:hidden" />
           <LogoMark className="hidden size-7 shrink-0 group-data-[collapsible=icon]:block" />
         </Link>

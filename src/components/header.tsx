@@ -22,7 +22,7 @@ import {
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 bg-background px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-17 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl md:px-6">
       <SidebarTrigger className="text-primary" />
 
       <GlobalSearch />
@@ -121,40 +121,73 @@ export function ThemeToggle() {
     };
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
+    // Element.animate is the reliable path here: animating a registered custom
+    // property inside mask-image (the previous approach) does not repaint the
+    // mask, so the circle never appeared. clip-path interpolates properly and
+    // stays on the compositor.
+    if (reduce || typeof document.body.animate !== "function") {
       applyTheme();
       return;
     }
 
-    // Browser-agnostic circular reveal (no View Transitions dependency):
-    // hold the OLD background on an overlay, switch the theme underneath, then
-    // grow a transparent circle out of that overlay from the centre so the new
-    // theme is revealed outward. The mask + growth live in globals.css.
-    const oldBg = getComputedStyle(document.body).backgroundColor || "#ffffff";
-    applyTheme();
+    // Paint the wipe in the colour the page is ABOUT to become. Flip the theme
+    // class, read the token, flip back — all in one frame, so nothing repaints
+    // and the user sees no flash. Read --background rather than body's computed
+    // backgroundColor: body paints its wash through the `background` shorthand,
+    // which resets background-color to transparent.
+    const wasDark = root.classList.contains("dark");
+    root.classList.toggle("dark", next === "dark");
+    const nextBg =
+      getComputedStyle(root).getPropertyValue("--background").trim() || "#ffffff";
+    root.classList.toggle("dark", wasDark);
 
     const x = window.innerWidth / 2;
     const y = window.innerHeight / 2;
-    const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+    const radius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y),
+    );
 
-    const overlay = document.createElement("div");
-    overlay.className = "theme-reveal";
-    overlay.style.background = oldBg;
-    overlay.style.setProperty("--tx", `${x}px`);
-    overlay.style.setProperty("--ty", `${y}px`);
-    overlay.style.setProperty("--theme-reveal-end", `${r}px`);
-    document.body.appendChild(overlay);
+    const wipe = document.createElement("div");
+    wipe.style.cssText =
+      `position:fixed;inset:0;z-index:2147483647;pointer-events:none;background:${nextBg};` +
+      `clip-path:circle(0px at ${x}px ${y}px);`;
+    document.body.appendChild(wipe);
 
-    const cleanup = () => overlay.remove();
-    overlay.addEventListener("animationend", cleanup, { once: true });
-    window.setTimeout(cleanup, 1500);
+    const remove = () => wipe.remove();
+    // Safety net: never leave the overlay on screen if a promise never settles.
+    const failsafe = window.setTimeout(remove, 1600);
+
+    const grow = wipe.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${radius}px at ${x}px ${y}px)`,
+        ],
+      },
+      { duration: 420, easing: "cubic-bezier(0.23, 1, 0.32, 1)", fill: "forwards" },
+    );
+
+    grow.finished
+      .then(() => {
+        // Screen is fully covered — swap the theme behind the cover, then hand
+        // the new page over with a short fade instead of a hard cut.
+        applyTheme();
+        return wipe.animate({ opacity: [1, 0] }, { duration: 180, easing: "ease-out", fill: "forwards" })
+          .finished;
+      })
+      .catch(() => {})
+      .finally(() => {
+        window.clearTimeout(failsafe);
+        remove();
+      });
   }
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      className="rounded-full text-primary"
+      className="rounded-full bg-card/70 text-primary shadow-[0_8px_22px_rgb(31_37_60_/_0.08)] ring-1 ring-border/70 hover:bg-primary hover:text-primary-foreground dark:shadow-[0_10px_28px_rgb(0_0_0_/_0.22)]"
       aria-label="Toggle theme"
       onClick={toggle}
     >

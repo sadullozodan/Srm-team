@@ -29,9 +29,17 @@ export function initials(fullName: string | null) {
   return words.map((word) => word[0]).join("").toUpperCase();
 }
 
-/** The white rounded card every widget sits in. */
+/** Shared dashboard surface. */
 export function Panel({ className, ...props }: React.ComponentProps<"section">) {
-  return <section className={cn("rounded-2xl bg-card", className)} {...props} />;
+  return (
+    <section
+      className={cn(
+        "rounded-2xl border border-border/70 bg-card/95 shadow-[0_14px_40px_rgb(31_37_60_/_0.06)] dark:shadow-[0_18px_48px_rgb(0_0_0_/_0.24)]",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 export function CardTitle({ children }: { children: React.ReactNode }) {
@@ -76,7 +84,7 @@ export function Stepper({
   onStep: (delta: number) => void;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-full bg-muted/60 p-1">
+    <div className="flex items-center gap-2 rounded-full border border-border/60 bg-muted/60 p-1 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.45)] dark:shadow-none">
       <StepButton label="Previous" onClick={() => onStep(-1)}>
         <ChevronLeft className="size-4" />
       </StepButton>
@@ -105,7 +113,7 @@ function StepButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="grid size-7 place-items-center rounded-full bg-primary text-primary-foreground"
+      className="grid size-7 place-items-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
     >
       {children}
     </button>

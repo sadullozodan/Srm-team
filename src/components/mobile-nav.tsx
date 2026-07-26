@@ -14,24 +14,21 @@ import {
 } from "@/components/ui/sheet";
 
 const tabCls =
-  "flex flex-1 flex-col items-center gap-1 py-2 text-[11px] font-medium";
+  "flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors";
 
-// Bottom tab bar, mobile only. The OMUZ tab drives the existing sidebar,
-// which already renders as a Sheet under md.
 export function MobileNav() {
   const { openMobile, setOpenMobile } = useSidebar();
   const [langOpen, setLangOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  // ponytail: local until i18n exists — header's own picker is hidden on mobile.
   const [lang, setLang] = useState<LangCode>("EN");
 
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-3 bottom-3 z-40 flex overflow-hidden rounded-2xl border border-border/70 bg-card/92 pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_44px_rgb(21_25_38_/_0.14)] backdrop-blur-xl md:hidden">
         <button
           onClick={() => setOpenMobile(!openMobile)}
           aria-label="Menu"
-          className={`${tabCls} ${openMobile ? "text-primary" : "text-muted-foreground"}`}
+          className={`${tabCls} ${openMobile ? "bg-muted text-primary" : "text-muted-foreground hover:text-foreground"}`}
         >
           <LogoMark className="h-6" />
           Omuz
@@ -39,7 +36,7 @@ export function MobileNav() {
 
         <button
           onClick={() => setLangOpen(true)}
-          className={`${tabCls} ${langOpen ? "text-primary" : "text-muted-foreground"}`}
+          className={`${tabCls} ${langOpen ? "bg-muted text-primary" : "text-muted-foreground hover:text-foreground"}`}
         >
           <Globe className="size-6" />
           Lang
@@ -47,14 +44,13 @@ export function MobileNav() {
 
         <button
           onClick={() => setNotifOpen(true)}
-          className={`${tabCls} ${notifOpen ? "text-primary" : "text-muted-foreground"}`}
+          className={`${tabCls} ${notifOpen ? "bg-muted text-primary" : "text-muted-foreground hover:text-foreground"}`}
         >
           <Bell className="size-6" />
-          Notification
+          Alerts
         </button>
 
-        {/* ponytail: profile panel not wired yet */}
-        <button className={`${tabCls} text-muted-foreground`}>
+        <button className={`${tabCls} text-muted-foreground hover:text-foreground`}>
           <User className="size-6" />
           Profile
         </button>

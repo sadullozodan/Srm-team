@@ -76,11 +76,18 @@ export default function RegisterPage() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
+      className="rounded-[1.25rem] border border-border/80 bg-card/92 p-5 shadow-[0_24px_80px_rgb(26_31_48_/_0.12)] backdrop-blur sm:p-7 dark:shadow-[0_30px_90px_rgb(0_0_0_/_0.32)]"
     >
       <AuthTabs />
 
-      <div className="mt-8 space-y-4">
+      <div className="mt-7">
+        <h1 className="text-2xl font-bold tracking-[-0.025em]">Create account</h1>
+        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+          Add your details and start with the OMUZ workspace.
+        </p>
+      </div>
+
+      <div className="mt-6 space-y-4">
         {FIELDS.map((field) => (
           <div key={field.name} className="space-y-1.5">
             <label htmlFor={field.name} className="text-sm font-medium text-foreground">
@@ -122,7 +129,7 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
@@ -133,7 +140,7 @@ export default function RegisterPage() {
         {error && (
           <p
             role="alert"
-            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
             {error}
           </p>
@@ -141,7 +148,7 @@ export default function RegisterPage() {
 
         <Button type="submit" className="h-12 w-full" disabled={submitting}>
           {submitting && <Loader2 className="animate-spin" />}
-          Sign up
+          {submitting ? "Creating..." : "Sign up"}
         </Button>
       </div>
     </form>

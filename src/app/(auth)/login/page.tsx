@@ -22,14 +22,10 @@ export default function LoginPage() {
   const [waking, setWaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Already signed in? Skip the form.
   useEffect(() => {
     if (!isLoading && isAuthenticated) router.replace("/");
   }, [isLoading, isAuthenticated, router]);
 
-  // Wake the API early: free hosting (Render) spins the service down after
-  // inactivity, and the first request can take ~50s. Ping /health on mount so
-  // it's warming up while the user types.
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (base) fetch(`${base}/health`, { mode: "cors" }).catch(() => {});
@@ -39,11 +35,9 @@ export default function LoginPage() {
     event.preventDefault();
     setError(null);
     setSubmitting(true);
-    // If the request drags on, it's almost always a cold start — say so.
     const wakeHint = setTimeout(() => setWaking(true), 4000);
+
     try {
-      // The backend matches the stored digits literally — so a "+" or a space
-      // here reads as a wrong password. Normalize to the bare 992… form first.
       await login({ phone: normalizePhone(phone), password });
       router.replace("/");
     } catch (err) {
@@ -62,11 +56,18 @@ export default function LoginPage() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
+      className="rounded-[1.25rem] border border-border/80 bg-card/92 p-5 shadow-[0_24px_80px_rgb(26_31_48_/_0.12)] backdrop-blur sm:p-7 dark:shadow-[0_30px_90px_rgb(0_0_0_/_0.32)]"
     >
       <AuthTabs />
 
-      <div className="mt-8 space-y-4">
+      <div className="mt-7">
+        <h1 className="text-2xl font-bold tracking-[-0.025em]">Welcome back</h1>
+        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+          Sign in to continue to your OMUZ workspace.
+        </p>
+      </div>
+
+      <div className="mt-6 space-y-4">
         <div className="space-y-1.5">
           <label htmlFor="phone" className="text-sm font-medium text-foreground">
             Phone number
@@ -102,7 +103,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
@@ -113,27 +114,27 @@ export default function LoginPage() {
         {error && (
           <p
             role="alert"
-            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
             {error}
           </p>
         )}
 
         {waking && !error && (
-          <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
-            Waking the server up — free hosting sleeps after inactivity, so the first sign-in can take up
-            to a minute. Hang tight…
+          <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+            Waking the server up. Free hosting sleeps after inactivity, so the first sign-in can take up
+            to a minute.
           </p>
         )}
 
         <Button type="submit" className="h-12 w-full" disabled={submitting}>
           {submitting && <Loader2 className="animate-spin" />}
-          {submitting ? "Signing in…" : "Log in"}
+          {submitting ? "Signing in..." : "Log in"}
         </Button>
 
         <Link
           href="/forgot-password"
-          className="block text-center text-sm font-medium text-primary hover:underline"
+          className="block text-center text-sm font-semibold text-primary transition-colors hover:text-[color-mix(in_oklch,var(--primary),black_12%)] hover:underline"
         >
           Forgot password?
         </Link>

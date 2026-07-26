@@ -6,90 +6,90 @@
 
 /* OMUZ palette expressed through shadcn's theme tokens. */
 :root {
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 
-  --background: #f2f4f5;
-  --foreground: #12141c;
+  --background: #f5f7fb;
+  --foreground: #111318;
   --card: #ffffff;
-  --card-foreground: #12141c;
+  --card-foreground: #111318;
   --popover: #ffffff;
-  --popover-foreground: #12141c;
+  --popover-foreground: #111318;
 
   /* Brand indigo, sampled from the Figma logo and the Log in button. */
-  --primary: #4a3aff;
+  --primary: #493cf3;
   --primary-foreground: #ffffff;
-  --secondary: #eceaff;
-  --secondary-foreground: #4f46e5;
-  --muted: #eef0f5;
-  --muted-foreground: #6b7280;
-  --accent: #eceaff;
-  --accent-foreground: #4f46e5;
-  --destructive: #e5484d;
+  --secondary: #eef0ff;
+  --secondary-foreground: #4338ca;
+  --muted: #edf0f6;
+  --muted-foreground: #667085;
+  --accent: #eef0ff;
+  --accent-foreground: #4338ca;
+  --destructive: #dc2626;
 
-  --border: #e6e7ef;
-  --input: #e3e5ee;
-  --ring: #4f46e5;
+  --border: #dfe4ee;
+  --input: #d9dfeb;
+  --ring: #5448f6;
 
-  --chart-1: #4f46e5;
-  --chart-2: #22c55e;
-  --chart-3: #f59e0b;
-  --chart-4: #ec4899;
-  --chart-5: #06b6d4;
+  --chart-1: #493cf3;
+  --chart-2: #17a56b;
+  --chart-3: #d99022;
+  --chart-4: #d84e7f;
+  --chart-5: #178fbf;
 
   /* Sidebar (lavender panel, white active pill, indigo active text) */
-  --sidebar: #e8eaf7;
-  --sidebar-foreground: #12141c;
-  --sidebar-primary: #4f46e5;
+  --sidebar: #eef1f8;
+  --sidebar-foreground: #161925;
+  --sidebar-primary: #493cf3;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #ffffff;
-  --sidebar-accent-foreground: #4f46e5;
-  --sidebar-border: #dcdef0;
-  --sidebar-ring: rgba(74, 58, 255, 0.35);
+  --sidebar-accent-foreground: #4338ca;
+  --sidebar-border: #dce2ef;
+  --sidebar-ring: rgba(73, 60, 243, 0.32);
 
   /* Auth brand panel — its own token because it is slate, not the lavender
      sidebar, and it needs a dark counterpart. */
-  --auth-panel: #e2e8f0;
-  --auth-panel-foreground: #262626;
+  --auth-panel: #e8edf6;
+  --auth-panel-foreground: #151823;
 }
 
 .dark {
-  --background: #0d0f16;
-  --foreground: #e7e9f2;
-  --card: #191d2b;
-  --card-foreground: #e7e9f2;
-  --popover: #191d2b;
-  --popover-foreground: #e7e9f2;
+  --background: #0b0d12;
+  --foreground: #eceef6;
+  --card: #161a24;
+  --card-foreground: #eceef6;
+  --popover: #171b26;
+  --popover-foreground: #eceef6;
 
-  --primary: #837bff;
-  --primary-foreground: #0d0f16;
-  --secondary: #262347;
-  --secondary-foreground: #cdd0ff;
-  --muted: #1b1f2e;
-  --muted-foreground: #9aa1b4;
-  --accent: #262347;
-  --accent-foreground: #cdd0ff;
+  --primary: #928cff;
+  --primary-foreground: #090a0f;
+  --secondary: #252443;
+  --secondary-foreground: #d6d4ff;
+  --muted: #1a1f2b;
+  --muted-foreground: #9aa3b6;
+  --accent: #252443;
+  --accent-foreground: #d6d4ff;
   --destructive: #ff6369;
 
-  --border: #262a3a;
-  --input: #2b3040;
-  --ring: #837bff;
+  --border: #282e3d;
+  --input: #303748;
+  --ring: #928cff;
 
-  --chart-1: #837bff;
+  --chart-1: #928cff;
   --chart-2: #4ade80;
   --chart-3: #fbbf24;
   --chart-4: #f472b6;
   --chart-5: #38bdf8;
 
-  --sidebar: #141726;
+  --sidebar: #111521;
   --sidebar-foreground: #e7e9f2;
-  --sidebar-primary: #837bff;
+  --sidebar-primary: #928cff;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #232840;
-  --sidebar-accent-foreground: #c4bfff;
-  --sidebar-border: #262a3a;
-  --sidebar-ring: rgba(131, 123, 255, 0.4);
+  --sidebar-accent: #23283a;
+  --sidebar-accent-foreground: #d6d4ff;
+  --sidebar-border: #272d3e;
+  --sidebar-ring: rgba(146, 140, 255, 0.38);
 
-  --auth-panel: #161a2b;
+  --auth-panel: #101522;
   --auth-panel-foreground: #e7e9f2;
 }
 
@@ -135,51 +135,95 @@
 }
 
 @layer base {
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at 18% -12%, color-mix(in oklch, var(--primary) 12%, transparent), transparent 36rem),
+      radial-gradient(circle at 96% 4%, rgba(23, 143, 191, 0.1), transparent 30rem),
+      linear-gradient(180deg, color-mix(in oklch, var(--background), white 30%), var(--background) 24rem);
     font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  .dark body {
+    background:
+      radial-gradient(circle at 18% -12%, color-mix(in oklch, var(--primary) 14%, transparent), transparent 36rem),
+      radial-gradient(circle at 96% 4%, rgba(56, 189, 248, 0.08), transparent 30rem),
+      linear-gradient(180deg, color-mix(in oklch, var(--background), white 3%), var(--background) 26rem);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+  }
+
+  .dark body::before {
+    opacity: 0.06;
+    mix-blend-mode: screen;
+  }
+
+  body > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 28%, transparent);
+    color: var(--foreground);
   }
 }
 
-/* Theme switch: reveal the new theme through a circular hole that grows from a
-   point (the screen centre). ThemeToggle drops an overlay holding the OLD
-   background on top, switches the theme underneath, then this mask punches a
-   transparent circle whose radius (--theme-reveal) animates outward, so the new
-   theme is revealed growing from the centre. Real content, every browser. */
-@property --theme-reveal {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
+/* Motion curves. The built-in CSS easings are too soft to read as intentional,
+   so UI transitions use these instead. The theme wipe itself is driven by
+   Element.animate in ThemeToggle (clip-path interpolates reliably; an animated
+   custom property inside mask-image does not repaint). */
+:root {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
 }
-.theme-reveal {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  pointer-events: none;
-  --theme-reveal: 0px;
-  -webkit-mask-image: radial-gradient(
-    circle var(--theme-reveal) at var(--tx, 50%) var(--ty, 50%),
-    rgba(0, 0, 0, 0) 98%,
-    rgba(0, 0, 0, 1) 100%
-  );
-  mask-image: radial-gradient(
-    circle var(--theme-reveal) at var(--tx, 50%) var(--ty, 50%),
-    rgba(0, 0, 0, 0) 98%,
-    rgba(0, 0, 0, 1) 100%
-  );
-  animation: theme-reveal-grow 620ms ease-in-out forwards;
-}
-@keyframes theme-reveal-grow {
+
+/* Row/card entrances: short stagger, opacity + transform only. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
   to {
-    --theme-reveal: var(--theme-reveal-end, 100vmax);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
+
+.rise-in {
+  animation: rise-in 320ms var(--ease-out-strong) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .theme-reveal {
-    display: none;
+  .rise-in {
+    animation: none;
   }
 }
 
