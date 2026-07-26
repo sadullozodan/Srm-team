@@ -199,6 +199,8 @@ export const notificationsApi = {
     apiFetch<void>(`/api/Notifications/${id}/read`, { method: "PUT" }),
   markAllRead: () =>
     apiFetch<void>("/api/Notifications/read-all", { method: "PUT" }),
+  create: (body: { title: string; message: string }) =>
+    apiFetch<NotificationDto>("/api/Notifications", { method: "POST", json: body }),
 };
 
 // Journal is a nested tree (group → weeks → lessons → attendance) edited in place.
@@ -303,6 +305,7 @@ export const queryKeys = {
   dashboardLeftCourses: (year: number) =>
     ["dashboard", "left-courses", year] as const,
   notifications: ["notifications"] as const,
+  notificationsUnreadCount: ["notifications", "unread-count"] as const,
   list: (resource: string, params?: ListParams) =>
     params ? ([resource, "list", params] as const) : ([resource, "list"] as const),
   detail: (resource: string, id: string) => [resource, "detail", id] as const,
