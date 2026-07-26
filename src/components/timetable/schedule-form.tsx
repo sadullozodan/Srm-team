@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar, Clock } from "lucide-react";
 import { employeesApi, groupsApi, timetableApi, queryKeys } from "@/lib/api/resources";
 import { ApiError } from "@/lib/api/client";
 import type {
@@ -20,75 +20,44 @@ import { Card, CardContent } from "@/components/ui/card";
 const DAYS: DayOfWeek[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TYPES: LessonType[] = ["Lecture", "Practice", "Exam"];
 
-const YEARS = Array.from({ length: 10 }, (_, i) => String(new Date().getFullYear() - 2 + i));
-const MONTHS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
-const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
-const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
-const MINUTES = ["00", "15", "30", "45"];
-
 interface FormState {
   groupId: string;
   mentorId: string;
   title: string;
   type: LessonType;
   day: DayOfWeek;
-  dateYear: string;
-  dateMonth: string;
-  dateDay: string;
-  startHour: string;
-  startMinute: string;
-  endHour: string;
-  endMinute: string;
+  date: string;
+  startTime: string;
+  endTime: string;
   room: string;
 }
 
-function parseDate(dateStr: string | null | undefined): { y: string; m: string; d: string } {
-  if (!dateStr) return { y: "", m: "", d: "" };
-  const [y, m, d] = dateStr.split("-");
-  return { y: y ?? "", m: m ?? "", d: d ?? "" };
-}
-
-function parseTime(timeStr: string | null | undefined): { h: string; m: string } {
-  if (!timeStr) return { h: "", m: "" };
-  const [h, m] = timeStr.split(":");
-  return { h: h ?? "", m: m ?? "" };
-}
-
 function toState(s?: ScheduleEntryDto): FormState {
-  const date = parseDate(s?.date);
-  const start = parseTime(s?.startTime);
-  const end = parseTime(s?.endTime);
   return {
     groupId: s?.groupId ?? "",
     mentorId: s?.mentorId ?? "",
     title: s?.title ?? "",
     type: s?.type ?? "Lecture",
     day: s?.day ?? "Monday",
-    dateYear: date.y,
-    dateMonth: date.m,
-    dateDay: date.d,
-    startHour: start.h,
-    startMinute: start.m,
-    endHour: end.h,
-    endMinute: end.m,
+    date: s?.date ? s.date.slice(0, 10) : "",
+    startTime: s?.startTime ? s.startTime.slice(0, 5) : "",
+    endTime: s?.endTime ? s.endTime.slice(0, 5) : "",
     room: s?.room ?? "",
   };
 }
 
 function toWriteDto(f: FormState): ScheduleEntryWriteDto {
   const clean = (v: string) => (v.trim() === "" ? null : v.trim());
-  const date = f.dateYear && f.dateMonth && f.dateDay ? `${f.dateYear}-${f.dateMonth}-${f.dateDay}` : null;
-  const startTime = f.startHour && f.startMinute ? `${f.startHour}:${f.startMinute}:00` : null;
-  const endTime = f.endHour && f.endMinute ? `${f.endHour}:${f.endMinute}:00` : null;
+  const time = (v: string) => (v ? `${v}:00` : null);
   return {
     groupId: f.groupId,
     mentorId: f.mentorId,
     title: f.title.trim(),
     type: f.type,
     day: f.day,
-    date,
-    startTime,
-    endTime,
+    date: f.date || null,
+    startTime: time(f.startTime),
+    endTime: time(f.endTime),
     room: clean(f.room),
   };
 }
@@ -157,47 +126,23 @@ export function ScheduleForm({ entryId, initial }: { entryId?: string; initial?:
               </Select>
             </Field>
           </div>
-          <Field label="Date">
-            <div className="grid grid-cols-3 gap-2">
-              <Select value={form.dateYear} onChange={(e) => set("dateYear", e.target.value)}>
-                <option value="">Year</option>
-                {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-              </Select>
-              <Select value={form.dateMonth} onChange={(e) => set("dateMonth", e.target.value)}>
-                <option value="">Month</option>
-                {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </Select>
-              <Select value={form.dateDay} onChange={(e) => set("dateDay", e.target.value)}>
-                <option value="">Day</option>
-                {DAYS_OF_MONTH.map((d) => <option key={d} value={d}>{d}</option>)}
-              </Select>
-            </div>
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Start time">
-              <div className="grid grid-cols-[1fr_auto_1fr] gap-1 items-center">
-                <Select value={form.startHour} onChange={(e) => set("startHour", e.target.value)}>
-                  <option value="">HH</option>
-                  {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
-                </Select>
-                <span className="text-sm text-muted-foreground">:</span>
-                <Select value={form.startMinute} onChange={(e) => set("startMinute", e.target.value)}>
-                  <option value="">MM</option>
-                  {MINUTES.map((m) => <option key={m} value={m}>{m}</option>)}
-                </Select>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Date">
+              <div className="relative">
+                <Calendar className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} className="h-10 pl-9" />
               </div>
             </Field>
-            <Field label="End time">
-              <div className="grid grid-cols-[1fr_auto_1fr] gap-1 items-center">
-                <Select value={form.endHour} onChange={(e) => set("endHour", e.target.value)}>
-                  <option value="">HH</option>
-                  {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
-                </Select>
-                <span className="text-sm text-muted-foreground">:</span>
-                <Select value={form.endMinute} onChange={(e) => set("endMinute", e.target.value)}>
-                  <option value="">MM</option>
-                  {MINUTES.map((m) => <option key={m} value={m}>{m}</option>)}
-                </Select>
+            <Field label="Start">
+              <div className="relative">
+                <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input type="time" value={form.startTime} onChange={(e) => set("startTime", e.target.value)} className="h-10 pl-9" />
+              </div>
+            </Field>
+            <Field label="End">
+              <div className="relative">
+                <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input type="time" value={form.endTime} onChange={(e) => set("endTime", e.target.value)} className="h-10 pl-9" />
               </div>
             </Field>
           </div>
