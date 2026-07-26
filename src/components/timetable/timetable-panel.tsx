@@ -2,20 +2,50 @@
 
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  ViewMode,
-  ScheduleEvent,
-  MOCK_SCHEDULE_EVENTS,
-} from "./types";
+import { useQuery } from "@tanstack/react-query";
+import { ViewMode, ScheduleEvent } from "./types";
+import { timetableApi, queryKeys } from "@/lib/api/resources";
+import type { ScheduleEntryDto } from "@/lib/api/types";
 import { DayView } from "./day-view";
 import { WeekView } from "./week-view";
 import { MonthView } from "./month-view";
 import { EventModal } from "./event-modal";
 import { DayPopover } from "./day-popover";
 
+const DAY_MAP: Record<string, number> = {
+  Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6,
+};
+
+// ponytail: API returns `color` field; defaulting category for now
+function toEvents(entries: ScheduleEntryDto[]): ScheduleEvent[] {
+  return entries.map((e) => {
+    const parts = e.date?.split("-");
+    const dateDay = parts ? parseInt(parts[2], 10) : 0;
+    return {
+      id: e.id,
+      title: e.title ?? "",
+      type: e.type,
+      startTime: e.startTime ?? "",
+      endTime: e.endTime ?? "",
+      classroom: e.room ?? "",
+      instructor: e.mentorName ?? "",
+      dayOfWeek: DAY_MAP[e.day] ?? 0,
+      dateDay,
+      dateStr: e.date ?? "",
+      category: "react" as const,
+    };
+  });
+}
+
 export function TimetablePanel() {
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
+
+  const { data: paged } = useQuery({
+    queryKey: queryKeys.list(timetableApi.key),
+    queryFn: () => timetableApi.list({ pageSize: 200 }),
+  });
+  const events = toEvents(paged?.items ?? []);
 
   // Day Overflow Popover state
   const [popoverData, setPopoverData] = useState<{
@@ -160,14 +190,14 @@ export function TimetablePanel() {
       {/* Dynamic View Rendering */}
       {viewMode === "day" && (
         <DayView
-          events={MOCK_SCHEDULE_EVENTS.filter((e) => e.dateDay === 19)}
+          events={events}
           onSelectEvent={setSelectedEvent}
         />
       )}
 
       {viewMode === "week" && (
         <WeekView
-          events={MOCK_SCHEDULE_EVENTS}
+          events={events}
           weekDays={weekDays}
           onSelectEvent={setSelectedEvent}
         />
@@ -175,7 +205,7 @@ export function TimetablePanel() {
 
       {viewMode === "month" && (
         <MonthView
-          events={MOCK_SCHEDULE_EVENTS}
+          events={events}
           monthDays={monthDays}
           onSelectEvent={setSelectedEvent}
           onOpenDayPopover={(dateTitle, events) =>
