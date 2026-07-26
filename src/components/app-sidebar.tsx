@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { NAV, type NavItem } from "@/lib/nav";
+import { useT } from "@/lib/i18n";
 import { Logo, LogoMark, NavIcon } from "./icons";
 import {
   Sidebar,
@@ -29,6 +30,7 @@ const menuBtnCls = "h-10   gap-3 text-[15px] font-medium";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const t = useT();
 
   // Groups open by default when they contain the active route.
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
@@ -71,7 +73,7 @@ export function AppSidebar() {
                         }
                       >
                         <NavIcon name={item.icon} className="size-5!" />
-                        <span>{item.label}</span>
+                        <span>{t(item.label)}</span>
                         <ChevronDown
                           className={`ml-auto transition-transform duration-200 group-data-[collapsible=icon]:hidden ${
                             isOpen ? "rotate-180" : ""
@@ -86,7 +88,7 @@ export function AppSidebar() {
                                 isActive={pathname === child.href}
                                 render={<Link href={child.href} />}
                               >
-                                {child.label}
+                                {t(child.label)}
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
@@ -107,7 +109,7 @@ export function AppSidebar() {
                       render={<Link href={href} />}
                     >
                       <NavIcon name={item.icon} className="size-5!" />
-                      <span>{item.label}</span>
+                      <span>{t(item.label)}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
