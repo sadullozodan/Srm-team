@@ -7,6 +7,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const LIST_PARAMS = { pageSize: 20 };
 
+export function useUnreadNotificationCount() {
+  return useQuery({
+    queryKey: queryKeys.notificationsUnreadCount,
+    queryFn: () => notificationsApi.unreadCount(),
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
+  });
+}
+
 /** "3 h ago" — the API returns an absolute timestamp, the bell wants a relative one. */
 function timeAgo(iso: string) {
   const then = new Date(iso).getTime();
@@ -31,6 +40,7 @@ export function NotificationPanel() {
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+    queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
   }
 
   const readMutation = useMutation({

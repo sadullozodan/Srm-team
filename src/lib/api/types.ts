@@ -536,3 +536,46 @@ export interface NotificationDto {
   isRead: boolean;
   createdAt: string;
 }
+
+export interface NotificationWriteDto {
+  userId?: string | null;
+  title: string;
+  message?: string | null;
+}
+
+// ---- SMS mailings ----
+export type SmsTargetType = "Group" | "Students" | "Mentors" | "Leads" | "Graduates";
+
+export interface SendSmsRequest {
+  title: string;
+  body: string;
+  targetType?: SmsTargetType;
+  recipientIds?: string[] | null;
+}
+
+export interface SmsRecipientDto {
+  name: string | null;
+  phone: string | null;
+  delivered: boolean;
+}
+
+export interface SmsMailingDto {
+  id: string;
+  title: string | null;
+  body: string | null;
+  targetType: SmsTargetType;
+  sentAt: string;
+  recipientCount: number;
+  recipients: SmsRecipientDto[] | null;
+}
+
+export interface SmsTemplateDto {
+  id: string;
+  title: string | null;
+  body: string | null;
+}
+
+export interface SmsTemplateWriteDto {
+  title: string;
+  body: string;
+}

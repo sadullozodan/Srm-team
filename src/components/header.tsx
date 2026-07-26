@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTheme } from "next-themes";
 import { Bell, ChevronDown, LogOut, Moon, Search, Sun, User } from "lucide-react";
 import { LANGS, type LangCode } from "@/lib/langs";
-import { NotificationPanel } from "@/components/notifications";
+import { NotificationPanel, useUnreadNotificationCount } from "@/components/notifications";
 import { useAuth } from "@/lib/auth/context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 bg-background px-4 md:px-6">
       <SidebarTrigger className="text-primary" />
@@ -48,7 +50,7 @@ export function Header() {
                 />
               }
             >
-              <Bell className="text-primary" />
+              <NotificationBell count={unreadCount} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-95 overflow-hidden p-0">
               <NotificationPanel />
@@ -63,6 +65,19 @@ export function Header() {
         <AccountMenu />
       </div>
     </header>
+  );
+}
+
+function NotificationBell({ count }: { count: number }) {
+  return (
+    <span className="relative inline-flex">
+      <Bell className="text-primary" />
+      {count > 0 && (
+        <span className="absolute -top-2 -right-2 min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </span>
   );
 }
 

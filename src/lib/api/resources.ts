@@ -15,8 +15,10 @@ import type {
   LeftCoursesPointDto,
   MentorLevelDto,
   NotificationDto,
+  NotificationWriteDto,
   PositionWriteDto,
   SalaryDto,
+  SendSmsRequest,
   EnrollmentDto,
   CourseWriteDto,
   DailyAttendanceDto,
@@ -45,6 +47,9 @@ import type {
   JournalWeekDto,
   SetAttendanceRequest,
   SetWeekResultRequest,
+  SmsMailingDto,
+  SmsTemplateDto,
+  SmsTemplateWriteDto,
   WeekResultDto,
 } from "./types";
 
@@ -137,12 +142,25 @@ export const notificationsApi = {
     apiFetch<PagedResult<NotificationDto>>(
       `/api/Notifications${toQuery(params as Record<string, string | number | undefined | null>)}`,
     ),
+  create: (body: NotificationWriteDto) =>
+    apiFetch<NotificationDto>("/api/Notifications", { method: "POST", json: body }),
   unreadCount: () => apiFetch<number>("/api/Notifications/unread-count"),
   markRead: (id: string) =>
     apiFetch<void>(`/api/Notifications/${id}/read`, { method: "PUT" }),
   markAllRead: () =>
     apiFetch<void>("/api/Notifications/read-all", { method: "PUT" }),
 };
+
+export const smsMailingsApi = {
+  send: (body: SendSmsRequest) =>
+    apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
+  history: (params: ListParams = {}) =>
+    apiFetch<PagedResult<SmsMailingDto>>(
+      `/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+};
+
+export const smsTemplatesApi = crud<SmsTemplateDto, SmsTemplateWriteDto>("SmsTemplates");
 
 // Journal is a nested tree (group → weeks → lessons → attendance) edited in place.
 export const journalApi = {
@@ -182,6 +200,9 @@ export const queryKeys = {
   dashboardLeftCourses: (year: number) =>
     ["dashboard", "left-courses", year] as const,
   notifications: ["notifications"] as const,
+  notificationsUnreadCount: ["notifications", "unread-count"] as const,
+  smsHistory: (params?: ListParams) =>
+    params ? (["SmsMailings", "history", params] as const) : (["SmsMailings", "history"] as const),
   list: (resource: string, params?: ListParams) =>
     params ? ([resource, "list", params] as const) : ([resource, "list"] as const),
   detail: (resource: string, id: string) => [resource, "detail", id] as const,
