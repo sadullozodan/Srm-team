@@ -10,18 +10,21 @@ import {
 } from "@tanstack/react-query";
 import {
   ArrowRight,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Clock,
   LayoutGrid,
   List,
   Pencil,
   Plus,
   Search,
   Trash2,
+  Users,
 } from "lucide-react";
-import { coursesApi, groupsApi, queryKeys } from "@/lib/api/resources";
-import type { GroupDto, GroupStatus } from "@/lib/api/types";
+import { coursesApi, enrollmentsApi, groupsApi, queryKeys } from "@/lib/api/resources";
+import type { EnrollmentDto, GroupDto, GroupStatus } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -36,11 +39,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 12;
 
-// GroupStatus is a string on the wire but the list filter takes its integer index.
 const STATUS_ORDER: GroupStatus[] = ["New", "Started", "Finished", "Cancelled"];
 const statusVariant: Record<GroupStatus, "muted" | "success" | "warning" | "destructive"> = {
   New: "muted",
@@ -49,11 +52,23 @@ const statusVariant: Record<GroupStatus, "muted" | "success" | "warning" | "dest
   Cancelled: "destructive",
 };
 
+const enrollmentVariant: Record<string, "success" | "muted" | "warning" | "destructive"> = {
+  Active: "success",
+  Left: "destructive",
+  Transferred: "warning",
+  Graduated: "muted",
+};
+
 const dateFmt = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
   year: "numeric",
 });
+
+function fmtDate(value: string): string {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : dateFmt.format(d);
+}
 
 function dateRange(start: string, end: string): string {
   const s = new Date(start);
@@ -89,6 +104,7 @@ export default function GroupsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<GroupStatus | "">("");
   const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -118,6 +134,18 @@ export default function GroupsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["Groups"] }),
   });
 
+  const groupQuery = useQuery({
+    queryKey: queryKeys.detail("Groups", selectedId!),
+    queryFn: () => groupsApi.get(selectedId!),
+    enabled: !!selectedId,
+  });
+
+  const enrollmentsQuery = useQuery({
+    queryKey: ["Enrollments", "group", selectedId],
+    queryFn: () => enrollmentsApi.byGroup(selectedId!),
+    enabled: !!selectedId,
+  });
+
   function handleDelete(group: GroupDto) {
     if (window.confirm(`Delete ${group.name ?? "this group"}? This can't be undone.`)) {
       deleteMutation.mutate(group.id);
@@ -126,6 +154,9 @@ export default function GroupsPage() {
 
   const groups = data?.items ?? [];
   const totalPages = data?.totalPages ?? 1;
+  const detail = groupQuery.data;
+  const roster = enrollmentsQuery.data?.filter((e) => e.status !== "Left") ?? [];
+  const left = enrollmentsQuery.data?.filter((e) => e.status === "Left") ?? [];
 
   return (
     <div className="space-y-6">
@@ -137,7 +168,6 @@ export default function GroupsPage() {
         </Button>
       </div>
 
-      {/* Course overview cards */}
       {coursesQuery.data?.items && coursesQuery.data.items.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {coursesQuery.data.items.map((course) => (
@@ -208,9 +238,9 @@ export default function GroupsPage() {
           </CardContent>
         </Card>
       ) : view === "list" ? (
-        <ListView groups={groups} loading={isPending} onDelete={handleDelete} />
+        <ListView groups={groups} loading={isPending} onDelete={handleDelete} onSelect={setSelectedId} />
       ) : (
-        <GridView groups={groups} loading={isPending} />
+        <GridView groups={groups} loading={isPending} onSelect={setSelectedId} />
       )}
 
       {!isError && (
@@ -223,7 +253,126 @@ export default function GroupsPage() {
           onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
         />
       )}
+
+      <Sheet open={!!selectedId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
+        <SheetContent className="w-full sm:max-w-lg p-0 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {groupQuery.isError ? (
+              <p className="text-sm text-destructive">Couldn&apos;t load group.</p>
+            ) : groupQuery.isPending || !detail ? (
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-40 w-full rounded-xl" />
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold">{detail.name ?? "Group"}</h1>
+                    <Badge variant={statusVariant[detail.status]}>{detail.status}</Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      className="h-9 gap-1.5"
+                      render={<Link href={`/groups/${selectedId}/edit`} />}
+                    >
+                      <Pencil className="size-4" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="h-9 w-9"
+                      aria-label="Delete group"
+                      onClick={() => {
+                        if (window.confirm("Delete this group? This can't be undone.")) {
+                          deleteMutation.mutate(selectedId!);
+                          setSelectedId(null);
+                        }
+                      }}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <InfoCard icon={<Users className="size-4" />} title="Overview">
+                    <p className="text-2xl font-bold">
+                      {detail.enrolledCount}
+                      <span className="text-base font-medium text-muted-foreground">
+                        /{detail.requiredStudents}
+                      </span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {detail.courseName ?? "—"}
+                      {detail.branchName ? ` · ${detail.branchName}` : ""}
+                    </p>
+                  </InfoCard>
+
+                  <InfoCard icon={<CalendarDays className="size-4" />} title="Journal">
+                    <p className="text-sm font-medium">{fmtDate(detail.startDate)}</p>
+                    <p className="text-sm text-muted-foreground">{fmtDate(detail.endDate)}</p>
+                  </InfoCard>
+
+                  <InfoCard icon={<Clock className="size-4" />} title="Schedule">
+                    <p className="text-sm font-medium">{detail.days ?? "—"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {detail.startTime && detail.endTime
+                        ? `${detail.startTime.slice(0, 5)} - ${detail.endTime.slice(0, 5)}`
+                        : "—"}
+                      {detail.room ? ` · ${detail.room}` : ""}
+                    </p>
+                  </InfoCard>
+
+                  <InfoCard icon={<Users className="size-4" />} title="Mentors">
+                    {detail.mentors && detail.mentors.length > 0 ? (
+                      detail.mentors.map((mentor, i) => (
+                        <p key={i} className="text-sm font-medium">{mentor}</p>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No mentors</p>
+                    )}
+                  </InfoCard>
+                </div>
+
+                <div>
+                  <h2 className="mb-3 text-lg font-semibold">Students</h2>
+                  <EnrollmentTable
+                    rows={roster}
+                    loading={enrollmentsQuery.isPending}
+                    error={enrollmentsQuery.isError}
+                    emptyText="No students enrolled yet."
+                  />
+                </div>
+
+                {left.length > 0 && (
+                  <div>
+                    <h2 className="mb-3 text-lg font-semibold">Left course</h2>
+                    <EnrollmentTable rows={left} loading={false} error={false} showReason />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
+  );
+}
+
+function InfoCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <Card>
+      <CardContent className="space-y-2 p-5">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          {icon}
+          <span className="text-sm font-medium">{title}</span>
+        </div>
+        <div className="space-y-0.5">{children}</div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -231,10 +380,12 @@ function ListView({
   groups,
   loading,
   onDelete,
+  onSelect,
 }: {
   groups: GroupDto[];
   loading: boolean;
   onDelete: (group: GroupDto) => void;
+  onSelect: (id: string) => void;
 }) {
   return (
     <Card className="overflow-hidden">
@@ -268,11 +419,9 @@ function ListView({
             </TableRow>
           ) : (
             groups.map((g) => (
-              <TableRow key={g.id}>
+              <TableRow key={g.id} className="cursor-pointer" onClick={() => onSelect(g.id)}>
                 <TableCell>
-                  <Link href={`/groups/${g.id}`} className="font-medium hover:text-primary">
-                    {g.name ?? "—"}
-                  </Link>
+                  <span className="font-medium hover:text-primary">{g.name ?? "—"}</span>
                   <p className="text-xs text-muted-foreground">
                     {dateRange(g.startDate, g.endDate)}
                   </p>
@@ -296,6 +445,7 @@ function ListView({
                       size="icon-sm"
                       aria-label="Journal"
                       render={<Link href={`/progressbook/${g.id}`} />}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <ClipboardList className="size-4 text-primary" />
                     </Button>
@@ -304,6 +454,7 @@ function ListView({
                       size="icon-sm"
                       aria-label="Edit"
                       render={<Link href={`/groups/${g.id}/edit`} />}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Pencil className="size-4 text-primary" />
                     </Button>
@@ -311,7 +462,7 @@ function ListView({
                       variant="ghost"
                       size="icon-sm"
                       aria-label="Delete"
-                      onClick={() => onDelete(g)}
+                      onClick={(e) => { e.stopPropagation(); onDelete(g); }}
                     >
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
@@ -326,7 +477,7 @@ function ListView({
   );
 }
 
-function GridView({ groups, loading }: { groups: GroupDto[]; loading: boolean }) {
+function GridView({ groups, loading, onSelect }: { groups: GroupDto[]; loading: boolean; onSelect: (id: string) => void }) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -358,17 +509,17 @@ function GridView({ groups, loading }: { groups: GroupDto[]; loading: boolean })
       {groups.map((g) => {
         const time = timeRange(g.startTime, g.endTime);
         return (
-          <Card key={g.id} className="transition-colors hover:border-primary/40">
+          <Card key={g.id} className="transition-colors hover:border-primary/40 cursor-pointer" onClick={() => onSelect(g.id)}>
             <CardContent className="space-y-3 p-5">
               <div className="flex items-start justify-between gap-2">
-                <Link href={`/groups/${g.id}`} className="min-w-0">
+                <div className="min-w-0">
                   <p className="truncate font-semibold hover:text-primary">
                     {g.name ?? "—"}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {dateRange(g.startDate, g.endDate)}
                   </p>
-                </Link>
+                </div>
                 <Badge variant="success">
                   {g.enrolledCount}/{g.requiredStudents}
                 </Badge>
@@ -388,6 +539,7 @@ function GridView({ groups, loading }: { groups: GroupDto[]; loading: boolean })
                   size="sm"
                   className="gap-1.5"
                   render={<Link href={`/progressbook/${g.id}`} />}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <ClipboardList className="size-4" />
                   Journal
@@ -399,6 +551,79 @@ function GridView({ groups, loading }: { groups: GroupDto[]; loading: boolean })
         );
       })}
     </div>
+  );
+}
+
+function EnrollmentTable({
+  rows,
+  loading,
+  error,
+  emptyText = "Nothing here.",
+  showReason = false,
+}: {
+  rows: EnrollmentDto[];
+  loading: boolean;
+  error: boolean;
+  emptyText?: string;
+  showReason?: boolean;
+}) {
+  return (
+    <Card className="overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Full name</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead>Account</TableHead>
+            {showReason && <TableHead>Reason</TableHead>}
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <TableRow key={i} className="hover:bg-transparent">
+                {Array.from({ length: showReason ? 5 : 4 }).map((_, j) => (
+                  <TableCell key={j}>
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : error ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={showReason ? 5 : 4} className="py-8 text-center text-destructive">
+                Couldn&apos;t load students.
+              </TableCell>
+            </TableRow>
+          ) : rows.length === 0 ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={showReason ? 5 : 4} className="py-8 text-center text-muted-foreground">
+                {emptyText}
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((e) => (
+              <TableRow key={e.id}>
+                <TableCell className="font-medium">{e.studentName ?? "—"}</TableCell>
+                <TableCell className="text-muted-foreground">{e.studentPhone ?? "—"}</TableCell>
+                <TableCell>
+                  <Badge variant={e.hasAccount ? "success" : "muted"}>
+                    {e.hasAccount ? "Yes" : "No"}
+                  </Badge>
+                </TableCell>
+                {showReason && (
+                  <TableCell className="text-muted-foreground">{e.leftReason ?? "—"}</TableCell>
+                )}
+                <TableCell>
+                  <Badge variant={enrollmentVariant[e.status]}>{e.status}</Badge>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </Card>
   );
 }
 

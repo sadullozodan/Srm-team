@@ -65,6 +65,7 @@ import type {
   StudentDto,
   StudentWriteDto,
   TokenAccountDto,
+  CreateUserRequest,
   UserDto,
   UserProfileDto,
   WeekResultDto,
@@ -137,9 +138,11 @@ export const usersApi = {
   list: (params: ListParams = {}) =>
     apiFetch<PagedResult<UserDto>>(`/api/Users${toQuery(params as Record<string, string | number | undefined | null>)}`),
   get: (id: string) => apiFetch<UserDto>(`/api/Users/${id}`),
+  create: (body: CreateUserRequest) =>
+    apiFetch<UserDto>("/api/Users", { method: "POST", json: body }),
   remove: (id: string) => apiFetch<void>(`/api/Users/${id}`, { method: "DELETE" }),
-  setRoles: (id: string, roles: string[]) =>
-    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roles } }),
+  setRoles: (id: string, roleIds: string[]) =>
+    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roleIds } }),
   setStatus: (id: string, status: string) =>
     apiFetch<UserDto>(`/api/Users/${id}/status`, { method: "PUT", json: { status } }),
   resetPassword: (id: string, newPassword: string) =>

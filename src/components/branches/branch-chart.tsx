@@ -10,7 +10,21 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { ChartMonthData, MOCK_CHART_DATA } from "./types";
+interface ChartMonthData {
+  month: string;
+  Sadbarg: number;
+  Profsous: number;
+}
+
+const MOCK_CHART_DATA: ChartMonthData[] = [
+  { month: "January", Sadbarg: 10, Profsous: 55 },
+  { month: "February", Sadbarg: 45, Profsous: 20 },
+  { month: "March", Sadbarg: 20, Profsous: 100 },
+  { month: "April", Sadbarg: 110, Profsous: 75 },
+  { month: "May", Sadbarg: 40, Profsous: 108 },
+  { month: "June", Sadbarg: 180, Profsous: 50 },
+  { month: "July", Sadbarg: 90, Profsous: 15 },
+];
 
 export interface CustomTooltipPayloadItem {
   dataKey?: string | number;

@@ -1,15 +1,21 @@
 "use client";
 
-import React from "react";
+import Link from "next/link";
 import { X, SquarePen, ChevronRight } from "lucide-react";
-import { BranchItem } from "./types";
+import type { BranchDto, GroupDto } from "@/lib/api/types";
 
 export interface BranchDrawerProps {
-  branch: BranchItem | null;
+  branch: BranchDto | null;
+  groups: GroupDto[];
   onClose: () => void;
 }
 
-export function BranchDrawer({ branch, onClose }: BranchDrawerProps) {
+function fmtTime(t: string | null) {
+  if (!t) return "";
+  return t.length >= 5 ? t.slice(0, 5) : t;
+}
+
+export function BranchDrawer({ branch, groups, onClose }: BranchDrawerProps) {
   if (!branch) return null;
 
   return (
@@ -40,74 +46,84 @@ export function BranchDrawer({ branch, onClose }: BranchDrawerProps) {
             </h1>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
               Status:{" "}
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+              <span className={`font-bold ${branch.status === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}`}>
                 {branch.status}
               </span>
             </p>
           </div>
 
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-sm">
+          <Link
+            href={`/branches/${branch.id}/edit`}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-sm"
+          >
             <SquarePen className="size-4" />
             <span>EDIT</span>
-          </button>
+          </Link>
         </div>
 
         <div className="bg-white dark:bg-slate-800/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 space-y-3 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-slate-500 dark:text-slate-400">City:</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">
-              {branch.city}
+              {branch.city ?? "—"}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-slate-500 dark:text-slate-400">District:</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">
-              {branch.district}
+              {branch.district ?? "—"}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-slate-500 dark:text-slate-400">Address:</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">
-              {branch.address}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500 dark:text-slate-400">Phone number:</span>
-            <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
-              {branch.phone}
+              {branch.address ?? "—"}
             </span>
           </div>
         </div>
 
         <div className="space-y-3 pt-2">
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-            Groups
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+              Groups
+            </h3>
+            <span className="text-xs text-slate-500">{groups.length}</span>
+          </div>
 
           <div className="space-y-3">
-            {branch.groupsList.map((grp) => (
-              <div
-                key={grp.id}
-                className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-xs transition-all space-y-2 relative group cursor-pointer"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    {grp.name}
-                  </h4>
-                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                    {grp.startDate}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
-                  <span>{grp.scheduleDays}</span>
-                  <div className="flex items-center gap-2 font-mono">
-                    <span>{grp.classTime}</span>
-                    <ChevronRight className="size-4 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
+            {groups.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-6">No groups for this branch.</p>
+            ) : (
+              groups.map((grp) => (
+                <Link
+                  key={grp.id}
+                  href={`/groups/${grp.id}`}
+                  className="block bg-white dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-xs transition-all space-y-2 relative group cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                      {grp.name ?? "—"}
+                    </h4>
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                      {grp.startDate}
+                    </span>
                   </div>
-                </div>
-              </div>
-            ))}
+
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
+                    <span>{grp.days ?? "—"} {grp.room ? `· ${grp.room}` : ""}</span>
+                    <div className="flex items-center gap-2 font-mono">
+                      <span>
+                        {fmtTime(grp.startTime)}{grp.startTime && grp.endTime ? " - " : ""}{fmtTime(grp.endTime)}
+                        {grp.enrolledCount > 0 && (
+                          <span className="ml-2 text-indigo-500">({grp.enrolledCount})</span>
+                        )}
+                      </span>
+                      <ChevronRight className="size-4 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </div>
