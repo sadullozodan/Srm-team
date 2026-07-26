@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field } from "@/components/ui/form-field";
+import { normalizePhone } from "@/lib/phone";
 
 const STATUS_OPTIONS: ActivationStatus[] = ["Active", "Inactive"];
 
@@ -30,7 +31,7 @@ export default function NewUserPage() {
     mutationFn: () =>
       usersApi.create({
         fullName: fullName.trim(),
-        userName: userName.trim(),
+        userName: normalizePhone(userName.trim()),
         password,
         status,
       }),

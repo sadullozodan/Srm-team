@@ -74,8 +74,8 @@ export function ScheduleForm({ entryId, initial }: { entryId?: string; initial?:
   const mutation = useMutation({
     mutationFn: (body: ScheduleEntryWriteDto) =>
       entryId ? timetableApi.update(entryId, body) : timetableApi.create(body),
-    onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: queryKeys.list("Timetable") });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.list("Timetable") });
       router.push("/timetable");
     },
     onError: (err) => setError(err instanceof ApiError ? err.message : "Couldn't save the entry."),
