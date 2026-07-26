@@ -1,83 +1,104 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
-import {
-  RecipientTab,
-  GroupRecipient,
-  StudentRecipient,
-  MentorRecipient,
-  LeadRecipient,
-  GraduateRecipient,
-  MOCK_GROUPS,
-  MOCK_STUDENTS,
-  MOCK_MENTORS,
-  MOCK_LEADS,
-  MOCK_GRADUATES,
-} from "./types";
+import { RecipientTab, GroupRecipient, StudentRecipient, MentorRecipient, LeadRecipient, GraduateRecipient } from "./types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface RecipientsPanelProps {
-  onSelectedCountChange: (count: number) => void;
+  students: StudentRecipient[];
+  groups: GroupRecipient[];
+  mentors: MentorRecipient[];
+  leads: LeadRecipient[];
+  graduates: GraduateRecipient[];
+  isLoading: boolean;
+  onSelectedChange: (ids: string[], targetType: string) => void;
 }
 
-export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps) {
+export function RecipientsPanel({ students: initialStudents, groups: initialGroups, mentors: initialMentors, leads: initialLeads, graduates: initialGraduates, isLoading, onSelectedChange }: RecipientsPanelProps) {
   const [activeTab, setActiveTab] = useState<RecipientTab>("group");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // States
-  const [groups, setGroups] = useState<GroupRecipient[]>(MOCK_GROUPS);
-  const [students, setStudents] = useState<StudentRecipient[]>(MOCK_STUDENTS);
-  const [mentors, setMentors] = useState<MentorRecipient[]>(MOCK_MENTORS);
-  const [leads, setLeads] = useState<LeadRecipient[]>(MOCK_LEADS);
-  const [graduates, setGraduates] = useState<GraduateRecipient[]>(MOCK_GRADUATES);
+  const [groups, setGroups] = useState<GroupRecipient[]>(() =>
+    initialGroups.map((g) => ({ ...g, expanded: false })),
+  );
+  const [students, setStudents] = useState<StudentRecipient[]>(initialStudents);
+  const [mentors, setMentors] = useState<MentorRecipient[]>(initialMentors);
+  const [leads, setLeads] = useState<LeadRecipient[]>(initialLeads);
+  const [graduates, setGraduates] = useState<GraduateRecipient[]>(initialGraduates);
 
-  // Phone dropdown open state: recipientId -> boolean
   const [openPhoneMenuId, setOpenPhoneMenuId] = useState<string | null>(null);
 
-  // Calculate total selected items across active tab
-  const getSelectedCount = () => {
+  useEffect(() => {
+    setGroups(initialGroups.map((g) => ({ ...g, expanded: false })));
+  }, [initialGroups]);
+
+  useEffect(() => {
+    setStudents(initialStudents);
+  }, [initialStudents]);
+
+  useEffect(() => {
+    setMentors(initialMentors);
+  }, [initialMentors]);
+
+  useEffect(() => {
+    setLeads(initialLeads);
+  }, [initialLeads]);
+
+  useEffect(() => {
+    setGraduates(initialGraduates);
+  }, [initialGraduates]);
+
+  const getSelected = useCallback(() => {
     if (activeTab === "group") {
-      let count = 0;
+      const ids: string[] = [];
       groups.forEach((g) => {
-        count += g.students.filter((s) => s.selected).length;
+        g.students.filter((s) => s.selected).forEach((s) => ids.push(s.id));
       });
-      return count;
+      return { ids, targetType: "Group" };
     }
-    if (activeTab === "students") return students.filter((s) => s.selected).length;
-    if (activeTab === "mentors") return mentors.filter((m) => m.selected).length;
-    if (activeTab === "leads") return leads.filter((l) => l.selected).length;
-    if (activeTab === "graduates") return graduates.filter((g) => g.selected).length;
-    return 0;
-  };
+    if (activeTab === "students") {
+      return { ids: students.filter((s) => s.selected).map((s) => s.id), targetType: "Students" };
+    }
+    if (activeTab === "mentors") {
+      return { ids: mentors.filter((m) => m.selected).map((m) => m.id), targetType: "Mentors" };
+    }
+    if (activeTab === "leads") {
+      return { ids: leads.filter((l) => l.selected).map((l) => l.id), targetType: "Leads" };
+    }
+    if (activeTab === "graduates") {
+      return { ids: graduates.filter((g) => g.selected).map((g) => g.id), targetType: "Graduates" };
+    }
+    return { ids: [], targetType: "" };
+  }, [activeTab, groups, students, mentors, leads, graduates]);
 
-  const selectedCount = getSelectedCount();
+  const selectedInfo = getSelected();
 
-  React.useEffect(() => {
-    onSelectedCountChange(selectedCount);
-  }, [selectedCount, onSelectedCountChange]);
+  useEffect(() => {
+    onSelectedChange(selectedInfo.ids, selectedInfo.targetType);
+  }, [selectedInfo.ids, selectedInfo.targetType, onSelectedChange]);
 
-  // Toggle group accordion expand/collapse
+  const selectedCount = selectedInfo.ids.length;
+
   const toggleGroupExpand = (groupId: string) => {
     setGroups((prev) =>
-      prev.map((g) => (g.id === groupId ? { ...g, expanded: !g.expanded } : g))
+      prev.map((g) => (g.id === groupId ? { ...g, expanded: !g.expanded } : g)),
     );
   };
 
-  // Toggle student selection inside a group
   const toggleGroupStudent = (groupId: string, studentId: string) => {
     setGroups((prev) =>
       prev.map((g) => {
         if (g.id !== groupId) return g;
         const updatedStudents = g.students.map((s) =>
-          s.id === studentId ? { ...s, selected: !s.selected } : s
+          s.id === studentId ? { ...s, selected: !s.selected } : s,
         );
         const selCount = updatedStudents.filter((s) => s.selected).length;
         return { ...g, students: updatedStudents, selectedCount: selCount };
-      })
+      }),
     );
   };
 
-  // Toggle all students inside a group
   const toggleGroupAll = (groupId: string, selectAll: boolean) => {
     setGroups((prev) =>
       prev.map((g) => {
@@ -88,38 +109,47 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
           students: updatedStudents,
           selectedCount: selectAll ? updatedStudents.length : 0,
         };
-      })
+      }),
     );
   };
 
-  // Generic toggles for other tabs
   const toggleStudentItem = (id: string) => {
     setStudents((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, selected: !s.selected } : s))
+      prev.map((s) => (s.id === id ? { ...s, selected: !s.selected } : s)),
     );
   };
 
   const toggleMentorItem = (id: string) => {
     setMentors((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, selected: !m.selected } : m))
+      prev.map((m) => (m.id === id ? { ...m, selected: !m.selected } : m)),
     );
   };
 
   const toggleLeadItem = (id: string) => {
     setLeads((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, selected: !l.selected } : l))
+      prev.map((l) => (l.id === id ? { ...l, selected: !l.selected } : l)),
     );
   };
 
   const toggleGraduateItem = (id: string) => {
     setGraduates((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, selected: !g.selected } : g))
+      prev.map((g) => (g.id === id ? { ...g, selected: !g.selected } : g)),
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-card rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-5">
+        <Skeleton className="h-10 w-full rounded-xl" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-full rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white dark:bg-card rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-5">
-      {/* Tab Switcher Navigation Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
         <div className="bg-slate-100/80 dark:bg-slate-800 p-1 rounded-2xl flex items-center gap-1">
           <button
@@ -173,14 +203,11 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
             Graduates
           </button>
         </div>
-
-        {/* Counter Badge */}
         <span className="text-xs font-bold text-slate-500 dark:text-slate-400 pr-1">
           Selected <span className="text-slate-800 dark:text-slate-200 font-extrabold">{selectedCount}</span>
         </span>
       </div>
 
-      {/* Search Bar for non-Group Tabs */}
       {activeTab !== "group" && (
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
@@ -199,7 +226,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
         </div>
       )}
 
-      {/* 1. Group Tab Content */}
       {activeTab === "group" && (
         <div className="space-y-4">
           {groups.map((grp) => (
@@ -207,7 +233,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
               key={grp.id}
               className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50/40 dark:bg-slate-900/20"
             >
-              {/* Accordion Header */}
               <div
                 onClick={() => toggleGroupExpand(grp.id)}
                 className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors"
@@ -220,9 +245,7 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                     {grp.dateRange}
                   </p>
                 </div>
-
                 <div className="flex items-center gap-3">
-                  {/* Students Badge Pill */}
                   <div className="text-center">
                     <span
                       className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
@@ -237,7 +260,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                       students
                     </span>
                   </div>
-
                   {grp.expanded ? (
                     <ChevronUp className="size-4 text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />
                   ) : (
@@ -246,7 +268,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                 </div>
               </div>
 
-              {/* Accordion Expanded Content (Student List Table) */}
               {grp.expanded && (
                 <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-900">
                   <div className="overflow-x-auto">
@@ -256,7 +277,7 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                           <th className="py-3 px-3 w-10">
                             <input
                               type="checkbox"
-                              checked={grp.selectedCount === grp.students.length}
+                              checked={grp.selectedCount === grp.students.length && grp.students.length > 0}
                               onChange={(e) => toggleGroupAll(grp.id, e.target.checked)}
                               className="size-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                             />
@@ -299,7 +320,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
         </div>
       )}
 
-      {/* 2. Students Tab Content */}
       {activeTab === "students" && (
         <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
           {students
@@ -314,71 +334,63 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  {/* Avatar */}
                   <div className="size-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs shrink-0">
                     {st.name.charAt(0)}
                   </div>
-
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                         {st.name}
                       </h4>
-                      <span className="text-slate-300 dark:text-slate-600">•</span>
-
-                      {/* Phone Selector Dropdown */}
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setOpenPhoneMenuId(openPhoneMenuId === st.id ? null : st.id)
-                          }
-                          className="flex items-center gap-1 text-[11px] font-mono text-slate-500 dark:text-slate-400 hover:text-indigo-600 transition-colors"
-                        >
-                          <span>{st.selectedPhone}</span>
-                          <ChevronDown className="size-3" />
-                        </button>
-
-                        {openPhoneMenuId === st.id && (
-                          <div className="absolute top-full left-0 mt-1 z-30 bg-white dark:bg-slate-800 rounded-xl p-2 shadow-xl border border-slate-200 dark:border-slate-700 min-w-[140px] space-y-1">
-                            {st.phones.map((p, idx) => (
-                              <button
-                                key={idx}
-                                onClick={() => {
-                                  setStudents((prev) =>
-                                    prev.map((item) =>
-                                      item.id === st.id
-                                        ? { ...item, selectedPhone: p.number }
-                                        : item
-                                    )
-                                  );
-                                  setOpenPhoneMenuId(null);
-                                }}
-                                className="w-full text-left p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-[11px] space-y-0.5"
-                              >
-                                <span className="block text-[10px] text-slate-400 font-semibold">
-                                  {p.type}
-                                </span>
-                                <span className="block font-mono font-bold text-slate-800 dark:text-slate-200">
-                                  {p.number}
-                                </span>
-                              </button>
-                            ))}
+                      {st.phones.length > 1 && (
+                        <>
+                          <span className="text-slate-300 dark:text-slate-600">•</span>
+                          <div className="relative">
+                            <button
+                              onClick={() =>
+                                setOpenPhoneMenuId(openPhoneMenuId === st.id ? null : st.id)
+                              }
+                              className="flex items-center gap-1 text-[11px] font-mono text-slate-500 dark:text-slate-400 hover:text-indigo-600 transition-colors"
+                            >
+                              <span>{st.selectedPhone}</span>
+                              <ChevronDown className="size-3" />
+                            </button>
+                            {openPhoneMenuId === st.id && (
+                              <div className="absolute top-full left-0 mt-1 z-30 bg-white dark:bg-slate-800 rounded-xl p-2 shadow-xl border border-slate-200 dark:border-slate-700 min-w-[140px] space-y-1">
+                                {st.phones.map((p, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => {
+                                      setStudents((prev) =>
+                                        prev.map((item) =>
+                                          item.id === st.id
+                                            ? { ...item, selectedPhone: p.number }
+                                            : item,
+                                        ),
+                                      );
+                                      setOpenPhoneMenuId(null);
+                                    }}
+                                    className="w-full text-left p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-[11px] space-y-0.5"
+                                  >
+                                    <span className="block text-[10px] text-slate-400 font-semibold">
+                                      {p.type}
+                                    </span>
+                                    <span className="block font-mono font-bold text-slate-800 dark:text-slate-200">
+                                      {p.number}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-
-                      <span className="text-slate-300 dark:text-slate-600">|</span>
-                      <span className="text-[11px] font-medium text-slate-400">
-                        {st.age}
-                      </span>
+                        </>
+                      )}
                     </div>
-
                     <p className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 mt-0.5">
-                      {st.course} &gt;
+                      {st.course || "\u00A0"}
                     </p>
                   </div>
                 </div>
-
                 <input
                   type="checkbox"
                   checked={st.selected}
@@ -390,7 +402,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
         </div>
       )}
 
-      {/* 3. Mentors Tab Content */}
       {activeTab === "mentors" && (
         <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
           {mentors
@@ -417,20 +428,15 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                       <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         {m.selectedPhone}
                       </span>
-                      <span className="text-slate-300 dark:text-slate-600">|</span>
-                      <span className="text-[11px] font-medium text-slate-400">
-                        {m.age}
-                      </span>
                     </div>
                     <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
                       Level:{" "}
                       <span className="text-indigo-600 dark:text-indigo-400 font-bold">
-                        {m.level}
+                        {m.level || "—"}
                       </span>
                     </p>
                   </div>
                 </div>
-
                 <input
                   type="checkbox"
                   checked={m.selected}
@@ -442,7 +448,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
         </div>
       )}
 
-      {/* 4. Leads Tab Content */}
       {activeTab === "leads" && (
         <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
           {leads
@@ -469,14 +474,10 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                       <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         {l.selectedPhone}
                       </span>
-                      <span className="text-slate-300 dark:text-slate-600">|</span>
-                      <span className="text-[11px] font-medium text-slate-400">
-                        {l.month}
-                      </span>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                        {l.course}
+                        {l.course || (l.month || "")}
                       </span>
                       <span className="text-slate-300 dark:text-slate-600">•</span>
                       <span
@@ -491,7 +492,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                     </div>
                   </div>
                 </div>
-
                 <input
                   type="checkbox"
                   checked={l.selected}
@@ -503,7 +503,6 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
         </div>
       )}
 
-      {/* 5. Graduates Tab Content */}
       {activeTab === "graduates" && (
         <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
           {graduates
@@ -530,10 +529,12 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                       <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         {g.selectedPhone}
                       </span>
-                      <span className="text-slate-300 dark:text-slate-600">|</span>
-                      <span className="text-[11px] font-medium text-slate-400">
-                        {g.age}
-                      </span>
+                      {g.age && (
+                        <>
+                          <span className="text-slate-300 dark:text-slate-600">|</span>
+                          <span className="text-[11px] font-medium text-slate-400">{g.age}</span>
+                        </>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5 text-[11px] font-semibold">
                       <span
@@ -551,14 +552,15 @@ export function RecipientsPanel({ onSelectedCountChange }: RecipientsPanelProps)
                       >
                         {g.careerTag}
                       </span>
-                      <span className="text-slate-300 dark:text-slate-600">•</span>
-                      <span className="text-slate-500 dark:text-slate-400">
-                        {g.company}
-                      </span>
+                      {g.company && (
+                        <>
+                          <span className="text-slate-300 dark:text-slate-600">•</span>
+                          <span className="text-slate-500 dark:text-slate-400">{g.company}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
-
                 <input
                   type="checkbox"
                   checked={g.selected}

@@ -491,7 +491,7 @@ export interface SmsMailingDto {
   targetType: SmsTargetType;
   sentAt: string;
   recipientCount: number;
-  recipients: string[] | null;
+  recipients: SmsRecipientDto[] | null;
 }
 
 export interface SendSmsRequest {

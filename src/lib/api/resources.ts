@@ -130,13 +130,7 @@ export const permissionsApi = crud<PermissionDto, PermissionWriteDto>("Permissio
 export const rolesApi = crud<RoleDto, RoleWriteDto>("Roles");
 export const smsTemplatesApi = crud<SmsTemplateDto, SmsTemplateWriteDto>("SmsTemplates");
 
-// SMS mailings: send + read-only history.
-export const smsApi = {
-  history: (params: ListParams = {}) =>
-    apiFetch<PagedResult<SmsMailingDto>>(`/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`),
-  send: (body: SendSmsRequest) =>
-    apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
-};
+
 
 // Users are managed (list/get/delete) with dedicated role/status/password actions.
 export const usersApi = {
@@ -241,7 +235,7 @@ export const smsMailingsApi = {
     apiFetch<PagedResult<SmsMailingDto>>(
       `/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`,
     ),
-  send: (body: unknown) => apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
+  send: (body: SendSmsRequest) => apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
 };
 
 export const logsApi = {
