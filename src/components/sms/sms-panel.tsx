@@ -198,11 +198,11 @@ export function SmsPanel() {
 
   const isRecipientsLoading = studentsQuery.isPending || groupsQuery.isPending || employeesQuery.isPending || leadsQuery.isPending || graduatesQuery.isPending;
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedTargetType, setSelectedTargetType] = useState<string>("Students");
 
   const handleSelectedChange = useCallback((ids: string[], targetType: string) => {
-    setSelectedIds(new Set(ids));
+    setSelectedIds(ids);
     setSelectedTargetType(targetType);
   }, []);
 
@@ -236,10 +236,10 @@ export function SmsPanel() {
         <div className="lg:col-span-5 xl:col-span-4">
           <ComposerPanel
             templates={templates}
-            selectedCount={selectedIds.size}
+            selectedCount={selectedIds.length}
             historyQuery={historyQuery}
             sendMutation={sendMutation}
-            recipientIds={Array.from(selectedIds)}
+            recipientIds={selectedIds}
           />
         </div>
       </div>
