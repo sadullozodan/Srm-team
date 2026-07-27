@@ -1,10 +1,12 @@
 "use client";
 
 import type { PaymentDto } from "@/lib/api/types";
+import { useT } from "@/lib/i18n";
 import { incomeDelta } from "@/lib/series";
 import { CardTitle, Panel, Stepper, money, useMonthPicker } from "../parts";
 
 export function IncomeCard({ payments, totalDebt }: { payments: PaymentDto[]; totalDebt: number }) {
+  const t = useT();
   const { year, month, monthName, label, step } = useMonthPicker();
 
   const income = payments
@@ -21,14 +23,14 @@ export function IncomeCard({ payments, totalDebt }: { payments: PaymentDto[]; to
   return (
     <Panel className="flex flex-wrap items-center justify-between gap-6 p-6">
       <div>
-        <CardTitle>Income</CardTitle>
+        <CardTitle>{t("Income")}</CardTitle>
         <p key={income} className="mt-3 text-4xl font-bold text-primary" style={{ animation: 'fadeScaleIn 0.3s ease-out' }}>{money(income)}</p>
 
         {delta === null ? (
-          <p className="mt-2 text-sm text-muted-foreground">No payments the month before</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("No payments the month before")}</p>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">
-            {Math.abs(delta)}% {delta < 0 ? "less" : "more"} than the month before
+            {Math.abs(delta)}% {delta < 0 ? t("less") : t("more")} {t("than the month before")}
           </p>
         )}
 
@@ -37,7 +39,7 @@ export function IncomeCard({ payments, totalDebt }: { payments: PaymentDto[]; to
         </div>
       </div>
 
-      <Donut percent={collected} label="collected" />
+      <Donut percent={collected} label={t("collected")} />
     </Panel>
   );
 }

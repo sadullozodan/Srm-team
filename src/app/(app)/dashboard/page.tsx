@@ -24,6 +24,7 @@ import type {
   PaymentDto,
   StudentDto,
 } from "@/lib/api/types";
+import { useT } from "@/lib/i18n";
 import { AttendancePanel } from "./attendance-panel";
 import { AttendanceCard, LeadsCard, LeftCoursesCard } from "./chart-cards";
 import { EnrollCard, type EnrollRow } from "./enroll-card";
@@ -33,6 +34,7 @@ import { IncomeCard } from "./income-card";
 import { Panel } from "../parts";
 
 export default function DashboardPage() {
+  const t = useT();
   const stats = useQuery({ queryKey: queryKeys.dashboard, queryFn: dashboardApi.stats });
 
   // Everything the stats endpoint does not cover. These fill in as they arrive
@@ -47,13 +49,13 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("Dashboard")}</h1>
         <DateField />
       </div>
 
       {stats.isError ? (
         <Panel className="p-6 text-sm text-destructive">
-          Couldn&apos;t load dashboard data
+          {t("Couldn't load dashboard data")}
           {stats.error instanceof Error ? `: ${stats.error.message}` : "."}
         </Panel>
       ) : stats.isPending ? (
@@ -111,6 +113,7 @@ function Widgets({
   payments: PaymentDto[];
   enrollRows: EnrollRow[];
 }) {
+  const t = useT();
   return (
     <>
       <div className="grid gap-5 lg:grid-cols-2">
@@ -118,17 +121,17 @@ function Widgets({
           <div className="grid gap-5 sm:grid-cols-3">
             <Kpi
               value={stats.studentsCount}
-              label="Students"
+              label={t("Students")}
               icon={<NavIcon name="students" className="size-4" />}
             />
             <Kpi
               value={stats.usersCount}
-              label="Users"
+              label={t("Users")}
               icon={<User className="size-4" />}
             />
             <Kpi
               value={stats.employeesCount}
-              label="Employees"
+              label={t("Employees")}
               icon={<NavIcon name="employees" className="size-4" />}
             />
           </div>
@@ -185,6 +188,7 @@ function Kpi({
  * prefilled date would imply the page is filtered by it.
  */
 function DateField() {
+  const t = useT();
   const [date, setDate] = useState("");
   const input = useRef<HTMLInputElement>(null);
 
@@ -194,21 +198,21 @@ function DateField() {
       className="relative flex cursor-pointer items-center gap-3 rounded-xl border bg-card px-4 py-3 transition-colors hover:border-primary focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/30"
     >
       <span className="absolute -top-2 left-3 bg-card px-1 text-xs text-muted-foreground">
-        Date
+        {t("Date")}
       </span>
 
       <CalendarDays className="size-5 shrink-0 text-primary" />
       <span
         className={`min-w-24 text-base font-medium tabular-nums ${date ? "" : "text-muted-foreground"}`}
       >
-        {date ? toDots(date) : "Select date"}
+        {date ? toDots(date) : t("Select date")}
       </span>
 
       <input
         ref={input}
         type="date"
         value={date}
-        aria-label="Date"
+        aria-label={t("Date")}
         onChange={(event) => setDate(event.target.value)}
         className="absolute inset-0 cursor-pointer opacity-0"
       />

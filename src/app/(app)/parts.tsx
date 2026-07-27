@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useT } from "@/lib/i18n";
 import { MONTHS } from "@/lib/series";
 import { cn } from "@/lib/utils";
 
@@ -43,9 +44,10 @@ export function Empty({ children }: { children: React.ReactNode }) {
 }
 
 export function SeeMore({ href }: { href: string }) {
+  const t = useT();
   return (
     <Link href={href} className="flex items-center gap-1 text-sm font-medium text-primary">
-      See more <ChevronRight className="size-4" />
+      {t("See more")} <ChevronRight className="size-4" />
     </Link>
   );
 }
@@ -67,7 +69,6 @@ export function TableHead({ columns }: { columns: string[] }) {
   );
 }
 
-/** ‹ label › control used by the Leads, Income and Attendance cards. */
 export function Stepper({
   label,
   onStep,
@@ -75,16 +76,17 @@ export function Stepper({
   label: string;
   onStep: (delta: number) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex items-center gap-2 rounded-full bg-muted/60 p-1">
-      <StepButton label="Previous" onClick={() => onStep(-1)}>
+      <StepButton label={t("Previous")} onClick={() => onStep(-1)}>
         <ChevronLeft className="size-4" />
       </StepButton>
       {/* Labels are derived from today's date, which the prerender cannot know. */}
       <span suppressHydrationWarning className="min-w-20 text-center text-sm font-medium">
         {label}
       </span>
-      <StepButton label="Next" onClick={() => onStep(1)}>
+      <StepButton label={t("Next")} onClick={() => onStep(1)}>
         <ChevronRight className="size-4" />
       </StepButton>
     </div>

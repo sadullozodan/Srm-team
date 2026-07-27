@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, CheckCheck, Mail } from "lucide-react";
+import { useT } from "@/lib/i18n";
 import { notificationsApi, queryKeys } from "@/lib/api/resources";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -31,6 +32,7 @@ function timeAgo(iso: string) {
 }
 
 export function NotificationPanel() {
+  const t = useT();
   const queryClient = useQueryClient();
 
   const { data, isPending } = useQuery({
@@ -59,13 +61,13 @@ export function NotificationPanel() {
   return (
     <div className="overflow-hidden rounded-xl bg-popover">
       <div className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
-        <span className="text-lg font-semibold">Notification</span>
+        <span className="text-lg font-semibold">{t("Notification")}</span>
         {hasUnread ? (
           <button
             type="button"
             onClick={() => readAllMutation.mutate()}
             disabled={readAllMutation.isPending}
-            aria-label="Mark all as read"
+            aria-label={t("Mark all as read")}
             className="transition-opacity hover:opacity-80"
           >
             <CheckCheck className="size-5" />
@@ -86,19 +88,19 @@ export function NotificationPanel() {
 
         {!isPending && items.length === 0 && (
           <li className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Nothing new
+            {t("Nothing new")}
           </li>
         )}
 
         {items.map((notification) => (
           <li key={notification.id} className="px-4 py-3">
             <div className="flex items-start justify-between gap-3">
-              <p className="font-semibold">{notification.title ?? "Notification"}</p>
+              <p className="font-semibold">{notification.title ?? t("Notification")}</p>
               <button
                 type="button"
                 onClick={() => readMutation.mutate(notification.id)}
                 disabled={notification.isRead || readMutation.isPending}
-                aria-label={notification.isRead ? "Read" : "Mark as read"}
+                aria-label={notification.isRead ? t("Read") : t("Mark as read")}
                 className="shrink-0"
               >
                 <Check

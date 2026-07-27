@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import type { GroupDto } from "@/lib/api/types";
 import { enrollSeries } from "@/lib/series";
 import { EnrollChart } from "./charts";
@@ -14,6 +15,7 @@ export type EnrollRow = {
 };
 
 export function EnrollCard({ groups, rows }: { groups: GroupDto[]; rows: EnrollRow[] }) {
+  const t = useT();
   const [year, setYear] = useState(new Date().getFullYear());
   const data = enrollSeries(groups, year);
   const hasData = data.some((point) => point.value > 0);
@@ -21,7 +23,7 @@ export function EnrollCard({ groups, rows }: { groups: GroupDto[]; rows: EnrollR
   return (
     <Panel className="p-5">
       <div className="flex items-center justify-between">
-        <CardTitle>Enroll</CardTitle>
+        <CardTitle>{t("Enroll")}</CardTitle>
         <Stepper label={`${year} y`} onStep={(delta) => setYear(year + delta)} />
       </div>
 
@@ -32,12 +34,12 @@ export function EnrollCard({ groups, rows }: { groups: GroupDto[]; rows: EnrollR
       {hasData && (
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-sm">
-          <TableHead columns={["Full name", "Course", "Phone"]} />
+          <TableHead columns={[t("Full name"), t("Course"), t("Phone")]} />
           <tbody>
             {rows.length === 0 && (
               <tr>
                 <td colSpan={3}>
-                  <Empty>No students yet</Empty>
+                  <Empty>{t("No students yet")}</Empty>
                 </td>
               </tr>
             )}

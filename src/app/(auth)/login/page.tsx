@@ -8,12 +8,14 @@ import { Loader } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/context";
+import { useT } from "@/lib/i18n";
 import { ApiError } from "@/lib/api/client";
 import { normalizePhone } from "@/lib/phone";
 import { AuthTabs } from "../auth-tabs";
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useT();
   const { login, isAuthenticated, isLoading } = useAuth();
 
   const [phone, setPhone] = useState("");
@@ -38,9 +40,9 @@ export default function LoginPage() {
       router.replace("/");
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        setError("Incorrect phone number or password.");
+        setError(t("Incorrect phone number or password."));
       } else {
-        setError(err instanceof Error ? err.message : "Something went wrong.");
+        setError(err instanceof Error ? err.message : t("Something went wrong."));
       }
     } finally {
       setSubmitting(false);
@@ -57,7 +59,7 @@ export default function LoginPage() {
       <div className="mt-8 space-y-4">
         <div>
           <label htmlFor="phone" className="sr-only">
-            Phone
+            {t("Phone")}
           </label>
           <Input
             id="phone"
@@ -68,13 +70,13 @@ export default function LoginPage() {
             autoComplete="tel"
             required
             className="h-13"
-            placeholder="Phone number"
+            placeholder={t("Phone number")}
           />
         </div>
 
         <div className="relative">
           <label htmlFor="password" className="sr-only">
-            Password
+            {t("Password")}
           </label>
           <Input
             id="password"
@@ -84,13 +86,13 @@ export default function LoginPage() {
             autoComplete="current-password"
             required
             className="h-13 pr-11"
-            placeholder="Password"
+            placeholder={t("Password")}
           />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? t("Hide password") : t("Show password")}
           >
             {showPassword ? (
               <EyeOff className="size-5" />
@@ -111,14 +113,14 @@ export default function LoginPage() {
 
         <Button type="submit" className="h-12 w-full" disabled={submitting}>
           {submitting && <Loader size="sm" />}
-          Log in
+          {t("Log in")}
         </Button>
 
         <Link
           href="/forgot-password"
           className="block text-center text-sm font-medium text-primary hover:underline"
         >
-          Forgot password?
+          {t("Forgot password?")}
         </Link>
       </div>
     </form>
