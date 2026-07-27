@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Upload, Plus, Search, ChevronDown, Calendar, SquarePen, X } from "lucide-react";
+import { ArrowLeft, Upload, Plus, Search, Calendar, SquarePen, X } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import {
   debtorsApi,
@@ -47,17 +47,9 @@ export function DebtorsPanel() {
   }, [debtors, searchQuery, selectedStatus]);
 
   // Overlay states
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedDebtorName, setSelectedDebtorName] = useState("");
   const [isAddTransactionExpanded, setIsAddTransactionExpanded] = useState(false);
-
-  // Modal Form states
-  const [modalDebtor, setModalDebtor] = useState("");
-  const [modalFromDate, setModalFromDate] = useState("");
-  const [modalToDate, setModalToDate] = useState("");
-  const [modalAmount, setModalAmount] = useState("");
-  const [modalNotes, setModalNotes] = useState("");
 
   // Drawer Add Transaction states
   const [newTransAmount, setNewTransAmount] = useState("");
@@ -97,13 +89,13 @@ export function DebtorsPanel() {
           </button>
 
           {/* + ADD NEW button */}
-          <button
-            onClick={() => setIsModalOpen(true)}
+          <Link
+            href="/accounting/debtors/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
           >
             <Plus className="size-4 stroke-[3]" />
             <span>ADD NEW</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -227,127 +219,7 @@ export function DebtorsPanel() {
         </table>
       </div>
 
-      {/* 4. "New deptors" Modal (image_755fa8.png) */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            className="bg-white dark:bg-card rounded-2xl w-full max-w-md p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 animate-in fade-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                New deptors
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-
-            {/* Form */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setIsModalOpen(false);
-              }}
-              className="space-y-4"
-            >
-              {/* Debtor Dropdown */}
-              <CustomSelect
-                label="Debtor"
-                value={modalDebtor || "Choose debtor"}
-                onChange={(val) => setModalDebtor(val === "Choose debtor" ? "" : val)}
-                options={["Choose debtor", "Dilovar Karimov", "Tojiev Olimjon"]}
-                className="w-full"
-              />
-
-              {/* Two-column row: From & To Date Pickers */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* From */}
-                <div className="relative">
-                  <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                    From
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={modalFromDate}
-                      onChange={(e) => setModalFromDate(e.target.value)}
-                      placeholder="mm.yyyy"
-                      className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-9 placeholder:text-slate-400"
-                    />
-                    <Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* To */}
-                <div className="relative">
-                  <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                    To
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={modalToDate}
-                      onChange={(e) => setModalToDate(e.target.value)}
-                      placeholder="mm.yyyy"
-                      className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-9 placeholder:text-slate-400"
-                    />
-                    <Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Amount Input */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={modalAmount}
-                  onChange={(e) => setModalAmount(e.target.value)}
-                  placeholder="Amount"
-                  className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
-                />
-              </div>
-
-              {/* Notes Input */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={modalNotes}
-                  onChange={(e) => setModalNotes(e.target.value)}
-                  placeholder="Notes"
-                  className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
-                />
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
-                >
-                  ADD
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-500 dark:text-indigo-400 text-xs font-bold tracking-wider transition-all"
-                >
-                  CANCEL
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 5. Right-Side Interactive Drawer (image_755fc8.png & image_75628e.png) */}
+      {/* 4. Right-Side Interactive Drawer (image_755fc8.png & image_75628e.png) */}
       {isDrawerOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end transition-opacity duration-300"
@@ -472,9 +344,9 @@ export function DebtorsPanel() {
                         {trans.comment}
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <button className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
+                        <Link href={`/accounting/debtors/${trans.id}/edit`} onClick={(e) => e.stopPropagation()} className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
                           <SquarePen className="size-4" />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   ))}

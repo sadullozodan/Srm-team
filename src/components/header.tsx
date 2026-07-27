@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, ChevronDown, Coins, LogOut, Moon, Search, Sun, User } from "lucide-react";
@@ -139,13 +140,37 @@ function AccountMenu() {
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+
+  const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (!document.startViewTransition) {
+      setTheme(newTheme);
+      return;
+    }
+
+    document.documentElement.style.setProperty("--click-x", `${x}px`);
+    document.documentElement.style.setProperty("--click-y", `${y}px`);
+
+    const transition = document.startViewTransition(() => {
+      flushSync(() => setTheme(newTheme));
+    });
+
+    void transition.finished.then(() => {
+      document.documentElement.style.removeProperty("--click-x");
+      document.documentElement.style.removeProperty("--click-y");
+    });
+  };
+
   return (
     <Button
       variant="ghost"
       size="icon"
       className="rounded-full text-primary"
       aria-label="Toggle theme"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      onClick={handleToggle}
     >
       <Sun className="dark:hidden" />
       <Moon className="hidden dark:block" />

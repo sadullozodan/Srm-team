@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   RotateCw,
   Search,
@@ -44,6 +44,12 @@ export function SalaryPanel() {
     }));
   }, [salariesQuery.data]);
 
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => salariesApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.list(salariesApi.key, FETCH_ALL) }),
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("All month");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -78,11 +84,17 @@ export function SalaryPanel() {
           Salary
         </h1>
 
-        {/* REFRESH Button */}
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20">
-          <RotateCw className="size-4 stroke-[2.5]" />
-          <span>REFRESH</span>
-        </button>
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20">
+            <RotateCw className="size-4 stroke-[2.5]" />
+            <span>REFRESH</span>
+          </button>
+          <Link href="/accounting/salary/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20">
+            <Plus className="size-4 stroke-[3]" />
+            <span>ADD NEW</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. Filters Bar */}
@@ -182,15 +194,18 @@ export function SalaryPanel() {
                 {/* ACTION */}
                 <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
-                    <button
-                      title="Edit"
+                    <Link
+                      href={`/accounting/salary/${row.id}/edit`}
+                      onClick={(e) => e.stopPropagation()}
                       className="p-1 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
+                      title="Edit"
                     >
                       <SquarePen className="size-4" />
-                    </button>
+                    </Link>
                     <button
                       title="Delete"
                       className="p-1 text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 rounded hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
+                      onClick={() => { if (confirm("Delete?")) deleteMutation.mutate(row.id); }}
                     >
                       <Trash2 className="size-4" />
                     </button>

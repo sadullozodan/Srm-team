@@ -6,12 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 import { ListFilter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dashboardApi, queryKeys } from "@/lib/api/resources";
-import { attendanceSeries, leftCoursesSeries, type MonthPoint } from "@/lib/series";
+import type { LeadDto } from "@/lib/api/types";
+import { attendanceSeries, leadsSeries, leftCoursesSeries } from "@/lib/series";
 import { AttendanceChart, LeadsChart, LeftCoursesChart } from "./charts";
 import { CardTitle, Panel, Stepper, useMonthPicker } from "../parts";
 
-export function LeadsCard({ data }: { data: MonthPoint[] }) {
+export function LeadsCard({ leads }: { leads: LeadDto[] }) {
   const [year, setYear] = useState(new Date().getFullYear());
+  const data = leadsSeries(leads, year);
 
   return (
     <Panel className="p-5">

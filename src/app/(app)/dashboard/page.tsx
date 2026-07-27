@@ -17,17 +17,13 @@ import {
 import type {
   DashboardStatsDto,
   GraduateDto,
+  GroupDto,
+  LeadDto,
   ListParams,
   PagedResult,
+  PaymentDto,
   StudentDto,
 } from "@/lib/api/types";
-import {
-  collectionRate,
-  enrollSeries,
-  incomeDelta,
-  leadsSeries,
-  type MonthPoint,
-} from "@/lib/series";
 import { AttendancePanel } from "./attendance-panel";
 import { AttendanceCard, LeadsCard, LeftCoursesCard } from "./chart-cards";
 import { EnrollCard, type EnrollRow } from "./enroll-card";
@@ -66,10 +62,10 @@ export default function DashboardPage() {
         <Widgets
           stats={stats.data}
           graduates={graduates}
-          leads={leadsSeries(leads)}
-          enroll={enrollSeries(groups)}
+          leads={leads}
+          enroll={groups}
+          payments={payments}
           enrollRows={students.slice(0, 6).map(toEnrollRow)}
-          delta={incomeDelta(payments)}
         />
       )}
     </div>
@@ -105,15 +101,15 @@ function Widgets({
   graduates,
   leads,
   enroll,
+  payments,
   enrollRows,
-  delta,
 }: {
   stats: DashboardStatsDto;
   graduates: GraduateDto[];
-  leads: MonthPoint[];
-  enroll: MonthPoint[];
+  leads: LeadDto[];
+  enroll: GroupDto[];
+  payments: PaymentDto[];
   enrollRows: EnrollRow[];
-  delta: number | null;
 }) {
   return (
     <>
@@ -144,18 +140,14 @@ function Widgets({
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <LeadsCard data={leads} />
-        <IncomeCard
-          income={stats.incomeThisMonth}
-          delta={delta}
-          collected={collectionRate(stats)}
-        />
+        <LeadsCard leads={leads} />
+        <IncomeCard payments={payments} totalDebt={stats.totalDebt} />
       </div>
 
       <AttendanceCard />
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <EnrollCard data={enroll} rows={enrollRows} />
+        <EnrollCard groups={enroll} rows={enrollRows} />
         <div className="space-y-5">
           <GraduatesCard count={stats.employedGraduatesCount} rows={graduates} />
           <LeftCoursesCard />

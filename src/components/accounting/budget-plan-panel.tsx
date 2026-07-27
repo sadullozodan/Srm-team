@@ -7,9 +7,7 @@ import {
   ArrowLeft,
   Upload,
   Plus,
-  ChevronDown,
   Calendar,
-  X,
 } from "lucide-react";
 import { BudgetPlanChart } from "./budget-plan-chart";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -63,42 +61,11 @@ export function BudgetPlanPanel() {
     }));
   }, [budgetsQuery.data]);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Form states for New Budget Modal
-  const [formStatus, setFormStatus] = useState("Active");
-  const [formAmount, setFormAmount] = useState("");
-  const [formCategory, setFormCategory] = useState("");
-  const [formFrom, setFormFrom] = useState("");
-  const [formTo, setFormTo] = useState("");
-
   // Chart Date Filters
   const [chartFromDate, setChartFromDate] = useState("Jan 2023");
   const [chartToDate, setChartToDate] = useState("Dec 2023");
   const [tableStatus, setTableStatus] = useState("All status");
   const [tableDate, setTableDate] = useState("July 2023");
-
-  const handleAddBudget = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await budgetsApi.create({
-        categoryName: formCategory || "Marketing",
-        fromDate: formFrom || "2023-04-01",
-        toDate: formTo || "2023-05-01",
-        amountAllocated: Number(formAmount) || 1000,
-        amountSpent: 0,
-        status: "Active",
-      });
-      budgetsQuery.refetch();
-    } catch {
-      // ignore
-    }
-    setIsModalOpen(false);
-    setFormAmount("");
-    setFormCategory("");
-    setFormFrom("");
-    setFormTo("");
-  };
 
   return (
     <div className="w-full bg-white dark:bg-card text-foreground rounded-2xl md:rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-200/80 dark:border-slate-800 space-y-6 font-sans relative">
@@ -157,13 +124,13 @@ export function BudgetPlanPanel() {
         </div>
 
         {/* + ADD NEW Button */}
-        <button
-          onClick={() => setIsModalOpen(true)}
+        <Link
+          href="/accounting/budget/new"
           className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
         >
           <Plus className="size-4 stroke-[3]" />
           <span>ADD NEW</span>
-        </button>
+        </Link>
       </div>
 
       {/* 4. Data Table */}
@@ -211,115 +178,6 @@ export function BudgetPlanPanel() {
         </table>
       </div>
 
-      {/* 5. "New budjet" Modal Component (matching image_74dfa2.png) */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-card rounded-2xl w-full max-w-md p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-6 animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                New budjet
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <ChevronDown className="size-5" />
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleAddBudget} className="space-y-5">
-              {/* Top Row: Status & Amount */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Status */}
-                <CustomSelect
-                  label="Status"
-                  value={formStatus}
-                  onChange={setFormStatus}
-                  options={["Active", "Inactive"]}
-                />
-
-                {/* Amount */}
-                <div className="relative">
-                  <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                    Amount
-                  </label>
-                  <input
-                    type="text"
-                    value={formAmount}
-                    onChange={(e) => setFormAmount(e.target.value)}
-                    placeholder="Amount"
-                    className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200"
-                  />
-                </div>
-              </div>
-
-              {/* Middle Row: Category */}
-              <CustomSelect
-                label="Category"
-                value={formCategory || "Choose category"}
-                onChange={setFormCategory}
-                options={["Choose category", "Marketing", "Office expenses", "Tax", "Employees"]}
-              />
-
-              {/* Bottom Row: From & To */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* From */}
-                <div className="relative">
-                  <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                    From
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={formFrom}
-                      onChange={(e) => setFormFrom(e.target.value)}
-                      placeholder="mm.yyyy"
-                      className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-9"
-                    />
-                    <Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* To */}
-                <div className="relative">
-                  <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                    To
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={formTo}
-                      onChange={(e) => setFormTo(e.target.value)}
-                      placeholder="mm.yyyy"
-                      className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-9"
-                    />
-                    <Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Footer Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
-                >
-                  ADD
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-500 dark:text-indigo-400 text-xs font-bold tracking-wider transition-all"
-                >
-                  CANCEL
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

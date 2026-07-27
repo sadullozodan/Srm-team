@@ -26,6 +26,12 @@ export type MonthPoint = { month: string; value: number };
 
 const emptyYear = (): MonthPoint[] => MONTHS.map((month) => ({ month, value: 0 }));
 
+function parseYear(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const match = value.match(/^(\d{4})/);
+  return match ? Number(match[1]) : null;
+}
+
 /**
  * `LeadDto.registerMonth` is a free-text string, so it arrives as anything from
  * "2024-06-01" to "June" to "Jun". Returns 0-11, or null if it is unreadable.
@@ -46,15 +52,16 @@ export function monthIndex(value: string | null | undefined): number | null {
 }
 
 /** Leads per month, from GET /api/Leads. */
-export function leadsSeries(leads: LeadDto[]): MonthPoint[] {
-  const year = emptyYear();
+export function leadsSeries(leads: LeadDto[], year?: number): MonthPoint[] {
+  const result = emptyYear();
 
   for (const lead of leads) {
+    if (year !== undefined && parseYear(lead.registerMonth) !== year) continue;
     const index = monthIndex(lead.registerMonth);
-    if (index !== null) year[index].value++;
+    if (index !== null) result[index].value++;
   }
 
-  return year;
+  return result;
 }
 
 /**
@@ -63,15 +70,16 @@ export function leadsSeries(leads: LeadDto[]): MonthPoint[] {
  * ponytail: the closest real signal available. EnrollmentDto has no enrolled-at
  * date, so a true per-enrollment series needs the backend (see BACKEND-GAPS.md).
  */
-export function enrollSeries(groups: GroupDto[]): MonthPoint[] {
-  const year = emptyYear();
+export function enrollSeries(groups: GroupDto[], year?: number): MonthPoint[] {
+  const result = emptyYear();
 
   for (const group of groups) {
+    if (year !== undefined && parseYear(group.startDate) !== year) continue;
     const index = monthIndex(group.startDate);
-    if (index !== null) year[index].value += group.enrolledCount;
+    if (index !== null) result[index].value += group.enrolledCount;
   }
 
-  return year;
+  return result;
 }
 
 /** Percent change in money collected, this month against last. */

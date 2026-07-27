@@ -2,13 +2,13 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Upload,
   Plus,
   Search,
-  ChevronDown,
   Calendar,
   SquarePen,
   Trash2,
@@ -70,6 +70,12 @@ export function PaymentsListPanel() {
   const [selectedStudentName, setSelectedStudentName] = useState("Dilovar Karimov");
   const [isAddTransactionExpanded, setIsAddTransactionExpanded] = useState(false);
   const [openDownloadPopoverId, setOpenDownloadPopoverId] = useState<number | null>(null);
+
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => paymentsApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["Payments"] }),
+  });
 
   // Modals state
   const [activeModal, setActiveModal] = useState<"amount" | "prepayment" | null>(null);
@@ -137,14 +143,14 @@ export function PaymentsListPanel() {
             <span>EXPORT</span>
           </button>
 
-          {/* + PREPAYMENT button */}
-          <button
-            onClick={() => setActiveModal("prepayment")}
+          {/* + PREPAYMENT button → /accounting/payments/new */}
+          <Link
+            href="/accounting/payments/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
           >
             <Plus className="size-4 stroke-[3]" />
             <span>PREPAYMENT</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -302,14 +308,15 @@ export function PaymentsListPanel() {
                 {/* ACTION: Edit (Blue) & Delete (Red) */}
                 <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
-                    <button
-                      title="Edit"
+                    <Link
+                      href={`/accounting/payments/${row.id}/edit`}
                       className="p-1 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
                     >
                       <SquarePen className="size-4" />
-                    </button>
+                    </Link>
                     <button
                       title="Delete"
+                      onClick={() => { if (confirm("Delete this payment?")) deleteMutation.mutate(row.id); }}
                       className="p-1 text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 rounded hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
                     >
                       <Trash2 className="size-4" />

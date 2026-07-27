@@ -2,7 +2,7 @@
 
 import { useState, Fragment, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CustomSelect } from "@/components/ui/custom-select";
 import {
   ArrowLeft,
@@ -86,6 +86,12 @@ export function ExpensesPanel() {
     })));
   }, [expensesQuery.data]);
 
+  const queryClient = useQueryClient();
+  const deleteExpenseMutation = useMutation({
+    mutationFn: (id: string) => expensesApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.list(expensesApi.key, FETCH_ALL) }),
+  });
+
   const [selectedCategory, setSelectedCategory] = useState("All category");
   const [selectedBranch, setSelectedBranch] = useState("All branches");
   const [selectedDate, setSelectedDate] = useState("July 2023");
@@ -136,11 +142,17 @@ export function ExpensesPanel() {
           </h1>
         </div>
 
-        {/* Right: EXPORT Button */}
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50/70 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950/40 text-xs font-bold tracking-wider transition-all shadow-xs">
-          <Upload className="size-4 stroke-[2.5]" />
-          <span>EXPORT</span>
-        </button>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50/70 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950/40 text-xs font-bold tracking-wider transition-all shadow-xs">
+            <Upload className="size-4 stroke-[2.5]" />
+            <span>EXPORT</span>
+          </button>
+          <Link href="/accounting/expenses/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20">
+            <Plus className="size-4 stroke-[3]" />
+            <span>ADD NEW</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. Filters Bar */}
@@ -379,10 +391,10 @@ export function ExpensesPanel() {
                         <td className="py-3.5 px-4 text-right">
                           {row.actionType === "edit_delete" ? (
                             <div className="flex items-center justify-end gap-2">
-                              <button className="p-1 text-indigo-500 hover:text-indigo-700">
+                              <Link href={`/accounting/expenses/${row.id}/edit`} onClick={(e) => e.stopPropagation()} className="p-1 text-indigo-500 hover:text-indigo-700">
                                 <SquarePen className="size-4" />
-                              </button>
-                              <button className="p-1 text-rose-500 hover:text-rose-700">
+                              </Link>
+                              <button className="p-1 text-rose-500 hover:text-rose-700" onClick={() => { if (confirm("Delete?")) deleteExpenseMutation.mutate(String(row.id)); }}>
                                 <Trash2 className="size-4" />
                               </button>
                             </div>

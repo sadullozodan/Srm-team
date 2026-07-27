@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Upload,
   Search,
@@ -41,6 +41,12 @@ export function AvansPanel() {
       status: a.status as "Pending" | "Approved" | "Denied",
     }));
   }, [advancesQuery.data]);
+
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => advancesApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.list(advancesApi.key, FETCH_ALL) }),
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All status");
@@ -133,11 +139,17 @@ export function AvansPanel() {
           Avans
         </h1>
 
-        {/* EXPORT Button */}
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50/70 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950/40 text-xs font-bold tracking-wider transition-all shadow-xs">
-          <Upload className="size-4 stroke-[2.5]" />
-          <span>EXPORT</span>
-        </button>
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50/70 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950/40 text-xs font-bold tracking-wider transition-all shadow-xs">
+            <Upload className="size-4 stroke-[2.5]" />
+            <span>EXPORT</span>
+          </button>
+          <Link href="/accounting/avans/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20">
+            <Plus className="size-4 stroke-[3]" />
+            <span>ADD NEW</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. Filters Bar */}

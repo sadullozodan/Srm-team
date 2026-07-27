@@ -50,6 +50,17 @@
      sidebar, and it needs a dark counterpart. */
   --auth-panel: #e2e8f0;
   --auth-panel-foreground: #262626;
+  --surface: #ffffff;
+  --bg-page: #f3f5f9;
+  --score-badge: #dcfce7;
+  --score-badge-foreground: #166534;
+}
+
+.dark {
+  --surface: #141826;
+  --bg-page: #0b0e14;
+  --score-badge: #1a3a2a;
+  --score-badge-foreground: #86efac;
 }
 
 .dark {
@@ -127,6 +138,12 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-auth-panel: var(--auth-panel);
   --color-auth-panel-foreground: var(--auth-panel-foreground);
+  --color-brand: #6c5ce7;
+  --color-gold: #f5b700;
+  --color-surface: var(--surface);
+  --color-bg: var(--bg-page);
+  --color-score-badge: var(--score-badge);
+  --color-score-badge-foreground: var(--score-badge-foreground);
   --font-sans: var(--font-geist-sans);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -187,6 +204,11 @@
   }
 }
 
+@keyframes fadeScaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .animate-layer-top {
   animation: layerTopFloat 2s ease-in-out infinite;
 }
@@ -197,5 +219,25 @@
 
 .animate-layer-bot {
   animation: layerBotFloat 2s ease-in-out 0.4s infinite;
+}
+
+/* View Transitions API — theme toggle circle-reveal animation */
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  animation: clip-circle-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  mix-blend-mode: normal;
+}
+
+@keyframes clip-circle-reveal {
+  from {
+    clip-path: circle(0% at var(--click-x, 50%) var(--click-y, 50%));
+  }
+  to {
+    clip-path: circle(100% at var(--click-x, 50%) var(--click-y, 50%));
+  }
 }
 
