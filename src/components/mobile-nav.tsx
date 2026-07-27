@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Bell, Globe, User } from "lucide-react";
 import { LogoMark } from "./icons";
 import { LANGS, type LangCode } from "@/lib/langs";
-import { NotificationPanel } from "@/components/notifications";
+import { NotificationPanel, useUnreadNotificationCount } from "@/components/notifications";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
   Sheet,
@@ -22,6 +22,7 @@ export function MobileNav() {
   const { openMobile, setOpenMobile } = useSidebar();
   const [langOpen, setLangOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
   // ponytail: local until i18n exists — header's own picker is hidden on mobile.
   const [lang, setLang] = useState<LangCode>("EN");
 
@@ -49,7 +50,14 @@ export function MobileNav() {
           onClick={() => setNotifOpen(true)}
           className={`${tabCls} ${notifOpen ? "text-primary" : "text-muted-foreground"}`}
         >
-          <Bell className="size-6" />
+          <span className="relative inline-flex">
+            <Bell className="size-6" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </span>
           Notification
         </button>
 

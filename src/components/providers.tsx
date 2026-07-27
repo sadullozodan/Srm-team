@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth/context";
 
 import { InitialLoadingProvider } from "@/components/providers/initial-loading-provider";
+import { LangProvider } from "@/lib/i18n";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // One client per browser session, created lazily so it survives re-renders
@@ -30,7 +31,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       >
         <AuthProvider>
           <TooltipProvider>
-            <InitialLoadingProvider>{children}</InitialLoadingProvider>
+            <InitialLoadingProvider>
+              <LangProvider>{children}</LangProvider>
+            </InitialLoadingProvider>
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>

@@ -17,22 +17,31 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { coursesApi, queryKeys } from "@/lib/api/resources";
-import type { CourseDto } from "@/lib/api/types";
+import { coursesApi, groupsApi, queryKeys } from "@/lib/api/resources";
+import type { CourseDto, GroupStatus } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const PAGE_SIZE = 12;
 const numberFmt = new Intl.NumberFormat("en-US");
 const money = (v: number) => `${numberFmt.format(Math.round(v))} c.`;
 
+const statusVariant: Record<GroupStatus, "muted" | "success" | "warning" | "destructive"> = {
+  New: "muted",
+  Started: "success",
+  Finished: "warning",
+  Cancelled: "destructive",
+};
+
 export default function CoursesPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -54,6 +63,18 @@ export default function CoursesPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["Courses"] }),
   });
 
+  const courseQuery = useQuery({
+    queryKey: queryKeys.detail("Courses", selectedId!),
+    queryFn: () => coursesApi.get(selectedId!),
+    enabled: !!selectedId,
+  });
+
+  const groupsQuery = useQuery({
+    queryKey: queryKeys.list("Groups", { pageSize: 100 }),
+    queryFn: () => groupsApi.list({ pageSize: 100 }),
+    enabled: !!selectedId,
+  });
+
   function handleDelete(course: CourseDto) {
     if (window.confirm(`Delete ${course.title ?? "this course"}? This can't be undone.`)) {
       deleteMutation.mutate(course.id);
@@ -62,6 +83,8 @@ export default function CoursesPage() {
 
   const courses = data?.items ?? [];
   const totalPages = data?.totalPages ?? 1;
+  const detail = courseQuery.data;
+  const courseGroups = (groupsQuery.data?.items ?? []).filter((g) => g.courseId === selectedId);
 
   return (
     <div className="space-y-6">
@@ -111,11 +134,10 @@ export default function CoursesPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {courses.map((c) => (
-            <Card key={c.id} className="transition-colors hover:border-primary/40">
+            <Card key={c.id} className="transition-colors hover:border-primary/40 cursor-pointer" onClick={() => setSelectedId(c.id)}>
               <CardContent className="p-5">
                 <div className="flex items-start gap-4">
                   {c.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={c.logoUrl}
                       alt={c.title ?? "Course"}
@@ -127,12 +149,9 @@ export default function CoursesPage() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <Link
-                      href={`/courses/${c.id}`}
-                      className="block truncate font-semibold hover:text-primary"
-                    >
+                    <span className="block truncate font-semibold hover:text-primary">
                       {c.title ?? "Untitled"}
-                    </Link>
+                    </span>
                     <p className="text-sm text-muted-foreground">
                       {money(c.fee)} · {c.durationMonths} mo
                     </p>
@@ -147,6 +166,7 @@ export default function CoursesPage() {
                       size="icon-sm"
                       aria-label="Edit"
                       render={<Link href={`/courses/${c.id}/edit`} />}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Pencil className="size-4 text-primary" />
                     </Button>
@@ -154,7 +174,7 @@ export default function CoursesPage() {
                       variant="ghost"
                       size="icon-sm"
                       aria-label="Delete"
-                      onClick={() => handleDelete(c)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(c); }}
                     >
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
@@ -194,6 +214,108 @@ export default function CoursesPage() {
           </div>
         </div>
       )}
+
+      <Sheet open={!!selectedId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
+        <SheetContent className="w-full sm:max-w-lg p-0 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {courseQuery.isError ? (
+              <p className="text-sm text-destructive">Couldn&apos;t load course.</p>
+            ) : courseQuery.isPending || !detail ? (
+              <div className="space-y-4">
+                <Skeleton className="size-16 rounded-xl" />
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-4">
+                  {detail.logoUrl ? (
+                    <img
+                      src={detail.logoUrl}
+                      alt={detail.title ?? "Course"}
+                      className="size-16 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex size-16 items-center justify-center rounded-xl bg-secondary text-primary">
+                      <BookOpen className="size-7" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-bold">{detail.title ?? "Untitled"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {money(detail.fee)} · {detail.durationMonths} months
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    size="lg"
+                    className="h-10 flex-1 gap-1.5"
+                    render={<Link href={`/courses/${selectedId}/edit`} />}
+                  >
+                    <Pencil className="size-4" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="h-10 w-10"
+                    aria-label="Delete course"
+                    onClick={() => {
+                      if (window.confirm("Delete this course? This can't be undone.")) {
+                        deleteMutation.mutate(selectedId!);
+                        setSelectedId(null);
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+
+                {detail.description && (
+                  <p className="text-sm text-muted-foreground">{detail.description}</p>
+                )}
+
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="mb-4 text-lg font-semibold">
+                      Groups <span className="text-muted-foreground">({detail.groupsCount})</span>
+                    </h2>
+                    {groupsQuery.isPending ? (
+                      <div className="space-y-2">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Skeleton key={i} className="h-12 w-full rounded-xl" />
+                        ))}
+                      </div>
+                    ) : courseGroups.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No groups run this course yet.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {courseGroups.map((g) => (
+                          <Link
+                            key={g.id}
+                            href={`/groups/${g.id}`}
+                            className="flex items-center justify-between rounded-xl border border-border px-4 py-3 transition-colors hover:border-primary/40"
+                          >
+                            <span className="font-medium">{g.name ?? "—"}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-muted-foreground">
+                                {g.enrolledCount}/{g.requiredStudents}
+                              </span>
+                              <Badge variant={statusVariant[g.status]}>{g.status}</Badge>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

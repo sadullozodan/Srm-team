@@ -491,7 +491,7 @@ export interface SmsMailingDto {
   targetType: SmsTargetType;
   sentAt: string;
   recipientCount: number;
-  recipients: string[] | null;
+  recipients: SmsRecipientDto[] | null;
 }
 
 export interface SendSmsRequest {
@@ -513,6 +513,16 @@ export interface SmsTemplateWriteDto {
 }
 
 // ---- Administration ----
+export interface CreateUserRequest {
+  fullName: string;
+  userName: string;
+  password: string;
+  roleIds?: string[] | null;
+  studentId?: string | null;
+  employeeId?: string | null;
+  status?: ActivationStatus;
+}
+
 export interface UserDto {
   id: string;
   fullName: string | null;

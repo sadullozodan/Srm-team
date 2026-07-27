@@ -65,6 +65,7 @@ import type {
   StudentDto,
   StudentWriteDto,
   TokenAccountDto,
+  CreateUserRequest,
   UserDto,
   UserProfileDto,
   WeekResultDto,
@@ -130,22 +131,18 @@ export const permissionsApi = crud<PermissionDto, PermissionWriteDto>("Permissio
 export const rolesApi = crud<RoleDto, RoleWriteDto>("Roles");
 export const smsTemplatesApi = crud<SmsTemplateDto, SmsTemplateWriteDto>("SmsTemplates");
 
-// SMS mailings: send + read-only history.
-export const smsApi = {
-  history: (params: ListParams = {}) =>
-    apiFetch<PagedResult<SmsMailingDto>>(`/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`),
-  send: (body: SendSmsRequest) =>
-    apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
-};
+
 
 // Users are managed (list/get/delete) with dedicated role/status/password actions.
 export const usersApi = {
   list: (params: ListParams = {}) =>
     apiFetch<PagedResult<UserDto>>(`/api/Users${toQuery(params as Record<string, string | number | undefined | null>)}`),
   get: (id: string) => apiFetch<UserDto>(`/api/Users/${id}`),
+  create: (body: CreateUserRequest) =>
+    apiFetch<UserDto>("/api/Users", { method: "POST", json: body }),
   remove: (id: string) => apiFetch<void>(`/api/Users/${id}`, { method: "DELETE" }),
-  setRoles: (id: string, roles: string[]) =>
-    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roles } }),
+  setRoles: (id: string, roleIds: string[]) =>
+    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roleIds } }),
   setStatus: (id: string, status: string) =>
     apiFetch<UserDto>(`/api/Users/${id}/status`, { method: "PUT", json: { status } }),
   resetPassword: (id: string, newPassword: string) =>
@@ -199,6 +196,8 @@ export const notificationsApi = {
     apiFetch<void>(`/api/Notifications/${id}/read`, { method: "PUT" }),
   markAllRead: () =>
     apiFetch<void>("/api/Notifications/read-all", { method: "PUT" }),
+  create: (body: { title: string; message: string }) =>
+    apiFetch<NotificationDto>("/api/Notifications", { method: "POST", json: body }),
 };
 
 // Journal is a nested tree (group → weeks → lessons → attendance) edited in place.
@@ -239,7 +238,7 @@ export const smsMailingsApi = {
     apiFetch<PagedResult<SmsMailingDto>>(
       `/api/SmsMailings/history${toQuery(params as Record<string, string | number | undefined | null>)}`,
     ),
-  send: (body: unknown) => apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
+  send: (body: SendSmsRequest) => apiFetch<SmsMailingDto>("/api/SmsMailings/send", { method: "POST", json: body }),
 };
 
 export const logsApi = {
@@ -303,6 +302,7 @@ export const queryKeys = {
   dashboardLeftCourses: (year: number) =>
     ["dashboard", "left-courses", year] as const,
   notifications: ["notifications"] as const,
+  notificationsUnreadCount: ["notifications", "unread-count"] as const,
   list: (resource: string, params?: ListParams) =>
     params ? ([resource, "list", params] as const) : ([resource, "list"] as const),
   detail: (resource: string, id: string) => [resource, "detail", id] as const,

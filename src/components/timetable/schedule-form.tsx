@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar, Clock } from "lucide-react";
 import { employeesApi, groupsApi, timetableApi, queryKeys } from "@/lib/api/resources";
 import { ApiError } from "@/lib/api/client";
 import type {
@@ -75,7 +75,7 @@ export function ScheduleForm({ entryId, initial }: { entryId?: string; initial?:
     mutationFn: (body: ScheduleEntryWriteDto) =>
       entryId ? timetableApi.update(entryId, body) : timetableApi.create(body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["Timetable"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.list("Timetable") });
       router.push("/timetable");
     },
     onError: (err) => setError(err instanceof ApiError ? err.message : "Couldn't save the entry."),
@@ -128,13 +128,22 @@ export function ScheduleForm({ entryId, initial }: { entryId?: string; initial?:
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Date">
-              <Input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} className="h-10" />
+              <div className="relative">
+                <Calendar className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} className="h-10 pl-9" />
+              </div>
             </Field>
-            <Field label="Start time">
-              <Input type="time" value={form.startTime} onChange={(e) => set("startTime", e.target.value)} className="h-10" />
+            <Field label="Start">
+              <div className="relative">
+                <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input type="time" value={form.startTime} onChange={(e) => set("startTime", e.target.value)} className="h-10 pl-9" />
+              </div>
             </Field>
-            <Field label="End time">
-              <Input type="time" value={form.endTime} onChange={(e) => set("endTime", e.target.value)} className="h-10" />
+            <Field label="End">
+              <div className="relative">
+                <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input type="time" value={form.endTime} onChange={(e) => set("endTime", e.target.value)} className="h-10 pl-9" />
+              </div>
             </Field>
           </div>
           <Field label="Room">

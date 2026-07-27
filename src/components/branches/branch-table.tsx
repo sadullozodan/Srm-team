@@ -1,24 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
-import { Search, ArrowRight } from "lucide-react";
-import { BranchItem } from "./types";
+import { Search, ArrowRight, Loader2 } from "lucide-react";
+import type { BranchDto } from "@/lib/api/types";
 
 export interface BranchTableProps {
-  branches: BranchItem[];
-  onOpenDrawer: (branch: BranchItem) => void;
+  branches: BranchDto[];
+  search: string;
+  onSearchChange: (q: string) => void;
+  loading: boolean;
+  onOpenDrawer: (branch: BranchDto) => void;
 }
 
-export function BranchTable({ branches, onOpenDrawer }: BranchTableProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredBranches = branches.filter(
-    (b) =>
-      b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.district.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
+export function BranchTable({ branches, search, onSearchChange, loading, onOpenDrawer }: BranchTableProps) {
   return (
     <div className="space-y-4">
       <div className="relative w-full max-w-xs">
@@ -29,8 +22,8 @@ export function BranchTable({ branches, onOpenDrawer }: BranchTableProps) {
           <Search className="absolute left-3 size-4 text-slate-400 pointer-events-none" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search by name"
             className="w-full pl-9 pr-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200"
           />
@@ -44,52 +37,62 @@ export function BranchTable({ branches, onOpenDrawer }: BranchTableProps) {
               <th className="py-4 px-6">TITLE</th>
               <th className="py-4 px-4">CITY</th>
               <th className="py-4 px-4">DISTRICT</th>
-              <th className="py-4 px-4">ADRESS</th>
-              <th className="py-4 px-4">GROUPS</th>
-              <th className="py-4 px-4">STUDENTS</th>
+              <th className="py-4 px-4">ADDRESS</th>
               <th className="py-4 px-4 text-center">STATUS</th>
               <th className="py-4 px-6 text-center">ACTION</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm font-medium">
-            {filteredBranches.map((b) => (
-              <tr
-                key={b.id}
-                className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
-              >
-                <td className="py-4 px-6 font-semibold text-slate-900 dark:text-slate-100">
-                  {b.title}
-                </td>
-                <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
-                  {b.city}
-                </td>
-                <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
-                  {b.district}
-                </td>
-                <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
-                  {b.address}
-                </td>
-                <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-semibold">
-                  {b.groupsCount}
-                </td>
-                <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-semibold">
-                  {b.studentsCount}
-                </td>
-                <td className="py-4 px-4 text-center">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400">
-                    {b.status}
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <button
-                    onClick={() => onOpenDrawer(b)}
-                    className="p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors"
-                  >
-                    <ArrowRight className="size-4 stroke-[2.5]" />
-                  </button>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <Loader2 className="size-5 animate-spin mx-auto" />
                 </td>
               </tr>
-            ))}
+            ) : branches.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-12 text-center text-slate-400 text-sm">
+                  No branches found.
+                </td>
+              </tr>
+            ) : (
+              branches.map((b) => (
+                <tr
+                  key={b.id}
+                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                >
+                  <td className="py-4 px-6 font-semibold text-slate-900 dark:text-slate-100">
+                    {b.title ?? "—"}
+                  </td>
+                  <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
+                    {b.city ?? "—"}
+                  </td>
+                  <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
+                    {b.district ?? "—"}
+                  </td>
+                  <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
+                    {b.address ?? "—"}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                      b.status === "Active"
+                        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400"
+                        : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                    }`}>
+                      {b.status}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <button
+                      onClick={() => onOpenDrawer(b)}
+                      className="p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors"
+                    >
+                      <ArrowRight className="size-4 stroke-[2.5]" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

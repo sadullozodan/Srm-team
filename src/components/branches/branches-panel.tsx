@@ -1,22 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { BranchItem, INITIAL_BRANCHES } from "./types";
+import { useQuery } from "@tanstack/react-query";
+import { branchesApi, groupsApi, queryKeys } from "@/lib/api/resources";
+import type { BranchDto } from "@/lib/api/types";
 import { BranchChart } from "./branch-chart";
 import { BranchTable } from "./branch-table";
 import { BranchDrawer } from "./branch-drawer";
-import { AddBranchModal } from "./add-branch-modal";
 
 export function BranchesPanel() {
-  const [branches, setBranches] = useState<BranchItem[]>(INITIAL_BRANCHES);
   const [year, setYear] = useState(2023);
-  const [selectedBranch, setSelectedBranch] = useState<BranchItem | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<BranchDto | null>(null);
+  const [search, setSearch] = useState("");
 
-  const handleAddBranch = (newBranch: BranchItem) => {
-    setBranches((prev) => [newBranch, ...prev]);
-  };
+  const branchesQuery = useQuery({
+    queryKey: queryKeys.list("Branches", search ? { search } : undefined),
+    queryFn: () => branchesApi.list(search ? { search } : undefined),
+  });
+
+  const groupsQuery = useQuery({
+    queryKey: ["Groups", "all"],
+    queryFn: () => groupsApi.list({ pageSize: 200 }),
+  });
+
+  const branches = branchesQuery.data?.items ?? [];
+  const allGroups = groupsQuery.data?.items ?? [];
 
   return (
     <div className="w-full space-y-6 font-sans">
@@ -44,13 +54,13 @@ export function BranchesPanel() {
             </button>
           </div>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
+          <Link
+            href="/branches/new"
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
           >
             <Plus className="size-4 stroke-[3]" />
             <span>ADD NEW</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -58,18 +68,16 @@ export function BranchesPanel() {
 
       <BranchTable
         branches={branches}
-        onOpenDrawer={(branch: BranchItem) => setSelectedBranch(branch)}
+        search={search}
+        onSearchChange={setSearch}
+        loading={branchesQuery.isPending}
+        onOpenDrawer={(branch: BranchDto) => setSelectedBranch(branch)}
       />
 
       <BranchDrawer
         branch={selectedBranch}
+        groups={allGroups.filter((g) => g.branchId === selectedBranch?.id)}
         onClose={() => setSelectedBranch(null)}
-      />
-
-      <AddBranchModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAddBranch={handleAddBranch}
       />
     </div>
   );

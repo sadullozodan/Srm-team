@@ -1,21 +1,63 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  ViewMode,
-  ScheduleEvent,
-  MOCK_SCHEDULE_EVENTS,
-} from "./types";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ViewMode, ScheduleEvent } from "./types";
+import { timetableApi, queryKeys } from "@/lib/api/resources";
+import type { ScheduleEntryDto } from "@/lib/api/types";
 import { DayView } from "./day-view";
 import { WeekView } from "./week-view";
 import { MonthView } from "./month-view";
 import { EventModal } from "./event-modal";
 import { DayPopover } from "./day-popover";
+import { Button } from "@/components/ui/button";
+
+const DAY_MAP: Record<string, number> = {
+  Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6,
+};
+
+// ponytail: API returns `color` field; defaulting category for now
+function toEvents(entries: ScheduleEntryDto[]): ScheduleEvent[] {
+  return entries.map((e) => {
+    const parts = e.date?.split("-");
+    const dateDay = parts ? parseInt(parts[2], 10) : 0;
+    return {
+      id: e.id,
+      title: e.title ?? "",
+      type: e.type,
+      startTime: e.startTime?.slice(0, 5) ?? "",
+      endTime: e.endTime?.slice(0, 5) ?? "",
+      classroom: e.room ?? "",
+      instructor: e.mentorName ?? "",
+      dayOfWeek: DAY_MAP[e.day] ?? 0,
+      dateDay,
+      dateStr: e.date ?? "",
+      category: "react" as const,
+    };
+  });
+}
 
 export function TimetablePanel() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
+
+  const { data: paged } = useQuery({
+    queryKey: queryKeys.list(timetableApi.key),
+    queryFn: () => timetableApi.list({ pageSize: 200 }),
+  });
+  const events = toEvents(paged?.items ?? []);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => timetableApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.list(timetableApi.key) });
+      setSelectedEvent(null);
+    },
+  });
 
   // Day Overflow Popover state
   const [popoverData, setPopoverData] = useState<{
@@ -93,14 +135,19 @@ export function TimetablePanel() {
 
   return (
     <div className="w-full space-y-6 font-sans">
-      {/* Top Header: Title + View Switcher */}
+      {/* Top Header: Title + Add + View Switcher */}
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
           Timetable
         </h1>
 
-        {/* View Switcher Toggle Pill (Day | Week | Month) */}
-        <div className="bg-slate-200/70 dark:bg-slate-800 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
+        <div className="flex items-center gap-2">
+          <Button onClick={() => router.push("/timetable/new")} size="sm" className="h-8 gap-1">
+            <Plus className="size-4" /> Add
+          </Button>
+
+          {/* View Switcher Toggle Pill (Day | Week | Month) */}
+          <div className="bg-slate-200/70 dark:bg-slate-800 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
           <button
             onClick={() => setViewMode("day")}
             className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
@@ -133,6 +180,7 @@ export function TimetablePanel() {
           </button>
         </div>
       </div>
+      </div>
 
       {/* Date Controller Bar (< Date Range >) */}
       <div className="flex items-center gap-3">
@@ -160,14 +208,14 @@ export function TimetablePanel() {
       {/* Dynamic View Rendering */}
       {viewMode === "day" && (
         <DayView
-          events={MOCK_SCHEDULE_EVENTS.filter((e) => e.dateDay === 19)}
+          events={events}
           onSelectEvent={setSelectedEvent}
         />
       )}
 
       {viewMode === "week" && (
         <WeekView
-          events={MOCK_SCHEDULE_EVENTS}
+          events={events}
           weekDays={weekDays}
           onSelectEvent={setSelectedEvent}
         />
@@ -175,7 +223,7 @@ export function TimetablePanel() {
 
       {viewMode === "month" && (
         <MonthView
-          events={MOCK_SCHEDULE_EVENTS}
+          events={events}
           monthDays={monthDays}
           onSelectEvent={setSelectedEvent}
           onOpenDayPopover={(dateTitle, events) =>
@@ -201,6 +249,11 @@ export function TimetablePanel() {
         <EventModal
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
+          onEdit={() => router.push(`/timetable/${selectedEvent.id}/edit`)}
+          onDelete={() => {
+            if (confirm("Delete this entry?")) deleteMutation.mutate(selectedEvent.id);
+          }}
+          isDeleting={deleteMutation.isPending && deleteMutation.variables === selectedEvent.id}
         />
       )}
     </div>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { KeyRound, Power, Search, Trash2 } from "lucide-react";
-import { usersApi, queryKeys } from "@/lib/api/resources";
-import type { ActivationStatus, RoleType, UserDto } from "@/lib/api/types";
+import { KeyRound, Plus, Power, Search, Trash2 } from "lucide-react";
+import { rolesApi, usersApi, queryKeys } from "@/lib/api/resources";
+import type { ActivationStatus, RoleDto, UserDto } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -14,7 +15,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusVariant: Record<ActivationStatus, "success" | "muted"> = { Active: "success", Inactive: "muted" };
-const ROLES: RoleType[] = ["SuperAdmin", "Admin", "Manager", "Accountant", "Mentor", "Developer", "Student"];
 
 export default function UsersPage() {
   const [searchInput, setSearchInput] = useState("");
@@ -27,11 +27,24 @@ export default function UsersPage() {
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["Users"] });
 
-  const { data, isPending, isError } = useQuery({
+  const { data: usersData, isPending, isError } = useQuery({
     queryKey: queryKeys.list("Users", { pageSize: 100, search }),
     queryFn: () => usersApi.list({ pageSize: 100, search }),
     placeholderData: keepPreviousData,
   });
+
+  const { data: allRoles } = useQuery({
+    queryKey: queryKeys.list("Roles", { pageSize: 100 }),
+    queryFn: () => rolesApi.list({ pageSize: 100 }),
+  });
+
+  const roleByType = useMemo(() => {
+    const map = new Map<string, RoleDto>();
+    for (const r of allRoles?.items ?? []) {
+      if (r.type) map.set(r.type, r);
+    }
+    return map;
+  }, [allRoles]);
 
   const statusMutation = useMutation({
     mutationFn: (vars: { id: string; status: ActivationStatus }) => usersApi.setStatus(vars.id, vars.status),
@@ -45,7 +58,11 @@ export default function UsersPage() {
     onSuccess: invalidate,
   });
   const rolesMutation = useMutation({
-    mutationFn: (vars: { id: string; role: string }) => usersApi.setRoles(vars.id, [vars.role]),
+    mutationFn: (vars: { id: string; roleType: string }) => {
+      const role = roleByType.get(vars.roleType);
+      if (!role) throw new Error(`Unknown role type: ${vars.roleType}`);
+      return usersApi.setRoles(vars.id, [role.id]);
+    },
     onSuccess: invalidate,
   });
 
@@ -60,11 +77,18 @@ export default function UsersPage() {
     if (window.confirm(`Delete ${u.fullName ?? u.userName ?? "this user"}?`)) deleteMutation.mutate(u.id);
   }
 
-  const users = data?.items ?? [];
+  const users = usersData?.items ?? [];
+  const roleTypes = Array.from(roleByType.keys());
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight text-foreground">Users</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Users</h1>
+        <Button size="lg" className="gap-1.5" render={<Link href="/administration/users/new" />}>
+          <Plus className="size-4" />
+          Create user
+        </Button>
+      </div>
 
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -93,36 +117,39 @@ export default function UsersPage() {
               ) : users.length === 0 ? (
                 <TableRow className="hover:bg-transparent"><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">No users found.</TableCell></TableRow>
               ) : (
-                users.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.fullName ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{u.userName ?? "—"}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={u.roles?.[0] ?? ""}
-                        onChange={(e) => rolesMutation.mutate({ id: u.id, role: e.target.value })}
-                        className="h-8 w-36"
-                      >
-                        <option value="" disabled>Set role…</option>
-                        {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-                      </Select>
-                    </TableCell>
-                    <TableCell><Badge variant={statusVariant[u.status]}>{u.status}</Badge></TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" aria-label="Toggle status" title="Toggle status" onClick={() => toggleStatus(u)}>
-                          <Power className="size-4 text-primary" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" aria-label="Reset password" title="Reset password" onClick={() => resetPassword(u)}>
-                          <KeyRound className="size-4 text-primary" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" aria-label="Delete" onClick={() => handleDelete(u)}>
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                users.map((u) => {
+                  const currentType = u.roles?.[0] ? (roleByType.get(u.roles[0]) ? u.roles[0] : null) : null;
+                  return (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">{u.fullName ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{u.userName ?? "—"}</TableCell>
+                      <TableCell>
+                        <Select
+                          value={currentType ?? ""}
+                          onChange={(e) => rolesMutation.mutate({ id: u.id, roleType: e.target.value })}
+                          className="h-8 w-36"
+                        >
+                          <option value="" disabled>Set role…</option>
+                          {roleTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </Select>
+                      </TableCell>
+                      <TableCell><Badge variant={statusVariant[u.status]}>{u.status}</Badge></TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon-sm" aria-label="Toggle status" title="Toggle status" onClick={() => toggleStatus(u)}>
+                            <Power className="size-4 text-primary" />
+                          </Button>
+                          <Button variant="ghost" size="icon-sm" aria-label="Reset password" title="Reset password" onClick={() => resetPassword(u)}>
+                            <KeyRound className="size-4 text-primary" />
+                          </Button>
+                          <Button variant="ghost" size="icon-sm" aria-label="Delete" onClick={() => handleDelete(u)}>
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

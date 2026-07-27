@@ -1,66 +1,76 @@
 "use client";
 
 import React, { useState } from "react";
+import { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { SmsTemplate, SmsHistoryItem, INITIAL_HISTORY } from "./types";
+import type { PagedResult, SmsMailingDto } from "@/lib/api/types";
+import { SmsTemplate, SmsHistoryItem } from "./types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface ComposerPanelProps {
   templates: SmsTemplate[];
   selectedCount: number;
+  recipientIds: string[];
+  historyQuery: UseQueryResult<PagedResult<SmsMailingDto>>;
+  sendMutation: UseMutationResult<SmsMailingDto, Error, { title: string; body: string; targetType: string; recipientIds: string[] }>;
 }
 
-export function ComposerPanel({ templates, selectedCount }: ComposerPanelProps) {
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("ru-RU");
+}
+
+function mailingToHistoryItem(m: SmsMailingDto): SmsHistoryItem {
+  return {
+    id: m.id,
+    title: m.title ?? "",
+    date: formatDate(m.sentAt),
+    description: m.body ?? "",
+    groups: [m.targetType],
+    recipients: [`${m.recipientCount} recipient${m.recipientCount === 1 ? "" : "s"}`],
+  };
+}
+
+export function ComposerPanel({ templates, selectedCount, recipientIds, historyQuery, sendMutation }: ComposerPanelProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  // Templates accordion state
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(true);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  // History list state
-  const [historyList, setHistoryList] = useState<SmsHistoryItem[]>(INITIAL_HISTORY);
-  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>("hist-2");
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
 
-  // Handle template selection
   const handleSelectTemplate = (tpl: SmsTemplate) => {
     setSelectedTemplateId(tpl.id);
     setTitle(tpl.title);
     setDescription(tpl.description);
   };
 
-  // Handle Send action
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() && !description.trim()) return;
-
-    const newHistoryItem: SmsHistoryItem = {
-      id: `hist-${Date.now()}`,
-      title: title.trim() || "Broadcast SMS",
-      date: new Date().toLocaleDateString("ru-RU"),
-      description: description.trim() || "SMS message content",
-      groups: ["Active Selected Recipients"],
-      recipients: [`Selected ${selectedCount} recipients`],
-    };
-
-    setHistoryList((prev) => [newHistoryItem, ...prev]);
-    setExpandedHistoryId(newHistoryItem.id);
-
-    // Reset form
+    if (!title.trim() || !description.trim() || recipientIds.length === 0) return;
+    sendMutation.mutate({
+      title: title.trim(),
+      body: description.trim(),
+      targetType: "Students",
+      recipientIds,
+    });
     setTitle("");
     setDescription("");
     setSelectedTemplateId(null);
   };
 
+  const historyList = historyQuery.data?.items ?? [];
+  const isPending = sendMutation.isPending;
+
   return (
     <div className="space-y-6">
-      {/* 1. SMS Text Card */}
       <div className="bg-white dark:bg-card rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
         <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
           SMS text
         </h2>
 
         <form onSubmit={handleSend} className="space-y-4">
-          {/* Title Input */}
           <div>
             <input
               type="text"
@@ -71,7 +81,6 @@ export function ComposerPanel({ templates, selectedCount }: ComposerPanelProps) 
             />
           </div>
 
-          {/* Description Textarea */}
           <div>
             <textarea
               rows={3}
@@ -82,7 +91,6 @@ export function ComposerPanel({ templates, selectedCount }: ComposerPanelProps) 
             />
           </div>
 
-          {/* Templates Accordion Dropdown */}
           <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50/40 dark:bg-slate-900/20">
             <button
               type="button"
@@ -99,6 +107,9 @@ export function ComposerPanel({ templates, selectedCount }: ComposerPanelProps) 
 
             {isTemplatesOpen && (
               <div className="p-3 pt-0 space-y-2 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-900">
+                {templates.length === 0 && (
+                  <p className="text-xs text-slate-400 py-2 text-center">No templates yet</p>
+                )}
                 {templates.map((tpl) => {
                   const isSelected = selectedTemplateId === tpl.id;
                   return (
@@ -123,8 +134,6 @@ export function ComposerPanel({ templates, selectedCount }: ComposerPanelProps) 
                           {tpl.title}
                         </span>
                       </div>
-
-                      {/* Selected Template Description Snippet */}
                       {isSelected && (
                         <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300 mt-2 pl-6 leading-relaxed">
                           {tpl.description}
@@ -137,88 +146,110 @@ export function ComposerPanel({ templates, selectedCount }: ComposerPanelProps) 
             )}
           </div>
 
-          {/* Primary Send Button */}
+          {sendMutation.isError && (
+            <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {sendMutation.error instanceof Error ? sendMutation.error.message : "Send failed"}
+            </p>
+          )}
+
+          {sendMutation.isSuccess && (
+            <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600">
+              Sent to {sendMutation.data.recipientCount} recipient{sendMutation.data.recipientCount === 1 ? "" : "s"}.
+            </p>
+          )}
+
           <button
             type="submit"
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold tracking-wider rounded-xl transition-all shadow-md shadow-indigo-600/20 active:scale-[0.99]"
+            disabled={isPending || recipientIds.length === 0 || !title.trim() || !description.trim()}
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-xs font-extrabold tracking-wider rounded-xl transition-all shadow-md shadow-indigo-600/20 active:scale-[0.99]"
           >
-            Send
+            {isPending
+              ? "Sending..."
+              : `Send to ${selectedCount} recipient${selectedCount === 1 ? "" : "s"}`}
           </button>
         </form>
       </div>
 
-      {/* 2. History Section */}
       <div className="bg-white dark:bg-card rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
         <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
           History
         </h2>
 
-        <div className="space-y-3">
-          {historyList.map((hist) => {
-            const isExpanded = expandedHistoryId === hist.id;
-            return (
-              <div
-                key={hist.id}
-                className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50/40 dark:bg-slate-900/20"
-              >
-                {/* Accordion Header */}
+        {historyQuery.isPending ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full rounded-2xl" />
+            ))}
+          </div>
+        ) : historyList.length === 0 ? (
+          <p className="text-xs text-slate-400 py-4 text-center">No history yet</p>
+        ) : (
+          <div className="space-y-3">
+            {historyList.map((hist) => {
+              const item = mailingToHistoryItem(hist);
+              const isExpanded = expandedHistoryId === item.id;
+              return (
                 <div
-                  onClick={() =>
-                    setExpandedHistoryId(isExpanded ? null : hist.id)
-                  }
-                  className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors"
+                  key={item.id}
+                  className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50/40 dark:bg-slate-900/20"
                 >
-                  <div className="flex items-center gap-2">
-                    {isExpanded ? (
-                      <ChevronUp className="size-4 text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />
-                    ) : (
-                      <ChevronDown className="size-4 text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />
-                    )}
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                      {hist.title}
+                  <div
+                    onClick={() =>
+                      setExpandedHistoryId(isExpanded ? null : item.id)
+                    }
+                    className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      {isExpanded ? (
+                        <ChevronUp className="size-4 text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />
+                      ) : (
+                        <ChevronDown className="size-4 text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />
+                      )}
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                        {item.title}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-400 font-mono">
+                      {item.date}
                     </span>
                   </div>
-                  <span className="text-[11px] font-medium text-slate-400 font-mono">
-                    {hist.date}
-                  </span>
-                </div>
 
-                {/* Expanded Details */}
-                {isExpanded && (
-                  <div className="p-4 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-900 space-y-3 text-xs">
-                    <p className="font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
-                      {hist.description}
-                    </p>
+                  {isExpanded && (
+                    <div className="p-4 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-900 space-y-3 text-xs">
+                      <p className="font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+                        {item.description}
+                      </p>
 
-                    {hist.groups.length > 0 && (
-                      <div className="space-y-1">
-                        <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px]">
-                          Groups:
-                        </span>
-                        {hist.groups.map((g, idx) => (
-                          <p
-                            key={idx}
-                            className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]"
-                          >
-                            {g}
+                      {item.groups.length > 0 && (
+                        <div className="space-y-1">
+                          <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px]">
+                            Target:
+                          </span>
+                          {item.groups.map((g, idx) => (
+                            <p
+                              key={idx}
+                              className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]"
+                            >
+                              {g}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+
+                      {item.recipients.length > 0 && (
+                        <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+                          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                            {item.recipients.join(", ")}
                           </p>
-                        ))}
-                      </div>
-                    )}
-
-                    {hist.recipients.length > 0 && (
-                      <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-                        <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
-                          {hist.recipients.join(", ")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
