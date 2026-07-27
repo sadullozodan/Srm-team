@@ -1,113 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Upload, ChevronDown, Calendar } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  paymentsApi,
+  expensesApi,
+  queryKeys,
+} from "@/lib/api/resources";
 
-interface NetRowData {
-  id: number;
-  fullName: string;
-  category: "Student" | "Mentor" | "Income tax";
-  date: string;
-  amount: string;
-  type: "positive" | "negative";
-}
-
-const NET_DATA: NetRowData[] = [
-  {
-    id: 1,
-    fullName: "Ahmad Abdulsamad",
-    category: "Student",
-    date: "21.06.2023",
-    amount: "+ 1000",
-    type: "positive",
-  },
-  {
-    id: 2,
-    fullName: "Ahmad Abdulsamad",
-    category: "Student",
-    date: "21.06.2023",
-    amount: "+ 1000",
-    type: "positive",
-  },
-  {
-    id: 3,
-    fullName: "Ahmad Abdulsamad",
-    category: "Student",
-    date: "21.06.2023",
-    amount: "+ 1000",
-    type: "positive",
-  },
-  {
-    id: 4,
-    fullName: "Ahmad Abdulsamad",
-    category: "Student",
-    date: "21.06.2023",
-    amount: "+ 1000",
-    type: "positive",
-  },
-  {
-    id: 5,
-    fullName: "Ahmad Abdulsamad",
-    category: "Student",
-    date: "21.06.2023",
-    amount: "+ 1000",
-    type: "positive",
-  },
-  {
-    id: 6,
-    fullName: "Ahmad Abdulsamad",
-    category: "Mentor",
-    date: "21.06.2023",
-    amount: "- 500",
-    type: "negative",
-  },
-  {
-    id: 7,
-    fullName: "Admin",
-    category: "Income tax",
-    date: "21.06.2023",
-    amount: "- 500",
-    type: "negative",
-  },
-  {
-    id: 8,
-    fullName: "Admin",
-    category: "Income tax",
-    date: "21.06.2023",
-    amount: "- 500",
-    type: "negative",
-  },
-  {
-    id: 9,
-    fullName: "Admin",
-    category: "Income tax",
-    date: "21.06.2023",
-    amount: "- 500",
-    type: "negative",
-  },
-  {
-    id: 10,
-    fullName: "Admin",
-    category: "Income tax",
-    date: "21.06.2023",
-    amount: "- 500",
-    type: "negative",
-  },
-  {
-    id: 11,
-    fullName: "Admin",
-    category: "Income tax",
-    date: "21.06.2023",
-    amount: "- 500",
-    type: "negative",
-  },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
 
 export function NetViewPanel() {
   const [selectedCategory, setSelectedCategory] = useState("All category");
-  const [selectedDate, setSelectedDate] = useState("July 2023");
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const paymentsQuery = useQuery({
+    queryKey: queryKeys.list(paymentsApi.key, FETCH_ALL),
+    queryFn: () => paymentsApi.list(FETCH_ALL),
+  });
+  const expensesQuery = useQuery({
+    queryKey: queryKeys.list(expensesApi.key, FETCH_ALL),
+    queryFn: () => expensesApi.list(FETCH_ALL),
+  });
+
+  const netRows = useMemo(() => {
+    const payments = (paymentsQuery.data?.items ?? []).map((p) => ({
+      id: `p-${p.id}`,
+      fullName: p.studentName ?? "—",
+      category: "Student" as const,
+      date: p.date ? new Date(p.date).toLocaleDateString("ru-RU") : "—",
+      amount: `+ ${p.paid}`,
+      type: "positive" as const,
+    }));
+    const expenses = (expensesQuery.data?.items ?? []).map((e) => ({
+      id: `e-${e.id}`,
+      fullName: e.name ?? e.category,
+      category: e.category === "Tax" ? "Income tax" as const : e.category === "OfficeExpenses" ? "Office" as const : "Mentor" as const,
+      date: e.date ? new Date(e.date).toLocaleDateString("ru-RU") : "—",
+      amount: `- ${e.amount}`,
+      type: "negative" as const,
+    }));
+    return [...payments, ...expenses].sort((a, b) => b.date.localeCompare(a.date));
+  }, [paymentsQuery.data, expensesQuery.data]);
 
   return (
     <div className="w-full bg-white dark:bg-card text-foreground rounded-2xl md:rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-200/80 dark:border-slate-800 space-y-6 font-sans">
@@ -173,7 +110,7 @@ export function NetViewPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {NET_DATA.map((row) => (
+            {netRows.map((row) => (
               <tr
                 key={row.id}
                 className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"

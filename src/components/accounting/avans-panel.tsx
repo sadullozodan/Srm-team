@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   Upload,
   Search,
@@ -15,101 +16,40 @@ import {
   Check,
 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  advancesApi,
+  queryKeys,
+} from "@/lib/api/resources";
 
-interface AvansRowData {
-  id: number;
-  fullName: string;
-  month: string;
-  amount: string;
-  description: string;
-  status: "Pending" | "Approved" | "Denied";
-}
-
-const INITIAL_AVANS_DATA: AvansRowData[] = [
-  {
-    id: 1,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Approved",
-  },
-  {
-    id: 3,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Approved",
-  },
-  {
-    id: 4,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Denied",
-  },
-  {
-    id: 5,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Approved",
-  },
-  {
-    id: 6,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Denied",
-  },
-  {
-    id: 7,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Approved",
-  },
-  {
-    id: 8,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Denied",
-  },
-  {
-    id: 9,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Denied",
-  },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function AvansPanel() {
-  const [avansRows, setAvansRows] = useState<AvansRowData[]>(INITIAL_AVANS_DATA);
+  const advancesQuery = useQuery({
+    queryKey: queryKeys.list(advancesApi.key, FETCH_ALL),
+    queryFn: () => advancesApi.list(FETCH_ALL),
+  });
+
+  const advances = useMemo(() => {
+    const items = advancesQuery.data?.items ?? [];
+    return items.map((a) => ({
+      id: a.id,
+      fullName: a.employeeName ?? "—",
+      month: MONTH_NAMES[a.month - 1] ?? String(a.month),
+      amount: String(a.amount),
+      description: a.description ?? "",
+      status: a.status as "Pending" | "Approved" | "Denied",
+    }));
+  }, [advancesQuery.data]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All status");
-  const [selectedDate, setSelectedDate] = useState("April 2024");
+  const [selectedDate, setSelectedDate] = useState("");
 
   // Overlays state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<"approve" | "deny" | null>(null);
-  const [selectedRow, setSelectedRow] = useState<AvansRowData | null>(null);
+  const [selectedRow, setSelectedRow] = useState<{ id: string; fullName: string; amount: string } | null>(null);
 
   // Form states for modals
   const [modalAmount, setModalAmount] = useState("1000");
@@ -118,14 +58,22 @@ export function AvansPanel() {
   // Drawer Toggle State
   const [showInactiveTransactions, setShowInactiveTransactions] = useState(true);
 
-  const handleOpenApproveModal = (e: React.MouseEvent, row: AvansRowData) => {
+  const filteredAdvances = useMemo(() => {
+    return advances.filter((a) => {
+      if (searchQuery && !a.fullName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedStatus !== "All status" && a.status !== selectedStatus) return false;
+      return true;
+    });
+  }, [advances, searchQuery, selectedStatus]);
+
+  const handleOpenApproveModal = (e: React.MouseEvent, row: { id: string; fullName: string; amount: string; status: string }) => {
     e.stopPropagation();
     setSelectedRow(row);
     setModalAmount(row.amount);
     setActiveModal("approve");
   };
 
-  const handleOpenDenyModal = (e: React.MouseEvent, row: AvansRowData) => {
+  const handleOpenDenyModal = (e: React.MouseEvent, row: { id: string; fullName: string; amount: string; status: string }) => {
     e.stopPropagation();
     setSelectedRow(row);
     setModalAmount(row.amount);
@@ -133,27 +81,46 @@ export function AvansPanel() {
     setActiveModal("deny");
   };
 
-  const handleRowClick = (row: AvansRowData) => {
+  const handleRowClick = (row: { id: string; fullName: string; amount: string; status: string }) => {
     setSelectedRow(row);
     setIsDrawerOpen(true);
   };
 
-  const handleApproveSubmit = (e: React.FormEvent) => {
+  const handleApproveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedRow) {
-      setAvansRows((prev) =>
-        prev.map((r) => (r.id === selectedRow.id ? { ...r, status: "Approved" } : r))
-      );
+      try {
+        await advancesApi.update(selectedRow.id, {
+          employeeId: "",
+          year: new Date().getFullYear(),
+          month: new Date().getMonth() + 1,
+          amount: Number(modalAmount),
+          status: "Approved",
+        });
+        advancesQuery.refetch();
+      } catch {
+        // ignore
+      }
     }
     setActiveModal(null);
   };
 
-  const handleDenySubmit = (e: React.FormEvent) => {
+  const handleDenySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedRow) {
-      setAvansRows((prev) =>
-        prev.map((r) => (r.id === selectedRow.id ? { ...r, status: "Denied" } : r))
-      );
+      try {
+        await advancesApi.update(selectedRow.id, {
+          employeeId: "",
+          year: new Date().getFullYear(),
+          month: new Date().getMonth() + 1,
+          amount: Number(modalAmount),
+          description: modalDescription,
+          status: "Denied",
+        });
+        advancesQuery.refetch();
+      } catch {
+        // ignore
+      }
     }
     setActiveModal(null);
   };
@@ -231,7 +198,7 @@ export function AvansPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {avansRows.map((row) => (
+            {filteredAdvances.map((row) => (
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}

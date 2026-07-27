@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Upload,
@@ -12,88 +13,59 @@ import {
 } from "lucide-react";
 import { BudgetPlanChart } from "./budget-plan-chart";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  budgetsApi,
+  queryKeys,
+} from "@/lib/api/resources";
 
-interface BudgetItem {
-  id: number;
-  categoryName: string;
-  from: string;
-  to: string;
-  amountAllocated: string;
-  amountSpent: string;
-  status: string;
-}
-
-const INITIAL_BUDGET_DATA: BudgetItem[] = [
-  {
-    id: 1,
-    categoryName: "Marketing",
-    from: "01.04.2023",
-    to: "01.05.2023",
-    amountAllocated: "1000",
-    amountSpent: "1000",
-    status: "Ative",
-  },
-  {
-    id: 2,
-    categoryName: "Office expenses",
-    from: "01.04.2023",
-    to: "01.05.2023",
-    amountAllocated: "1000",
-    amountSpent: "1000",
-    status: "Ative",
-  },
-  {
-    id: 3,
-    categoryName: "Tax",
-    from: "01.04.2023",
-    to: "01.05.2023",
-    amountAllocated: "1000",
-    amountSpent: "1000",
-    status: "Ative",
-  },
-  {
-    id: 4,
-    categoryName: "Marketing",
-    from: "01.04.2023",
-    to: "01.05.2023",
-    amountAllocated: "1000",
-    amountSpent: "1000",
-    status: "Ative",
-  },
-  {
-    id: 5,
-    categoryName: "Office expenses",
-    from: "01.04.2023",
-    to: "01.05.2023",
-    amountAllocated: "1000",
-    amountSpent: "1000",
-    status: "Ative",
-  },
-  {
-    id: 6,
-    categoryName: "Employees",
-    from: "01.04.2023",
-    to: "01.05.2023",
-    amountAllocated: "1000",
-    amountSpent: "1000",
-    status: "Ative",
-  },
-  {
-    id: 7,
-    categoryName: "Tax",
-    from: "01.04.2023",
-    to: "01.05.2023",
-    amountAllocated: "1000",
-    amountSpent: "1000",
-    status: "Ative",
-  },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function BudgetPlanPanel() {
-  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(INITIAL_BUDGET_DATA);
+  const budgetsQuery = useQuery({
+    queryKey: queryKeys.list(budgetsApi.key, FETCH_ALL),
+    queryFn: () => budgetsApi.list(FETCH_ALL),
+  });
+
+  const budgets = useMemo(() => {
+    const items = budgetsQuery.data?.items ?? [];
+    return items.map((b) => ({
+      id: b.id,
+      categoryName: b.categoryName ?? "—",
+      from: b.fromDate ? new Date(b.fromDate).toLocaleDateString("ru-RU") : "—",
+      to: b.toDate ? new Date(b.toDate).toLocaleDateString("ru-RU") : "—",
+      amountAllocated: String(b.amountAllocated),
+      amountSpent: String(b.amountSpent),
+      status: b.status === "Active" ? "Ative" : "Inactive",
+    }));
+  }, [budgetsQuery.data]);
+
+  const chartData = useMemo(() => {
+    const items = budgetsQuery.data?.items ?? [];
+    const allocatedByMonth = new Array(12).fill(0);
+    const spentByMonth = new Array(12).fill(0);
+    for (const b of items) {
+      const from = new Date(b.fromDate);
+      const to = new Date(b.toDate);
+      const fromMonth = from.getMonth();
+      const toMonth = to.getMonth();
+      for (let m = fromMonth; m <= toMonth; m++) {
+        if (m >= 0 && m < 12) {
+          allocatedByMonth[m] += b.amountAllocated;
+          spentByMonth[m] += b.amountSpent;
+        }
+      }
+    }
+    return MONTHS.map((month, i) => ({
+      month,
+      allocated: allocatedByMonth[i],
+      spent: spentByMonth[i],
+    }));
+  }, [budgetsQuery.data]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Form states for New Budjet Modal
+  // Form states for New Budget Modal
   const [formStatus, setFormStatus] = useState("Active");
   const [formAmount, setFormAmount] = useState("");
   const [formCategory, setFormCategory] = useState("");
@@ -106,20 +78,22 @@ export function BudgetPlanPanel() {
   const [tableStatus, setTableStatus] = useState("All status");
   const [tableDate, setTableDate] = useState("July 2023");
 
-  const handleAddBudget = (e: React.FormEvent) => {
+  const handleAddBudget = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newItem: BudgetItem = {
-      id: Date.now(),
-      categoryName: formCategory || "Marketing",
-      from: formFrom || "01.04.2023",
-      to: formTo || "01.05.2023",
-      amountAllocated: formAmount || "1000",
-      amountSpent: "0",
-      status: "Ative",
-    };
-    setBudgetItems((prev) => [newItem, ...prev]);
+    try {
+      await budgetsApi.create({
+        categoryName: formCategory || "Marketing",
+        fromDate: formFrom || "2023-04-01",
+        toDate: formTo || "2023-05-01",
+        amountAllocated: Number(formAmount) || 1000,
+        amountSpent: 0,
+        status: "Active",
+      });
+      budgetsQuery.refetch();
+    } catch {
+      // ignore
+    }
     setIsModalOpen(false);
-    // reset form
     setFormAmount("");
     setFormCategory("");
     setFormFrom("");
@@ -151,7 +125,7 @@ export function BudgetPlanPanel() {
       </div>
 
       {/* 2. Recharts Line Chart Component */}
-      <BudgetPlanChart />
+      <BudgetPlanChart data={chartData} />
 
       {/* 3. Filters & Add Button Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
@@ -206,7 +180,7 @@ export function BudgetPlanPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {budgetItems.map((row) => (
+            {budgets.map((row) => (
               <tr
                 key={row.id}
                 className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"

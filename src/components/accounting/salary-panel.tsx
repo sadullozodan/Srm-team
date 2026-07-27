@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   RotateCw,
   Search,
@@ -15,179 +16,50 @@ import {
   Check,
 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  salariesApi,
+  queryKeys,
+} from "@/lib/api/resources";
 
-interface SalaryRowData {
-  id: number;
-  fullName: string;
-  total: string;
-  prepaid: string;
-  remaining: string;
-  paid: string;
-  month: string;
-  status: "Active" | "Inactive";
-}
-
-interface DailySalaryRow {
-  id: number;
-  group: string;
-  month: string;
-  hours: number;
-  salary: string;
-  bonus: string;
-  actionType: "check_edit" | "done";
-}
-
-const SALARY_DATA: SalaryRowData[] = [
-  {
-    id: 1,
-    fullName: "Abdulsamad Ahmad",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "November",
-    status: "Active",
-  },
-  {
-    id: 2,
-    fullName: "Abdulsamad Ahmad",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "December",
-    status: "Active",
-  },
-  {
-    id: 3,
-    fullName: "Abdulsamad Ahmad",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "January",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    fullName: "Abdulsamad Ahmad",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "February",
-    status: "Active",
-  },
-  {
-    id: 5,
-    fullName: "Abdulsamad Ahmad",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "February",
-    status: "Active",
-  },
-  {
-    id: 6,
-    fullName: "Abdulsamad Ahmad",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "February",
-    status: "Active",
-  },
-  {
-    id: 7,
-    fullName: "Shamsuddinov Najibullo",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "February",
-    status: "Active",
-  },
-  {
-    id: 8,
-    fullName: "Shamsuddinov Najibullo",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "February",
-    status: "Active",
-  },
-  {
-    id: 9,
-    fullName: "Shamsuddinov Najibullo",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "February",
-    status: "Active",
-  },
-  {
-    id: 10,
-    fullName: "Shamsuddinov Najibullo",
-    total: "4500",
-    prepaid: "1000",
-    remaining: "3500",
-    paid: "3500",
-    month: "February",
-    status: "Active",
-  },
-];
-
-const INITIAL_DAILY_SALARIES: DailySalaryRow[] = [
-  {
-    id: 1,
-    group: "React Dec 3",
-    month: "December",
-    hours: 20,
-    salary: "1400 s",
-    bonus: "0",
-    actionType: "check_edit",
-  },
-  {
-    id: 2,
-    group: "React Jan 2",
-    month: "January",
-    hours: 24,
-    salary: "1780 s",
-    bonus: "100",
-    actionType: "check_edit",
-  },
-  {
-    id: 3,
-    group: "JS Feb 2",
-    month: "February",
-    hours: 32,
-    salary: "2240 s",
-    bonus: "0",
-    actionType: "done",
-  },
-  {
-    id: 4,
-    group: "HTML & CSS Feb 2",
-    month: "February",
-    hours: 28,
-    salary: "1960 s",
-    bonus: "40",
-    actionType: "done",
-  },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function SalaryPanel() {
+  const salariesQuery = useQuery({
+    queryKey: queryKeys.list(salariesApi.key, FETCH_ALL),
+    queryFn: () => salariesApi.list(FETCH_ALL),
+  });
+
+  const salaries = useMemo(() => {
+    const items = salariesQuery.data?.items ?? [];
+    return items.map((s) => ({
+      id: s.id,
+      fullName: s.employeeName ?? "—",
+      total: String(s.total),
+      prepaid: String(s.prepaid),
+      remaining: String(s.remaining),
+      paid: String(s.paid),
+      month: MONTH_NAMES[s.month - 1] ?? String(s.month),
+      status: s.status === "Active" ? "Active" as const : "Inactive" as const,
+    }));
+  }, [salariesQuery.data]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("All month");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<SalaryRowData | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<{ id: string; fullName: string } | null>(null);
   const [dailySalaryMode, setDailySalaryMode] = useState<"Default" | "Detail">("Default");
-  const [dailySalaries, setDailySalaries] = useState<DailySalaryRow[]>(INITIAL_DAILY_SALARIES);
+  const [dailySalaries, setDailySalaries] = useState<{ id: number; group: string; month: string; hours: number; salary: string; bonus: string; actionType: string }[]>([]);
 
-  const handleRowClick = (employee: SalaryRowData) => {
+  const filteredSalaries = useMemo(() => {
+    return salaries.filter((s) => {
+      if (searchQuery && !s.fullName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedMonth !== "All month" && s.month !== selectedMonth) return false;
+      return true;
+    });
+  }, [salaries, searchQuery, selectedMonth]);
+
+  const handleRowClick = (employee: { id: string; fullName: string }) => {
     setSelectedEmployee(employee);
     setIsDrawerOpen(true);
   };
@@ -258,7 +130,7 @@ export function SalaryPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {SALARY_DATA.map((row) => (
+            {filteredSalaries.map((row) => (
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}
@@ -356,7 +228,7 @@ export function SalaryPanel() {
             {/* Employee Profile Section */}
             <div className="space-y-3">
               <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
-                {selectedEmployee ? selectedEmployee.fullName : "Shamsuddinov Najibullo"}
+                {selectedEmployee ? selectedEmployee.fullName : "Employee"}
               </h3>
 
               {/* Role Badges */}

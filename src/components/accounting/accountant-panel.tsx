@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -13,41 +14,87 @@ import {
 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { AccountantAreaChart } from "./accountant-area-chart";
+import {
+  paymentsApi,
+  expensesApi,
+  reportsApi,
+  queryKeys,
+} from "@/lib/api/resources";
+import type { ChartDataItem } from "./accountant-area-chart";
 
-interface AccountantRow {
-  id: number;
-  startedAt: string;
-  finishedAt: string;
-  totalIncome: string;
-  totalExpense: string;
-  paid: string;
-  notPaid: string;
-  net: string;
-  branch: string;
-  status: "Inprogress" | "Archive";
-}
-
-const ACCOUNTANT_DATA: AccountantRow[] = [
-  { id: 1, startedAt: "01.04.2023", finishedAt: "01.05.2023", totalIncome: "1000", totalExpense: "500", paid: "500", notPaid: "500", net: "2500", branch: "Sadbarg", status: "Inprogress" },
-  { id: 2, startedAt: "01.04.2023", finishedAt: "01.05.2023", totalIncome: "1000", totalExpense: "500", paid: "500", notPaid: "500", net: "2500", branch: "Sadbarg", status: "Inprogress" },
-  { id: 3, startedAt: "01.04.2023", finishedAt: "01.05.2023", totalIncome: "1000", totalExpense: "500", paid: "500", notPaid: "500", net: "2500", branch: "Profsous", status: "Archive" },
-  { id: 4, startedAt: "01.04.2023", finishedAt: "01.05.2023", totalIncome: "1000", totalExpense: "500", paid: "500", notPaid: "500", net: "2500", branch: "Sadbarg", status: "Inprogress" },
-  { id: 5, startedAt: "01.04.2023", finishedAt: "01.05.2023", totalIncome: "1000", totalExpense: "500", paid: "500", notPaid: "500", net: "2500", branch: "Profsous", status: "Archive" },
-  { id: 6, startedAt: "01.04.2023", finishedAt: "01.05.2023", totalIncome: "1000", totalExpense: "500", paid: "500", notPaid: "500", net: "2500", branch: "Profsous", status: "Inprogress" },
-  { id: 7, startedAt: "01.04.2023", finishedAt: "01.05.2023", totalIncome: "1000", totalExpense: "500", paid: "500", notPaid: "500", net: "2500", branch: "Sadbarg", status: "Archive" },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function AccountantPanel() {
   const [selectedStatus, setSelectedStatus] = useState("All status");
   const [selectedBranch, setSelectedBranch] = useState("All branches");
-  const [selectedDate, setSelectedDate] = useState("July 2023");
-  const [selectedYear, setSelectedYear] = useState(2024);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const paymentsQuery = useQuery({
+    queryKey: queryKeys.list(paymentsApi.key, FETCH_ALL),
+    queryFn: () => paymentsApi.list(FETCH_ALL),
+  });
+  const expensesQuery = useQuery({
+    queryKey: queryKeys.list(expensesApi.key, FETCH_ALL),
+    queryFn: () => expensesApi.list(FETCH_ALL),
+  });
+  const incomeByMonthQuery = useQuery({
+    queryKey: ["reports", "income-by-month", selectedYear],
+    queryFn: () => reportsApi.incomeByMonth(selectedYear),
+  });
+
+  const chartData: ChartDataItem[] = useMemo(() => {
+    const incomeByMonth = incomeByMonthQuery.data ?? [];
+    const incomeMap = new Map(incomeByMonth.map((r) => [r.month, r.total]));
+    const payments = paymentsQuery.data?.items ?? [];
+    const expenses = expensesQuery.data?.items ?? [];
+
+    return MONTHS.map((month, i) => {
+      const monthNum = i + 1;
+      const income = incomeMap.get(monthNum) ?? 0;
+      const expense = expenses
+        .filter((e) => {
+          const d = new Date(e.date);
+          return d.getMonth() === i && d.getFullYear() === selectedYear;
+        })
+        .reduce((sum, e) => sum + e.amount, 0);
+      return { month, income, expense };
+    });
+  }, [incomeByMonthQuery.data, paymentsQuery.data, expensesQuery.data, selectedYear]);
+
+  const accountantPeriods = useMemo(() => {
+    const payments = paymentsQuery.data?.items ?? [];
+    const expenses = expensesQuery.data?.items ?? [];
+    const totalIncome = payments.reduce((s, p) => s + p.paid, 0);
+    const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
+
+    if (payments.length === 0 && expenses.length === 0) return [];
+
+    const firstDate = [...payments, ...expenses].reduce((earliest, item) => {
+      const d = new Date(item.date);
+      return d < earliest ? d : earliest;
+    }, new Date());
+
+    return [{
+      id: "1",
+      startedAt: firstDate.toLocaleDateString("ru-RU"),
+      finishedAt: new Date().toLocaleDateString("ru-RU"),
+      totalIncome: String(totalIncome),
+      totalExpense: String(totalExpense),
+      paid: String(totalIncome - totalExpense),
+      notPaid: "0",
+      net: String(totalIncome - totalExpense),
+      branch: "All",
+      status: "Inprogress" as const,
+    }];
+  }, [paymentsQuery.data, expensesQuery.data]);
 
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedDateRange, setSelectedDateRange] = useState("01.04.2023 - 01.05.2023");
+  const [selectedDateRange, setSelectedDateRange] = useState("");
 
-  const handleRowClick = (row: AccountantRow) => {
+  const handleRowClick = (row: { startedAt: string; finishedAt: string }) => {
     setSelectedDateRange(`${row.startedAt} - ${row.finishedAt}`);
     setIsDrawerOpen(true);
   };
@@ -103,7 +150,7 @@ export function AccountantPanel() {
 
         {/* Interactive Recharts Area Chart */}
         <div className="w-full pt-2">
-          <AccountantAreaChart height={300} />
+          <AccountantAreaChart data={chartData} height={300} />
         </div>
       </div>
 
@@ -161,7 +208,7 @@ export function AccountantPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {ACCOUNTANT_DATA.map((row) => (
+            {accountantPeriods.map((row) => (
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}

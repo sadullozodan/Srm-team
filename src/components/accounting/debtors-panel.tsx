@@ -1,60 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Upload, Plus, Search, ChevronDown, Calendar, SquarePen, X } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  debtorsApi,
+  queryKeys,
+} from "@/lib/api/resources";
+import type { DebtorDto } from "@/lib/api/types";
 
-interface DebtorRow {
-  id: number;
-  fullName: string;
-  from: string;
-  to: string;
-  totalDebtAmount: string;
-  paymentPerMonth: string;
-  totalPaidAmount: string;
-  notes: string;
-  status: "Inprogress" | "Paid";
-}
-
-const DEBTORS_DATA: DebtorRow[] = [
-  { id: 1, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 2, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 3, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 4, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Paid" },
-  { id: 5, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 6, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 7, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Paid" },
-  { id: 8, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 9, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Paid" },
-  { id: 10, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 11, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 12, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-];
-
-interface DrawerTransaction {
-  id: number;
-  amount: string;
-  type: string;
-  date: string;
-  comment: string;
-}
-
-const DRAWER_TRANSACTIONS: DrawerTransaction[] = [
-  { id: 1, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----" },
-  { id: 2, amount: "300 c", type: "Cash", date: "16 june 2023", comment: "-----" },
-  { id: 3, amount: "200 c", type: "Alif", date: "20 june 2023", comment: "-----" },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
 
 export function DebtorsPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All status");
   const [selectedDate, setSelectedDate] = useState("July 2023");
 
+  const debtorsQuery = useQuery({
+    queryKey: queryKeys.list(debtorsApi.key, FETCH_ALL),
+    queryFn: () => debtorsApi.list(FETCH_ALL),
+  });
+
+  const debtors = useMemo(() => {
+    const items = debtorsQuery.data?.items ?? [];
+    return items.map((d) => ({
+      id: d.id,
+      fullName: d.fullName ?? "—",
+      from: d.fromDate ? new Date(d.fromDate).toLocaleDateString("ru-RU") : "—",
+      to: d.toDate ? new Date(d.toDate).toLocaleDateString("ru-RU") : "—",
+      totalDebtAmount: String(d.totalDebtAmount),
+      paymentPerMonth: String(d.paymentPerMonth),
+      totalPaidAmount: String(d.totalPaidAmount),
+      notes: d.notes ?? "—",
+      status: d.status === "Paid" ? "Paid" as const : "Inprogress" as const,
+    }));
+  }, [debtorsQuery.data]);
+
+  const filteredDebtors = useMemo(() => {
+    return debtors.filter((d) => {
+      if (searchQuery && !d.fullName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedStatus !== "All status" && d.status !== selectedStatus) return false;
+      return true;
+    });
+  }, [debtors, searchQuery, selectedStatus]);
+
   // Overlay states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedDebtorName, setSelectedDebtorName] = useState("Dilovar Karimov");
+  const [selectedDebtorName, setSelectedDebtorName] = useState("");
   const [isAddTransactionExpanded, setIsAddTransactionExpanded] = useState(false);
 
   // Modal Form states
@@ -69,7 +64,9 @@ export function DebtorsPanel() {
   const [newTransType, setNewTransType] = useState("");
   const [newTransComment, setNewTransComment] = useState("");
 
-  const handleRowClick = (row: DebtorRow) => {
+  const DRAWER_TRANSACTIONS: { id: number; amount: string; type: string; date: string; comment: string }[] = [];
+
+  const handleRowClick = (row: { id: string; fullName: string }) => {
     setSelectedDebtorName(row.fullName.replace(/^\d+\.\s*/, ""));
     setIsDrawerOpen(true);
   };
@@ -171,7 +168,7 @@ export function DebtorsPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {DEBTORS_DATA.map((row) => (
+            {filteredDebtors.map((row) => (
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}

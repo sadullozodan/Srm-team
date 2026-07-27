@@ -17,20 +17,7 @@ export interface ChartDataItem {
   expense: number;
 }
 
-export const MOCK_CHART_DATA: ChartDataItem[] = [
-  { month: "January", income: 12000, expense: 5000 },
-  { month: "February", income: 16000, expense: 8000 },
-  { month: "March", income: 14000, expense: 6500 },
-  { month: "April", income: 22000, expense: 12000 },
-  { month: "May", income: 15000, expense: 6000 },
-  { month: "June", income: 24000, expense: 14000 },
-  { month: "July", income: 28000, expense: 11000 },
-  { month: "August", income: 21000, expense: 9500 },
-  { month: "September", income: 25000, expense: 13000 },
-  { month: "October", income: 29000, expense: 15000 },
-  { month: "November", income: 23000, expense: 10000 },
-  { month: "December", income: 30000, expense: 16000 },
-];
+export const MOCK_CHART_DATA: ChartDataItem[] = [];
 
 export interface CustomTooltipPayloadItem {
   dataKey?: string | number;
