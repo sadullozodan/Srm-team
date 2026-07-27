@@ -44,12 +44,14 @@ const DICT: Record<string, Entry> = {
   "SMS mailings": { RU: "SMS-рассылки", TJ: "SMS-паёмҳо" },
 
   // --- Header / common ---
+  Lang: { RU: "Язык", TJ: "Забон" },
+  Language: { RU: "Язык", TJ: "Забон" },
+  Profile: { RU: "Профиль", TJ: "Профил" },
   "Search students, groups, courses…": {
     RU: "Поиск студентов, групп, курсов…",
     TJ: "Ҷустуҷӯи донишҷӯён, гурӯҳҳо…",
   },
   "Sign out": { RU: "Выйти", TJ: "Баромад" },
-  Profile: { RU: "Профиль", TJ: "Профил" },
   Account: { RU: "Аккаунт", TJ: "Ҳисоб" },
   Notifications: { RU: "Уведомления", TJ: "Огоҳиномаҳо" },
 };

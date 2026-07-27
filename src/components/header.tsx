@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, ChevronDown, Coins, LogOut, Moon, Search, Sun, User } from "lucide-react";
-import { LANGS, type LangCode } from "@/lib/langs";
+import { LANGS } from "@/lib/langs";
 import { NotificationPanel } from "@/components/notifications";
 import { useAuth } from "@/lib/auth/context";
+import { useLang, useT } from "@/lib/i18n";
 import { tokensApi } from "@/lib/api/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
+  const t = useT();
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 bg-background px-4 md:px-6">
       <SidebarTrigger className="text-primary" />
@@ -30,7 +31,7 @@ export function Header() {
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search..."
+          placeholder={t("Search students, groups, courses…")}
           className="h-11 rounded-full bg-card pl-9"
         />
       </div>
@@ -47,7 +48,7 @@ export function Header() {
                   variant="ghost"
                   size="icon"
                   className="rounded-full"
-                  aria-label="Notifications"
+                  aria-label={t("Notifications")}
                 />
               }
             >
@@ -99,6 +100,7 @@ function CoinBalance() {
 
 function AccountMenu() {
   const { user, logout } = useAuth();
+  const t = useT();
   const initials = (user?.fullName ?? user?.userName ?? "")
     .split(" ")
     .map((part) => part[0])
@@ -131,7 +133,7 @@ function AccountMenu() {
         </div>
         <DropdownMenuItem onClick={logout} className="text-destructive">
           <LogOut className="size-4" />
-          Sign out
+          {t("Sign out")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -179,7 +181,7 @@ export function ThemeToggle() {
 }
 
 export function LangMenu() {
-  const [lang, setLang] = useState<LangCode>("EN");
+  const { lang, setLang } = useLang();
   const current = LANGS.find((l) => l.code === lang)!;
   return (
     <DropdownMenu>

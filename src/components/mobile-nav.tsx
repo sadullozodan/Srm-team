@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Bell, Globe, User } from "lucide-react";
 import { LogoMark } from "./icons";
-import { LANGS, type LangCode } from "@/lib/langs";
+import { LANGS } from "@/lib/langs";
+import { useLang, useT } from "@/lib/i18n";
 import { NotificationPanel, useUnreadNotificationCount } from "@/components/notifications";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
@@ -23,8 +24,8 @@ export function MobileNav() {
   const [langOpen, setLangOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
-  // ponytail: local until i18n exists — header's own picker is hidden on mobile.
-  const [lang, setLang] = useState<LangCode>("EN");
+  const { lang, setLang } = useLang();
+  const t = useT();
 
   return (
     <>
@@ -43,7 +44,7 @@ export function MobileNav() {
           className={`${tabCls} ${langOpen ? "text-primary" : "text-muted-foreground"}`}
         >
           <Globe className="size-6" />
-          Lang
+          {t("Lang")}
         </button>
 
         <button
@@ -58,20 +59,20 @@ export function MobileNav() {
               </span>
             )}
           </span>
-          Notification
+          {t("Notifications")}
         </button>
 
         {/* ponytail: profile panel not wired yet */}
         <button className={`${tabCls} text-muted-foreground`}>
           <User className="size-6" />
-          Profile
+          {t("Profile")}
         </button>
       </nav>
 
       <Sheet open={langOpen} onOpenChange={setLangOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl pb-24">
           <SheetHeader>
-            <SheetTitle>Language</SheetTitle>
+            <SheetTitle>{t("Language")}</SheetTitle>
           </SheetHeader>
           <div className="px-4">
             {LANGS.map(({ code, label, Flag }) => (
