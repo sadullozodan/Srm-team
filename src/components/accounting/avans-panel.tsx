@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Upload,
   Search,
@@ -15,101 +16,51 @@ import {
   Check,
 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  advancesApi,
+  queryKeys,
+} from "@/lib/api/resources";
+import { Toast } from "@/components/ui/toast";
 
-interface AvansRowData {
-  id: number;
-  fullName: string;
-  month: string;
-  amount: string;
-  description: string;
-  status: "Pending" | "Approved" | "Denied";
-}
-
-const INITIAL_AVANS_DATA: AvansRowData[] = [
-  {
-    id: 1,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Approved",
-  },
-  {
-    id: 3,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Approved",
-  },
-  {
-    id: 4,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Denied",
-  },
-  {
-    id: 5,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Approved",
-  },
-  {
-    id: 6,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Denied",
-  },
-  {
-    id: 7,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Approved",
-  },
-  {
-    id: 8,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Denied",
-  },
-  {
-    id: 9,
-    fullName: "Tojiev Olimjon",
-    month: "April",
-    amount: "1000",
-    description: "I need money, give me my money, please)",
-    status: "Denied",
-  },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function AvansPanel() {
-  const [avansRows, setAvansRows] = useState<AvansRowData[]>(INITIAL_AVANS_DATA);
+  const [toast, setToast] = useState<string | null>(null);
+  const advancesQuery = useQuery({
+    queryKey: queryKeys.list(advancesApi.key, FETCH_ALL),
+    queryFn: () => advancesApi.list(FETCH_ALL),
+  });
+
+  const advances = useMemo(() => {
+    const items = advancesQuery.data?.items ?? [];
+    return items.map((a) => ({
+      id: a.id,
+      fullName: a.employeeName ?? "—",
+      month: MONTH_NAMES[a.month - 1] ?? String(a.month),
+      amount: String(a.amount),
+      description: a.description ?? "",
+      status: a.status as "Pending" | "Approved" | "Denied",
+    }));
+  }, [advancesQuery.data]);
+
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => advancesApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.list(advancesApi.key, FETCH_ALL) });
+      setToast("Advance deleted");
+    },
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All status");
-  const [selectedDate, setSelectedDate] = useState("April 2024");
+  const [selectedDate, setSelectedDate] = useState("");
 
   // Overlays state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<"approve" | "deny" | null>(null);
-  const [selectedRow, setSelectedRow] = useState<AvansRowData | null>(null);
+  const [selectedRow, setSelectedRow] = useState<{ id: string; fullName: string; amount: string } | null>(null);
 
   // Form states for modals
   const [modalAmount, setModalAmount] = useState("1000");
@@ -118,14 +69,22 @@ export function AvansPanel() {
   // Drawer Toggle State
   const [showInactiveTransactions, setShowInactiveTransactions] = useState(true);
 
-  const handleOpenApproveModal = (e: React.MouseEvent, row: AvansRowData) => {
+  const filteredAdvances = useMemo(() => {
+    return advances.filter((a) => {
+      if (searchQuery && !a.fullName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedStatus !== "All status" && a.status !== selectedStatus) return false;
+      return true;
+    });
+  }, [advances, searchQuery, selectedStatus]);
+
+  const handleOpenApproveModal = (e: React.MouseEvent, row: { id: string; fullName: string; amount: string; status: string }) => {
     e.stopPropagation();
     setSelectedRow(row);
     setModalAmount(row.amount);
     setActiveModal("approve");
   };
 
-  const handleOpenDenyModal = (e: React.MouseEvent, row: AvansRowData) => {
+  const handleOpenDenyModal = (e: React.MouseEvent, row: { id: string; fullName: string; amount: string; status: string }) => {
     e.stopPropagation();
     setSelectedRow(row);
     setModalAmount(row.amount);
@@ -133,27 +92,46 @@ export function AvansPanel() {
     setActiveModal("deny");
   };
 
-  const handleRowClick = (row: AvansRowData) => {
+  const handleRowClick = (row: { id: string; fullName: string; amount: string; status: string }) => {
     setSelectedRow(row);
     setIsDrawerOpen(true);
   };
 
-  const handleApproveSubmit = (e: React.FormEvent) => {
+  const handleApproveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedRow) {
-      setAvansRows((prev) =>
-        prev.map((r) => (r.id === selectedRow.id ? { ...r, status: "Approved" } : r))
-      );
+      try {
+        await advancesApi.update(selectedRow.id, {
+          employeeId: "",
+          year: new Date().getFullYear(),
+          month: new Date().getMonth() + 1,
+          amount: Number(modalAmount),
+          status: "Approved",
+        });
+        advancesQuery.refetch();
+      } catch {
+        // ignore
+      }
     }
     setActiveModal(null);
   };
 
-  const handleDenySubmit = (e: React.FormEvent) => {
+  const handleDenySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedRow) {
-      setAvansRows((prev) =>
-        prev.map((r) => (r.id === selectedRow.id ? { ...r, status: "Denied" } : r))
-      );
+      try {
+        await advancesApi.update(selectedRow.id, {
+          employeeId: "",
+          year: new Date().getFullYear(),
+          month: new Date().getMonth() + 1,
+          amount: Number(modalAmount),
+          description: modalDescription,
+          status: "Denied",
+        });
+        advancesQuery.refetch();
+      } catch {
+        // ignore
+      }
     }
     setActiveModal(null);
   };
@@ -166,11 +144,17 @@ export function AvansPanel() {
           Avans
         </h1>
 
-        {/* EXPORT Button */}
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50/70 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950/40 text-xs font-bold tracking-wider transition-all shadow-xs">
-          <Upload className="size-4 stroke-[2.5]" />
-          <span>EXPORT</span>
-        </button>
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50/70 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950/40 text-xs font-bold tracking-wider transition-all shadow-xs">
+            <Upload className="size-4 stroke-[2.5]" />
+            <span>EXPORT</span>
+          </button>
+          <Link href="/accounting/avans/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20">
+            <Plus className="size-4 stroke-[3]" />
+            <span>ADD NEW</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. Filters Bar */}
@@ -231,7 +215,7 @@ export function AvansPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {avansRows.map((row) => (
+            {filteredAdvances.map((row) => (
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}
@@ -504,7 +488,7 @@ export function AvansPanel() {
                         <button className="p-1 text-indigo-500 hover:text-indigo-700">
                           <SquarePen className="size-4" />
                         </button>
-                        <button className="p-1 text-rose-500 hover:text-rose-700">
+                        <button onClick={() => { if (confirm("Delete this advance?")) deleteMutation.mutate("1"); }} className="p-1 text-rose-500 hover:text-rose-700">
                           <Trash2 className="size-4" />
                         </button>
                       </div>
@@ -529,7 +513,7 @@ export function AvansPanel() {
                         <button className="p-1 text-indigo-500 hover:text-indigo-700">
                           <SquarePen className="size-4" />
                         </button>
-                        <button className="p-1 text-rose-500 hover:text-rose-700">
+                        <button onClick={() => { if (confirm("Delete this advance?")) deleteMutation.mutate("3"); }} className="p-1 text-rose-500 hover:text-rose-700">
                           <Trash2 className="size-4" />
                         </button>
                       </div>
@@ -541,6 +525,7 @@ export function AvansPanel() {
           </div>
         </div>
       )}
+      <Toast message={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

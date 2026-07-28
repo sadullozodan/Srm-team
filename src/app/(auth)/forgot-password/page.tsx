@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authApi } from "@/lib/api/resources";
 import { normalizePhone } from "@/lib/phone";
+import { useT } from "@/lib/i18n";
 import { ApiError } from "@/lib/api/client";
 
 type Step = "phone" | "code" | "password";
@@ -43,6 +44,7 @@ const SCREENS = {
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const t = useT();
 
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
@@ -73,7 +75,7 @@ export default function ForgotPasswordPage() {
     }
 
     if (step === "password" && newPassword !== confirm) {
-      setError("Passwords don't match.");
+      setError(t("Passwords don't match."));
       return;
     }
 
@@ -93,7 +95,7 @@ export default function ForgotPasswordPage() {
       setError(
         err instanceof ApiError || err instanceof Error
           ? err.message
-          : "Something went wrong.",
+          : t("Something went wrong."),
       );
     } finally {
       setSubmitting(false);
@@ -106,7 +108,7 @@ export default function ForgotPasswordPage() {
     try {
       await sendCode();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : t("Something went wrong."));
     } finally {
       setSubmitting(false);
     }
@@ -117,13 +119,13 @@ export default function ForgotPasswordPage() {
       onSubmit={handleSubmit}
       className="rounded-2xl bg-card p-6 shadow-sm sm:p-8"
     >
-      <h1 className="text-lg font-semibold">{screen.title}</h1>
+      <h1 className="text-lg font-semibold">{t(screen.title)}</h1>
 
       <div className="mt-6 flex flex-col items-center text-center">
         <Image src={screen.art} alt="" width={128} height={128} className="size-28" />
-        <p className="mt-4 font-semibold">{screen.heading}</p>
+        <p className="mt-4 font-semibold">{t(screen.heading)}</p>
         {screen.body && (
-          <p className="mt-1 text-sm text-muted-foreground">{screen.body}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t(screen.body)}</p>
         )}
       </div>
 
@@ -131,7 +133,7 @@ export default function ForgotPasswordPage() {
         {step === "phone" && (
           <div>
             <label htmlFor="phone" className="sr-only">
-              Phone
+              {t("Phone")}
             </label>
             <Input
               id="phone"
@@ -142,7 +144,7 @@ export default function ForgotPasswordPage() {
               required
               maxLength={30}
               className="h-13"
-              placeholder="Phone"
+              placeholder={t("Phone")}
             />
           </div>
         )}
@@ -150,7 +152,7 @@ export default function ForgotPasswordPage() {
         {step === "code" && (
           <div>
             <label htmlFor="code" className="sr-only">
-              Verification code
+              {t("Verification code")}
             </label>
             <Input
               id="code"
@@ -162,7 +164,7 @@ export default function ForgotPasswordPage() {
               minLength={4}
               maxLength={10}
               className="h-13 tracking-[0.4em]"
-              placeholder="Code"
+              placeholder={t("Code")}
             />
             <button
               type="button"
@@ -170,7 +172,7 @@ export default function ForgotPasswordPage() {
               disabled={submitting}
               className="mt-3 block w-full text-center text-sm font-medium text-primary hover:underline"
             >
-              Request a new code
+              {t("Request a new code")}
             </button>
           </div>
         )}
@@ -179,7 +181,7 @@ export default function ForgotPasswordPage() {
           <>
             <PasswordField
               id="newPassword"
-              label="New password"
+              label={t("New password")}
               value={newPassword}
               onChange={setNewPassword}
               show={showPassword}
@@ -187,7 +189,7 @@ export default function ForgotPasswordPage() {
             />
             <PasswordField
               id="confirm"
-              label="Confirm password"
+              label={t("Confirm password")}
               value={confirm}
               onChange={setConfirm}
               show={showPassword}
@@ -208,7 +210,7 @@ export default function ForgotPasswordPage() {
         <div className="flex gap-3">
           <Button type="submit" className="h-12 flex-1" disabled={submitting}>
             {submitting && <Loader size="sm" />}
-            {step === "phone" ? "Send code" : step === "code" ? "Verify" : "Save"}
+            {step === "phone" ? t("Send code") : step === "code" ? t("Verify") : t("Save")}
           </Button>
           <Button
             type="button"
@@ -216,7 +218,7 @@ export default function ForgotPasswordPage() {
             className="h-12 flex-1"
             onClick={() => router.push("/login")}
           >
-            Cancel
+            {t("Cancel")}
           </Button>
         </div>
       </div>
@@ -239,6 +241,7 @@ function PasswordField({
   show: boolean;
   onToggle: () => void;
 }) {
+  const t = useT();
   return (
     <div className="relative">
       <label htmlFor={id} className="sr-only">
@@ -260,7 +263,7 @@ function PasswordField({
         type="button"
         onClick={onToggle}
         className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-        aria-label={show ? "Hide password" : "Show password"}
+        aria-label={show ? t("Hide password") : t("Show password")}
       >
         {show ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
       </button>

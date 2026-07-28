@@ -1,0 +1,184 @@
+/* ═══════════════════════════════════════════════════════════════════
+   404 — OMUZ style (matches login page aesthetic)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Shell ──────────────────────────────────────────────────────── */
+.nf-shell {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #0b0d18;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.nf-shell--visible {
+  opacity: 1;
+}
+
+/* ── Left panel ─────────────────────────────────────────────────── */
+.nf-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 40px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.nf-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 48px;
+}
+
+.nf-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nf-logo-icon {
+  color: #837bff;
+  width: 34px;
+  height: 34px;
+}
+.nf-logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #e7e9f2;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* ── Form area ──────────────────────────────────────────────────── */
+.nf-form-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.nf-form {
+  background: rgba(25, 29, 43, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 40px 32px 36px;
+  box-shadow:
+    0 0 0 1px rgba(131, 123, 255, 0.06),
+    0 8px 40px rgba(0, 0, 0, 0.35);
+  animation: nfSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+  text-align: center;
+}
+
+@keyframes nfSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nf-code {
+  font-size: 5rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #837bff 0%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.nf-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #e7e9f2;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.nf-desc {
+  font-size: 0.88rem;
+  color: #9aa1b4;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+/* ── Actions ────────────────────────────────────────────────────── */
+.nf-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nf-btn {
+  height: 46px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.25s, opacity 0.2s, background 0.2s;
+}
+
+.nf-btn-primary {
+  background: linear-gradient(135deg, #6c63ff, #4f46e5);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.35);
+}
+.nf-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(79, 70, 229, 0.45);
+}
+.nf-btn-primary:active {
+  transform: translateY(0);
+}
+
+.nf-btn-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #9aa1b4;
+}
+.nf-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #e7e9f2;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .nf-left {
+    padding: 20px 24px 32px;
+  }
+  .nf-form-wrap {
+    max-width: 380px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nf-left {
+    padding: 16px 16px 24px;
+  }
+  .nf-form {
+    padding: 32px 20px 28px;
+    border-radius: 16px;
+  }
+  .nf-code {
+    font-size: 3.5rem;
+  }
+}

@@ -51,6 +51,8 @@ export function LeadsChart({ data }: { data: MonthPoint[] }) {
           stroke="var(--color-value)"
           strokeWidth={3}
           fill="url(#fill-leads)"
+          animationDuration={600}
+          animationEasing="ease-out"
         />
       </AreaChart>
     </ChartContainer>
@@ -80,6 +82,8 @@ export function AttendanceChart({ data }: { data: DayPoint[] }) {
           stroke="var(--color-late)"
           strokeWidth={3}
           fill="url(#fill-late)"
+          animationDuration={600}
+          animationEasing="ease-out"
         />
         <Area
           dataKey="absent"
@@ -87,6 +91,8 @@ export function AttendanceChart({ data }: { data: DayPoint[] }) {
           stroke="var(--color-absent)"
           strokeWidth={3}
           fill="url(#fill-absent)"
+          animationDuration={600}
+          animationEasing="ease-out"
         />
       </AreaChart>
     </ChartContainer>
@@ -117,6 +123,8 @@ export function EnrollChart({ data }: { data: MonthPoint[] }) {
           stroke="var(--color-value)"
           strokeWidth={3}
           fill="url(#fill-enroll)"
+          animationDuration={600}
+          animationEasing="ease-out"
         />
       </AreaChart>
     </ChartContainer>
@@ -136,8 +144,8 @@ export function LeftCoursesChart({ data }: { data: LeftCoursesPoint[] }) {
         <XAxis dataKey="month" {...axis} />
         <YAxis {...axis} />
         <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-        <Bar dataKey="left" fill="var(--color-left)" radius={[6, 6, 0, 0]} maxBarSize={14} />
-        <Bar dataKey="returned" fill="var(--color-returned)" radius={[6, 6, 0, 0]} maxBarSize={14} />
+        <Bar dataKey="left" fill="var(--color-left)" radius={[6, 6, 0, 0]} maxBarSize={14} animationDuration={600} animationEasing="ease-out" />
+        <Bar dataKey="returned" fill="var(--color-returned)" radius={[6, 6, 0, 0]} maxBarSize={14} animationDuration={600} animationEasing="ease-out" />
       </BarChart>
     </ChartContainer>
   );

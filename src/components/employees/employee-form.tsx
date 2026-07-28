@@ -125,7 +125,7 @@ export function EmployeeForm({
       employeeId ? employeesApi.update(employeeId, body) : employeesApi.create(body),
     onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ["Employees"] });
-      router.push(`/employees/${saved.id}`);
+      router.push(`/employees`);
     },
     onError: (err) => {
       setError(err instanceof ApiError ? err.message : "Couldn't save the employee.");

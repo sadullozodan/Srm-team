@@ -64,7 +64,7 @@ export function BranchesPanel() {
         </div>
       </div>
 
-      <BranchChart />
+      <BranchChart year={year} />
 
       <BranchTable
         branches={branches}

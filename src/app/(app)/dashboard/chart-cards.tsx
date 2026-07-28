@@ -2,21 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useT } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { ListFilter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dashboardApi, queryKeys } from "@/lib/api/resources";
-import { attendanceSeries, leftCoursesSeries, type MonthPoint } from "@/lib/series";
+import type { LeadDto } from "@/lib/api/types";
+import { attendanceSeries, leadsSeries, leftCoursesSeries } from "@/lib/series";
 import { AttendanceChart, LeadsChart, LeftCoursesChart } from "./charts";
 import { CardTitle, Panel, Stepper, useMonthPicker } from "../parts";
 
-export function LeadsCard({ data }: { data: MonthPoint[] }) {
+export function LeadsCard({ leads }: { leads: LeadDto[] }) {
+  const t = useT();
   const [year, setYear] = useState(new Date().getFullYear());
+  const data = leadsSeries(leads, year);
 
   return (
     <Panel className="p-5">
       <div className="flex items-center justify-between">
-        <CardTitle>Leads</CardTitle>
+        <CardTitle>{t("Leads")}</CardTitle>
         <Stepper label={`${year} y`} onStep={(delta) => setYear(year + delta)} />
       </div>
       <div className="mt-4">
@@ -27,6 +31,7 @@ export function LeadsCard({ data }: { data: MonthPoint[] }) {
 }
 
 export function AttendanceCard() {
+  const t = useT();
   const { year, month, label, step } = useMonthPicker();
 
   // The stepper actually filters here — this endpoint takes year and month.
@@ -39,9 +44,9 @@ export function AttendanceCard() {
     <Panel className="p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-4">
-          <CardTitle>Attendance</CardTitle>
-          <LegendDot color="#22c55e" label="Late" />
-          <LegendDot color="#ef4444" label="Absent" />
+          <CardTitle>{t("Attendance")}</CardTitle>
+          <LegendDot color="#22c55e" label={t("Late")} />
+          <LegendDot color="#ef4444" label={t("Absent")} />
         </div>
         <Stepper label={label} onStep={step} />
       </div>
@@ -53,6 +58,7 @@ export function AttendanceCard() {
 }
 
 export function LeftCoursesCard() {
+  const t = useT();
   const [year, setYear] = useState(new Date().getFullYear());
 
   const { data } = useQuery({
@@ -63,12 +69,12 @@ export function LeftCoursesCard() {
   return (
     <Panel className="p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <CardTitle>Left courses</CardTitle>
+        <CardTitle>{t("Left courses")}</CardTitle>
         <div className="flex items-center gap-2">
           <Stepper label={`${year} y`} onStep={(delta) => setYear(year + delta)} />
           <Button variant="outline" className="gap-2 rounded-xl" render={<Link href="/students/left-courses" />}>
             <ListFilter className="size-4" />
-            Show list
+            {t("Show list")}
           </Button>
         </div>
       </div>

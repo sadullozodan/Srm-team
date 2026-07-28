@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Upload,
   Plus,
   Search,
-  ChevronDown,
   Calendar,
   SquarePen,
   Trash2,
@@ -15,175 +16,71 @@ import {
   Download,
 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  paymentsApi,
+  queryKeys,
+} from "@/lib/api/resources";
+import type { PaymentDto } from "@/lib/api/types";
+import { Toast } from "@/components/ui/toast";
 
-interface PaymentRowData {
-  id: number;
-  fullName: string;
-  phone: string;
-  amount: string;
-  discountBadge?: string;
-  isAmountRed?: boolean;
-  paid: string;
-  date: string;
-  group: string;
-  branch: string;
-  status: "Ative" | "Active" | "Prepayment";
-}
+const DRAWER_TRANSACTIONS: { id: number; amount: string; type: string; date: string; comment: string }[] = [];
 
-const PAYMENTS_DATA: PaymentRowData[] = [
-  {
-    id: 1,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Sadbarg",
-    status: "Ative",
-  },
-  {
-    id: 2,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Sadbarg",
-    status: "Prepayment",
-  },
-  {
-    id: 3,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Sadbarg",
-    status: "Active",
-  },
-  {
-    id: 4,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Sadbarg",
-    status: "Ative",
-  },
-  {
-    id: 5,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    isAmountRed: true,
-    discountBadge: "- 400",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Profsous",
-    status: "Ative",
-  },
-  {
-    id: 6,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Sadbarg",
-    status: "Prepayment",
-  },
-  {
-    id: 7,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Profsous",
-    status: "Prepayment",
-  },
-  {
-    id: 8,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "800",
-    isAmountRed: true,
-    discountBadge: "- 200",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Profsous",
-    status: "Ative",
-  },
-  {
-    id: 9,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Sadbarg",
-    status: "Ative",
-  },
-  {
-    id: 10,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Sadbarg",
-    status: "Ative",
-  },
-  {
-    id: 11,
-    fullName: "Dilovar Karimov",
-    phone: "93 258 4147",
-    amount: "1000",
-    paid: "1000",
-    date: "30.01.2024",
-    group: "C# 5 June",
-    branch: "Sadbarg",
-    status: "Ative",
-  },
-];
-
-interface DrawerTransaction {
-  id: number;
-  amount: string;
-  type: string;
-  date: string;
-  comment: string;
-}
-
-const DRAWER_TRANSACTIONS: DrawerTransaction[] = [
-  { id: 1, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----" },
-  { id: 2, amount: "300 c", type: "Cash", date: "16 June 2023", comment: "-----" },
-  { id: 3, amount: "200 c", type: "Alif", date: "20 June 2023", comment: "-----" },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
 
 export function PaymentsListPanel() {
+  const [toast, setToast] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("All groups");
   const [selectedBranch, setSelectedBranch] = useState("All branches");
   const [selectedStatus, setSelectedStatus] = useState("All status");
   const [selectedDate, setSelectedDate] = useState("July 2023");
 
+  const paymentsQuery = useQuery({
+    queryKey: queryKeys.list(paymentsApi.key, FETCH_ALL),
+    queryFn: () => paymentsApi.list(FETCH_ALL),
+  });
+
+  const payments = useMemo(() => {
+    const items = paymentsQuery.data?.items ?? [];
+    return items.map((p) => ({
+      id: p.id,
+      fullName: p.studentName ?? "—",
+      phone: "",
+      amount: String(p.amount),
+      discountBadge: p.discount > 0 ? `- ${p.discount}` : undefined,
+      isAmountRed: p.discount > 0,
+      paid: String(p.paid),
+      date: p.date ? new Date(p.date).toLocaleDateString("ru-RU") : "—",
+      group: p.groupName ?? "—",
+      branch: p.branchName ?? "—",
+      status: p.status === "Prepayment" ? "Prepayment" : "Active" as const,
+    }));
+  }, [paymentsQuery.data]);
+
+  const filteredPayments = useMemo(() => {
+    return payments.filter((p) => {
+      if (searchQuery && !p.fullName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedGroup !== "All groups" && p.group !== selectedGroup) return false;
+      if (selectedBranch !== "All branches" && p.branch !== selectedBranch) return false;
+      if (selectedStatus !== "All status" && p.status !== selectedStatus) return false;
+      return true;
+    });
+  }, [payments, searchQuery, selectedGroup, selectedBranch, selectedStatus]);
+
   // Overlay states
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedStudentName, setSelectedStudentName] = useState("Dilovar Karimov");
   const [isAddTransactionExpanded, setIsAddTransactionExpanded] = useState(false);
   const [openDownloadPopoverId, setOpenDownloadPopoverId] = useState<number | null>(null);
+
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => paymentsApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["Payments"] });
+      setToast("Payment deleted");
+    },
+  });
 
   // Modals state
   const [activeModal, setActiveModal] = useState<"amount" | "prepayment" | null>(null);
@@ -214,12 +111,12 @@ export function PaymentsListPanel() {
   const [newTransType, setNewTransType] = useState("");
   const [newTransComment, setNewTransComment] = useState("");
 
-  const handleRowClick = (row: PaymentRowData) => {
+  const handleRowClick = (row: { id: string; fullName: string }) => {
     setSelectedStudentName(row.fullName);
     setIsDrawerOpen(true);
   };
 
-  const handleAmountClick = (e: React.MouseEvent, row: PaymentRowData) => {
+  const handleAmountClick = (e: React.MouseEvent, row: { id: string; fullName: string; amount: string }) => {
     e.stopPropagation();
     setSelectedStudentName(row.fullName);
     setAmountInputVal(row.amount);
@@ -251,14 +148,14 @@ export function PaymentsListPanel() {
             <span>EXPORT</span>
           </button>
 
-          {/* + PREPAYMENT button */}
-          <button
-            onClick={() => setActiveModal("prepayment")}
+          {/* + PREPAYMENT button → /accounting/payments/new */}
+          <Link
+            href="/accounting/payments/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
           >
             <Plus className="size-4 stroke-[3]" />
             <span>PREPAYMENT</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -341,7 +238,7 @@ export function PaymentsListPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {PAYMENTS_DATA.map((row) => (
+            {filteredPayments.map((row) => (
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}
@@ -416,14 +313,15 @@ export function PaymentsListPanel() {
                 {/* ACTION: Edit (Blue) & Delete (Red) */}
                 <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
-                    <button
-                      title="Edit"
+                    <Link
+                      href={`/accounting/payments/${row.id}/edit`}
                       className="p-1 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
                     >
                       <SquarePen className="size-4" />
-                    </button>
+                    </Link>
                     <button
                       title="Delete"
+                      onClick={() => { if (confirm("Delete this payment?")) deleteMutation.mutate(row.id); }}
                       className="p-1 text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 rounded hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
                     >
                       <Trash2 className="size-4" />
@@ -952,6 +850,7 @@ export function PaymentsListPanel() {
           </div>
         </div>
       )}
+      <Toast message={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

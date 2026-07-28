@@ -17,20 +17,7 @@ export interface BudgetChartItem {
   spent: number;
 }
 
-export const MOCK_BUDGET_DATA: BudgetChartItem[] = [
-  { month: "January", allocated: 6000, spent: 14000 },
-  { month: "February", allocated: 10000, spent: 8000 },
-  { month: "March", allocated: 11000, spent: 9000 },
-  { month: "April", allocated: 8000, spent: 11000 },
-  { month: "May", allocated: 5000, spent: 19000 },
-  { month: "June", allocated: 12000, spent: 17000 },
-  { month: "July", allocated: 20000, spent: 16000 },
-  { month: "August", allocated: 18000, spent: 11000 },
-  { month: "September", allocated: 16000, spent: 9000 },
-  { month: "October", allocated: 18000, spent: 12000 },
-  { month: "November", allocated: 13000, spent: 10000 },
-  { month: "December", allocated: 8000, spent: 5000 },
-];
+export const MOCK_BUDGET_DATA: BudgetChartItem[] = [];
 
 export interface CustomTooltipPayloadItem {
   dataKey?: string | number;

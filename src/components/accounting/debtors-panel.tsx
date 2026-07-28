@@ -1,75 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, Upload, Plus, Search, ChevronDown, Calendar, SquarePen, X } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Upload, Plus, Search, Calendar, SquarePen, Trash2, X } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import {
+  debtorsApi,
+  queryKeys,
+} from "@/lib/api/resources";
+import type { DebtorDto } from "@/lib/api/types";
+import { Toast } from "@/components/ui/toast";
 
-interface DebtorRow {
-  id: number;
-  fullName: string;
-  from: string;
-  to: string;
-  totalDebtAmount: string;
-  paymentPerMonth: string;
-  totalPaidAmount: string;
-  notes: string;
-  status: "Inprogress" | "Paid";
-}
-
-const DEBTORS_DATA: DebtorRow[] = [
-  { id: 1, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 2, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 3, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 4, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Paid" },
-  { id: 5, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 6, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 7, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Paid" },
-  { id: 8, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 9, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Paid" },
-  { id: 10, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 11, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-  { id: 12, fullName: "1. Dilovar Karimov", from: "01.04.2023", to: "01.05.2023", totalDebtAmount: "1000", paymentPerMonth: "1000", totalPaidAmount: "1000", notes: "---------", status: "Inprogress" },
-];
-
-interface DrawerTransaction {
-  id: number;
-  amount: string;
-  type: string;
-  date: string;
-  comment: string;
-}
-
-const DRAWER_TRANSACTIONS: DrawerTransaction[] = [
-  { id: 1, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----" },
-  { id: 2, amount: "300 c", type: "Cash", date: "16 june 2023", comment: "-----" },
-  { id: 3, amount: "200 c", type: "Alif", date: "20 june 2023", comment: "-----" },
-];
+const FETCH_ALL = { page: 1, pageSize: 1000 };
 
 export function DebtorsPanel() {
+  const queryClient = useQueryClient();
+  const [toast, setToast] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All status");
   const [selectedDate, setSelectedDate] = useState("July 2023");
 
-  // Overlay states
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedDebtorName, setSelectedDebtorName] = useState("Dilovar Karimov");
-  const [isAddTransactionExpanded, setIsAddTransactionExpanded] = useState(false);
+  const debtorsQuery = useQuery({
+    queryKey: queryKeys.list(debtorsApi.key, FETCH_ALL),
+    queryFn: () => debtorsApi.list(FETCH_ALL),
+  });
 
-  // Modal Form states
-  const [modalDebtor, setModalDebtor] = useState("");
-  const [modalFromDate, setModalFromDate] = useState("");
-  const [modalToDate, setModalToDate] = useState("");
-  const [modalAmount, setModalAmount] = useState("");
-  const [modalNotes, setModalNotes] = useState("");
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => debtorsApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.list(debtorsApi.key, FETCH_ALL) });
+      setToast("Debtor deleted");
+    },
+  });
+
+  const debtors = useMemo(() => {
+    const items = debtorsQuery.data?.items ?? [];
+    return items.map((d) => ({
+      id: d.id,
+      fullName: d.fullName ?? "—",
+      from: d.fromDate ? new Date(d.fromDate).toLocaleDateString("ru-RU") : "—",
+      to: d.toDate ? new Date(d.toDate).toLocaleDateString("ru-RU") : "—",
+      totalDebtAmount: String(d.totalDebtAmount),
+      paymentPerMonth: String(d.paymentPerMonth),
+      totalPaidAmount: String(d.totalPaidAmount),
+      notes: d.notes ?? "—",
+      status: d.status === "Paid" ? "Paid" as const : "Inprogress" as const,
+    }));
+  }, [debtorsQuery.data]);
+
+  const filteredDebtors = useMemo(() => {
+    return debtors.filter((d) => {
+      if (searchQuery && !d.fullName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedStatus !== "All status" && d.status !== selectedStatus) return false;
+      return true;
+    });
+  }, [debtors, searchQuery, selectedStatus]);
+
+  // Overlay states
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedDebtorName, setSelectedDebtorName] = useState("");
+  const [isAddTransactionExpanded, setIsAddTransactionExpanded] = useState(false);
 
   // Drawer Add Transaction states
   const [newTransAmount, setNewTransAmount] = useState("");
   const [newTransType, setNewTransType] = useState("");
   const [newTransComment, setNewTransComment] = useState("");
 
-  const handleRowClick = (row: DebtorRow) => {
+  const DRAWER_TRANSACTIONS: { id: number; amount: string; type: string; date: string; comment: string }[] = [];
+
+  const handleRowClick = (row: { id: string; fullName: string }) => {
     setSelectedDebtorName(row.fullName.replace(/^\d+\.\s*/, ""));
     setIsDrawerOpen(true);
   };
@@ -100,13 +100,13 @@ export function DebtorsPanel() {
           </button>
 
           {/* + ADD NEW button */}
-          <button
-            onClick={() => setIsModalOpen(true)}
+          <Link
+            href="/accounting/debtors/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
           >
             <Plus className="size-4 stroke-[3]" />
             <span>ADD NEW</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -168,10 +168,11 @@ export function DebtorsPanel() {
               <th className="py-3.5 px-4">TOTAL PAID AMOUNT</th>
               <th className="py-3.5 px-4">NOTES</th>
               <th className="py-3.5 px-4 text-center">STATUS</th>
+              <th className="py-3.5 px-4 text-right">ACTION</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {DEBTORS_DATA.map((row) => (
+            {filteredDebtors.map((row) => (
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}
@@ -224,133 +225,23 @@ export function DebtorsPanel() {
                     </span>
                   )}
                 </td>
+                <td className="py-3.5 px-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link href={`/accounting/debtors/${row.id}/edit`} onClick={(e) => e.stopPropagation()} className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
+                      <SquarePen className="size-4" />
+                    </Link>
+                    <button onClick={(e) => { e.stopPropagation(); if (confirm("Delete this debtor?")) deleteMutation.mutate(row.id); }} className="p-1 text-rose-500 hover:text-rose-700">
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* 4. "New deptors" Modal (image_755fa8.png) */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            className="bg-white dark:bg-card rounded-2xl w-full max-w-md p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 animate-in fade-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                New deptors
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-
-            {/* Form */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setIsModalOpen(false);
-              }}
-              className="space-y-4"
-            >
-              {/* Debtor Dropdown */}
-              <CustomSelect
-                label="Debtor"
-                value={modalDebtor || "Choose debtor"}
-                onChange={(val) => setModalDebtor(val === "Choose debtor" ? "" : val)}
-                options={["Choose debtor", "Dilovar Karimov", "Tojiev Olimjon"]}
-                className="w-full"
-              />
-
-              {/* Two-column row: From & To Date Pickers */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* From */}
-                <div className="relative">
-                  <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                    From
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={modalFromDate}
-                      onChange={(e) => setModalFromDate(e.target.value)}
-                      placeholder="mm.yyyy"
-                      className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-9 placeholder:text-slate-400"
-                    />
-                    <Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* To */}
-                <div className="relative">
-                  <label className="absolute -top-2.5 left-3 bg-white dark:bg-card px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 z-10">
-                    To
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={modalToDate}
-                      onChange={(e) => setModalToDate(e.target.value)}
-                      placeholder="mm.yyyy"
-                      className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-9 placeholder:text-slate-400"
-                    />
-                    <Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Amount Input */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={modalAmount}
-                  onChange={(e) => setModalAmount(e.target.value)}
-                  placeholder="Amount"
-                  className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
-                />
-              </div>
-
-              {/* Notes Input */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={modalNotes}
-                  onChange={(e) => setModalNotes(e.target.value)}
-                  placeholder="Notes"
-                  className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
-                />
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20"
-                >
-                  ADD
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-500 dark:text-indigo-400 text-xs font-bold tracking-wider transition-all"
-                >
-                  CANCEL
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 5. Right-Side Interactive Drawer (image_755fc8.png & image_75628e.png) */}
+      {/* 4. Right-Side Interactive Drawer (image_755fc8.png & image_75628e.png) */}
       {isDrawerOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end transition-opacity duration-300"
@@ -388,7 +279,7 @@ export function DebtorsPanel() {
                   ) : (
                     <Plus className="size-5 stroke-[3]" />
                   )}
-                </div>
+</div>
               </div>
 
               {/* Form Content when Expanded (image_75628e.png) */}
@@ -475,9 +366,9 @@ export function DebtorsPanel() {
                         {trans.comment}
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <button className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
+                        <Link href={`/accounting/debtors/${trans.id}/edit`} onClick={(e) => e.stopPropagation()} className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
                           <SquarePen className="size-4" />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -487,6 +378,7 @@ export function DebtorsPanel() {
           </div>
         </div>
       )}
+      <Toast message={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

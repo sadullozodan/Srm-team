@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Bell, Globe, User } from "lucide-react";
 import { LogoMark } from "./icons";
 import { LANGS } from "@/lib/langs";
-import { useLang } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
 import { NotificationPanel, useUnreadNotificationCount } from "@/components/notifications";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
@@ -26,13 +26,13 @@ export function MobileNav() {
   const [notifOpen, setNotifOpen] = useState(false);
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
   const { lang, setLang } = useLang();
+const t = useT();
 
   return (
     <>
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
         <button
           onClick={() => setOpenMobile(!openMobile)}
-          aria-label="Menu"
           className={`${tabCls} ${openMobile ? "text-primary" : "text-muted-foreground"}`}
         >
           <LogoMark className="h-6" />
@@ -44,7 +44,7 @@ export function MobileNav() {
           className={`${tabCls} ${langOpen ? "text-primary" : "text-muted-foreground"}`}
         >
           <Globe className="size-6" />
-          Lang
+          {t("Lang")}
         </button>
 
         <button
@@ -59,22 +59,22 @@ export function MobileNav() {
               </span>
             )}
           </span>
-          Notification
+          {t("Notifications")}
         </button>
 
-        <Link
-          href="/profile"
-          className={`${tabCls} text-muted-foreground`}
+        <button
+          onClick={() => setOpenMobile(!openMobile)}
+          className={`${tabCls} ${openMobile ? "text-primary" : "text-muted-foreground"}`}
         >
           <User className="size-6" />
-          Profile
-        </Link>
+{t("Profile")}
+        </button>
       </nav>
 
       <Sheet open={langOpen} onOpenChange={setLangOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl pb-24">
           <SheetHeader>
-            <SheetTitle>Language</SheetTitle>
+            <SheetTitle>{t("Language")}</SheetTitle>
           </SheetHeader>
           <div className="px-4">
             {LANGS.map(({ code, label, Flag }) => (

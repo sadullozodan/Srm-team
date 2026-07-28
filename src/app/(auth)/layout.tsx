@@ -1,9 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import { Logo } from "@/components/icons";
 import { LangMenu, ThemeToggle } from "@/components/header";
+import { useT } from "@/lib/i18n";
 
-// Split auth shell from the Figma: form column on the left, brand panel on the
-// right. The panel drops below lg, so phones get the form full width.
 export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -28,19 +29,16 @@ export default function AuthLayout({
   );
 }
 
-// The panel keeps its own surface token so it can go dark without touching the
-// artwork, which is a transparent PNG sitting on top of it.
 function BrandPanel() {
+  const t = useT();
   return (
     <div className="relative hidden overflow-hidden rounded-2xl bg-auth-panel lg:m-6 lg:ml-0 lg:block">
       <div className="px-14 pt-16">
         <p className="text-3xl font-bold text-auth-panel-foreground">
-          Welcome to
+          {t("Welcome to")}
         </p>
         <Logo className="mt-4 h-20" />
       </div>
-      {/* Figma runs the art the full width of the panel and lets the bottom
-          crop it. The height cap keeps that ratio on very wide screens. */}
       <Image
         src="/auth/hero.png"
         alt=""

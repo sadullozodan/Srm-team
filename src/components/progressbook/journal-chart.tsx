@@ -5,7 +5,7 @@
 // tooltip (names), never colour alone, so the CVD-validated categorical palette
 // can cycle for large rosters. Table view = the journal grid rendered below it.
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTheme } from "next-themes";
 import type { JournalWeekDto } from "@/lib/api/types";
 
@@ -25,7 +25,7 @@ interface Student {
 }
 
 const W = 960;
-const H = 360;
+const H = 200;
 const PAD = { top: 20, right: 44, bottom: 34, left: 40 };
 const PLOT_W = W - PAD.left - PAD.right;
 const PLOT_H = H - PAD.top - PAD.bottom;
@@ -39,11 +39,9 @@ export function JournalChart({
   students: Student[];
 }) {
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
-  useEffect(() => setMounted(true), []);
 
-  const palette = mounted && resolvedTheme === "dark" ? PALETTE_DARK : PALETTE_LIGHT;
+  const palette = resolvedTheme === "dark" ? PALETTE_DARK : PALETTE_LIGHT;
 
   const ordered = [...weeks].sort((a, b) => a.weekNumber - b.weekNumber);
 
@@ -67,10 +65,6 @@ export function JournalChart({
     };
   });
 
-  // Only worth drawing once at least one score exists.
-  const hasData = series.some((s) => s.values.some((v) => v !== null));
-  if (!hasData) return null;
-
   const xFor = (col: number) =>
     colCount === 1 ? PAD.left + PLOT_W / 2 : PAD.left + (col / (colCount - 1)) * PLOT_W;
   const yFor = (value: number) => PAD.top + PLOT_H - (value / 100) * PLOT_H;
@@ -92,6 +86,7 @@ export function JournalChart({
 
   return (
     <div className="relative w-full">
+      <style>{`@keyframes drawLine { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }`}</style>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
@@ -162,18 +157,31 @@ export function JournalChart({
               strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
+              pathLength={1}
+              style={{ strokeDasharray: 1, animation: 'drawLine 0.8s ease-out forwards' }}
             />
             {s.values.map((v, i) =>
               v === null ? null : (
-                <circle
-                  key={i}
-                  cx={xFor(i)}
-                  cy={yFor(v)}
-                  r={hover === i ? 4.5 : 3.5}
-                  fill={s.color}
-                  style={{ stroke: "var(--card)" }}
-                  strokeWidth={1.5}
-                />
+                <g key={i}>
+                  <circle
+                    cx={xFor(i)}
+                    cy={yFor(v)}
+                    r={hover === i ? 4.5 : 3.5}
+                    fill={s.color}
+                    style={{ stroke: "var(--card)" }}
+                    strokeWidth={1.5}
+                  />
+                  {hover === i && (
+                    <text
+                      x={xFor(i)}
+                      y={yFor(v) - 8}
+                      textAnchor="middle"
+                      style={{ fill: "var(--foreground)", fontSize: 11, fontWeight: 600 }}
+                    >
+                      {v}
+                    </text>
+                  )}
+                </g>
               )
             )}
           </g>

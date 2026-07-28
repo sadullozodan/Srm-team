@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState, Fragment, useMemo } from "react";
 import Link from "next/link";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CustomSelect } from "@/components/ui/custom-select";
 import {
   ArrowLeft,
@@ -16,180 +17,95 @@ import {
   Trash2,
   ChevronLeft,
 } from "lucide-react";
+import {
+  expensesApi,
+  queryKeys,
+} from "@/lib/api/resources";
 
-interface ChildExpense {
-  id: number;
-  fullName: string;
-  totalPayment: string;
-  recipient: string;
-  branch: string;
-  status: "Active" | "Inactive";
+const FETCH_ALL = { page: 1, pageSize: 1000 };
+
+interface ExpenseTreeItem {
+  id: string;
+  name: string;
+  amount: number;
+  recipient: string | null;
+  branchName: string | null;
+  status: string;
+  children: ExpenseTreeItem[];
 }
 
-interface ParentExpense {
-  id: number;
-  fullName: string;
-  totalPayment: string;
-  recipient: string;
-  branch: string;
-  status: "Active" | "Inactive";
-  children?: ChildExpense[];
+function buildExpenseTree(items: { id: string; parentId: string | null; name: string | null; amount: number; recipient: string | null; branchName: string | null; status: string; category: string }[]): ExpenseTreeItem[] {
+  const childrenMap = new Map<string, ExpenseTreeItem[]>();
+  const roots: ExpenseTreeItem[] = [];
+
+  for (const item of items) {
+    const node: ExpenseTreeItem = {
+      id: item.id,
+      name: item.name ?? item.category,
+      amount: item.amount,
+      recipient: item.recipient,
+      branchName: item.branchName,
+      status: item.status,
+      children: [],
+    };
+    if (item.parentId) {
+      const existing = childrenMap.get(item.parentId) ?? [];
+      existing.push(node);
+      childrenMap.set(item.parentId, existing);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  for (const root of roots) {
+    root.children = childrenMap.get(root.id) ?? [];
+  }
+
+  return roots;
 }
 
-const EXPENSES_DATA: ParentExpense[] = [
-  {
-    id: 1,
-    fullName: "Tax",
-    totalPayment: "1000",
-    recipient: "Student",
-    branch: "Sadbarg",
-    status: "Active",
-    children: [
-      {
-        id: 11,
-        fullName: "Income tax",
-        totalPayment: "300",
-        recipient: "Student",
-        branch: "Sadbarg",
-        status: "Active",
-      },
-      {
-        id: 12,
-        fullName: "VAT (value added tax)",
-        totalPayment: "200",
-        recipient: "Student",
-        branch: "Sadbarg",
-        status: "Active",
-      },
-      {
-        id: 13,
-        fullName: "Property tax",
-        totalPayment: "200",
-        recipient: "Student",
-        branch: "Sadbarg",
-        status: "Active",
-      },
-      {
-        id: 14,
-        fullName: "Social taxes (on wages, etc.)",
-        totalPayment: "300",
-        recipient: "Student",
-        branch: "Sadbarg",
-        status: "Active",
-      },
-    ],
-  },
-  {
-    id: 2,
-    fullName: "Office expenses",
-    totalPayment: "1000",
-    recipient: "Student",
-    branch: "Sadbarg",
-    status: "Active",
-    children: [
-      {
-        id: 21,
-        fullName: "Stationery & Supplies",
-        totalPayment: "500",
-        recipient: "Student",
-        branch: "Sadbarg",
-        status: "Active",
-      },
-      {
-        id: 22,
-        fullName: "Internet & Utilities",
-        totalPayment: "500",
-        recipient: "Student",
-        branch: "Sadbarg",
-        status: "Active",
-      },
-    ],
-  },
-  {
-    id: 3,
-    fullName: "Marketing",
-    totalPayment: "1000",
-    recipient: "Student",
-    branch: "Profsous",
-    status: "Inactive",
-    children: [
-      {
-        id: 31,
-        fullName: "SMM & Target ads",
-        totalPayment: "600",
-        recipient: "Student",
-        branch: "Profsous",
-        status: "Inactive",
-      },
-      {
-        id: 32,
-        fullName: "Outdoor Banners",
-        totalPayment: "400",
-        recipient: "Student",
-        branch: "Profsous",
-        status: "Inactive",
-      },
-    ],
-  },
-  {
-    id: 4,
-    fullName: "Employees",
-    totalPayment: "1000",
-    recipient: "Student",
-    branch: "Profsous",
-    status: "Active",
-    children: [
-      {
-        id: 41,
-        fullName: "Team building",
-        totalPayment: "1000",
-        recipient: "Student",
-        branch: "Profsous",
-        status: "Active",
-      },
-    ],
-  },
-];
-
-interface TransactionRow {
-  id: number;
-  amount: string;
-  type: string;
-  date: string;
-  comment: string;
-  actionType: "edit_delete" | "arrow_up";
-}
-
-const TRANSACTIONS_DATA: TransactionRow[] = [
-  { id: 1, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----", actionType: "edit_delete" },
-  { id: 2, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----", actionType: "edit_delete" },
-  { id: 3, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----", actionType: "edit_delete" },
-  { id: 4, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----", actionType: "edit_delete" },
-  { id: 5, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----", actionType: "edit_delete" },
-  { id: 6, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----", actionType: "edit_delete" },
-  { id: 7, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----", actionType: "edit_delete" },
-  { id: 8, amount: "500 c", type: "Cash", date: "13.08.23, 16:50", comment: "-----", actionType: "edit_delete" },
-  { id: 9, amount: "200 c", type: "Alif", date: "20 June 2023", comment: "-----", actionType: "arrow_up" },
-  { id: 10, amount: "300 c", type: "Cash", date: "16 June 2023", comment: "-----", actionType: "edit_delete" },
-];
+const TRANSACTIONS_DATA: { id: number; amount: string; type: string; date: string; comment: string; actionType: string }[] = [];
 
 export function ExpensesPanel() {
+  const expensesQuery = useQuery({
+    queryKey: queryKeys.list(expensesApi.key, FETCH_ALL),
+    queryFn: () => expensesApi.list(FETCH_ALL),
+  });
+
+  const expenseTree = useMemo(() => {
+    const items = expensesQuery.data?.items ?? [];
+    return buildExpenseTree(items.map((e) => ({
+      id: e.id,
+      parentId: e.parentId,
+      name: e.name ?? e.category,
+      amount: e.amount,
+      recipient: e.recipient,
+      branchName: e.branchName,
+      status: e.status,
+      category: e.category,
+    })));
+  }, [expensesQuery.data]);
+
+  const queryClient = useQueryClient();
+  const deleteExpenseMutation = useMutation({
+    mutationFn: (id: string) => expensesApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.list(expensesApi.key, FETCH_ALL) }),
+  });
+
   const [selectedCategory, setSelectedCategory] = useState("All category");
   const [selectedBranch, setSelectedBranch] = useState("All branches");
   const [selectedDate, setSelectedDate] = useState("July 2023");
 
-  // Local state for parent expandable rows (Tax expanded by default as in image_75451e.png)
-  const [expandedParents, setExpandedParents] = useState<Record<number, boolean>>({
-    1: true, // Tax expanded
-  });
+  // Local state for parent expandable rows
+  const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
 
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedChildTitle, setSelectedChildTitle] = useState("Income tax");
+  const [selectedChildTitle, setSelectedChildTitle] = useState("");
   const [showInactiveTransactions, setShowInactiveTransactions] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const toggleParent = (parentId: number) => {
+  const toggleParent = (parentId: string) => {
     setExpandedParents((prev) => ({
       ...prev,
       [parentId]: !prev[parentId],
@@ -200,6 +116,14 @@ export function ExpensesPanel() {
     setSelectedChildTitle(childName);
     setIsDrawerOpen(true);
   };
+
+  const filteredTree = useMemo(() => {
+    return expenseTree.filter((parent) => {
+      if (selectedCategory !== "All category" && !parent.name.toLowerCase().includes(selectedCategory.toLowerCase())) return false;
+      if (selectedBranch !== "All branches" && parent.branchName !== selectedBranch) return false;
+      return true;
+    });
+  }, [expenseTree, selectedCategory, selectedBranch]);
 
   return (
     <div className="w-full bg-white dark:bg-card text-foreground rounded-2xl md:rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-200/80 dark:border-slate-800 space-y-6 font-sans relative">
@@ -218,11 +142,17 @@ export function ExpensesPanel() {
           </h1>
         </div>
 
-        {/* Right: EXPORT Button */}
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50/70 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950/40 text-xs font-bold tracking-wider transition-all shadow-xs">
-          <Upload className="size-4 stroke-[2.5]" />
-          <span>EXPORT</span>
-        </button>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50/70 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-950/40 text-xs font-bold tracking-wider transition-all shadow-xs">
+            <Upload className="size-4 stroke-[2.5]" />
+            <span>EXPORT</span>
+          </button>
+          <Link href="/accounting/expenses/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider transition-all shadow-md shadow-indigo-600/20">
+            <Plus className="size-4 stroke-[3]" />
+            <span>ADD NEW</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. Filters Bar */}
@@ -273,7 +203,7 @@ export function ExpensesPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
-            {EXPENSES_DATA.map((parent) => {
+            {filteredTree.map((parent) => {
               const isExpanded = !!expandedParents[parent.id];
               return (
                 <Fragment key={parent.id}>
@@ -291,24 +221,24 @@ export function ExpensesPanel() {
                           }`}
                         />
                         <span className="font-bold text-slate-900 dark:text-slate-100">
-                          {parent.fullName}
+                          {parent.name}
                         </span>
                       </div>
                     </td>
 
                     {/* TOTAL PAYMENT */}
                     <td className="py-3.5 px-4 text-slate-800 dark:text-slate-200 font-semibold">
-                      {parent.totalPayment}
+                      {parent.amount}
                     </td>
 
                     {/* RECIPIENT */}
                     <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
-                      {parent.recipient}
+                      {parent.recipient ?? "—"}
                     </td>
 
                     {/* BRANCH */}
                     <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
-                      {parent.branch}
+                      {parent.branchName ?? "—"}
                     </td>
 
                     {/* STATUS */}
@@ -330,27 +260,27 @@ export function ExpensesPanel() {
                     parent.children?.map((child) => (
                       <tr
                         key={child.id}
-                        onClick={() => handleChildClick(child.fullName)}
+                        onClick={() => handleChildClick(child.name)}
                         className="bg-slate-50/40 dark:bg-slate-900/20 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 cursor-pointer transition-colors border-t border-slate-100 dark:border-slate-800/60"
                       >
                         {/* Indented Child Name */}
                         <td className="py-3.5 px-4 sm:px-6 pl-12 sm:pl-14 font-medium text-slate-700 dark:text-slate-300">
-                          {child.fullName}
+                          {child.name}
                         </td>
 
                         {/* TOTAL PAYMENT */}
                         <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
-                          {child.totalPayment}
+                          {child.amount}
                         </td>
 
                         {/* RECIPIENT */}
                         <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">
-                          {child.recipient}
+                          {child.recipient ?? "—"}
                         </td>
 
                         {/* BRANCH */}
                         <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">
-                          {child.branch}
+                          {child.branchName ?? "—"}
                         </td>
 
                         {/* STATUS */}
@@ -461,10 +391,10 @@ export function ExpensesPanel() {
                         <td className="py-3.5 px-4 text-right">
                           {row.actionType === "edit_delete" ? (
                             <div className="flex items-center justify-end gap-2">
-                              <button className="p-1 text-indigo-500 hover:text-indigo-700">
+                              <Link href={`/accounting/expenses/${row.id}/edit`} onClick={(e) => e.stopPropagation()} className="p-1 text-indigo-500 hover:text-indigo-700">
                                 <SquarePen className="size-4" />
-                              </button>
-                              <button className="p-1 text-rose-500 hover:text-rose-700">
+                              </Link>
+                              <button className="p-1 text-rose-500 hover:text-rose-700" onClick={() => { if (confirm("Delete?")) deleteExpenseMutation.mutate(String(row.id)); }}>
                                 <Trash2 className="size-4" />
                               </button>
                             </div>

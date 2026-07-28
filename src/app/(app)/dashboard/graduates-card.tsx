@@ -1,25 +1,27 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { GraduateDto } from "@/lib/api/types";
 import { CardTitle, Empty, Panel, SeeMore, TableHead, initials, longDate } from "../parts";
 
 export function GraduatesCard({ count, rows }: { count: number; rows: GraduateDto[] }) {
+  const t = useT();
   return (
     <Panel className="p-5">
       <div className="flex items-center justify-between">
-        <CardTitle>Employed graduates ({count})</CardTitle>
+        <CardTitle>{t("Employed graduates ({count})").replace("{count}", String(count))}</CardTitle>
         <SeeMore href="/students/graduates" />
       </div>
 
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-sm">
-          <TableHead columns={["Full name", "Course", "Date of issue", "Work"]} />
+          <TableHead columns={[t("Full name"), t("Course"), t("Date of issue"), t("Work")]} />
           <tbody>
             {rows.length === 0 && (
               <tr>
                 <td colSpan={4}>
-                  <Empty>No graduates yet</Empty>
+                  <Empty>{t("No graduates yet")}</Empty>
                 </td>
               </tr>
             )}
@@ -33,7 +35,7 @@ export function GraduatesCard({ count, rows }: { count: number; rows: GraduateDt
                     </Avatar>
                     <div>
                       <p className="font-semibold">{graduate.studentName}</p>
-                      <p className="text-xs text-primary">{graduate.age} year</p>
+                      <p className="text-xs text-primary">{graduate.age} {t("year")}</p>
                     </div>
                   </div>
                 </td>
