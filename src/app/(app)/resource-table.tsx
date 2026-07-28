@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { queryKeys } from "@/lib/api/resources";
 import type { ListParams, PagedResult } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import { cellCls } from "./panels";
 
 // A generic, app-wide list table: owns fetching, paging and the
@@ -62,6 +63,7 @@ export function ResourceTable<TDto extends { id: string }>({
   emptyMessage = "Nothing here yet.",
   minWidth = "min-w-[700px]",
 }: ResourceTableProps<TDto>) {
+  const t = useT();
   const listParams = { page, pageSize: PAGE_SIZE, search, ...params };
 
   const { data, isPending, isError, error, isPlaceholderData } = useQuery({
@@ -90,7 +92,7 @@ export function ResourceTable<TDto extends { id: string }>({
             <tr className="bg-muted/70 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
               {columns.map((column) => (
                 <th key={column} className={cellCls}>
-                  {column}
+                  {t(column)}
                 </th>
               ))}
             </tr>
@@ -101,7 +103,7 @@ export function ResourceTable<TDto extends { id: string }>({
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-10 text-center text-muted-foreground">
-                  {emptyMessage}
+                  {t(emptyMessage)}
                 </td>
               </tr>
             ) : (
@@ -151,18 +153,21 @@ function Pagination({
   disabled: boolean;
   onChange: (page: number) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex items-center justify-between gap-3 text-xs font-medium text-muted-foreground">
-      <span>{total} total</span>
+      <span>
+        {total} {t("total")}
+      </span>
       <div className="flex items-center gap-2">
-        <PageButton label="Previous page" disabled={disabled || page <= 1} onClick={() => onChange(Math.max(1, page - 1))}>
+        <PageButton label={t("Previous page")} disabled={disabled || page <= 1} onClick={() => onChange(Math.max(1, page - 1))}>
           <ChevronLeft className="size-4" />
         </PageButton>
         <span className="min-w-20 text-center">
-          Page {page} of {totalPages}
+          {t("Page")} {page} {t("of")} {totalPages}
         </span>
         <PageButton
-          label="Next page"
+          label={t("Next page")}
           disabled={disabled || page >= totalPages}
           onClick={() => onChange(Math.min(totalPages, page + 1))}
         >

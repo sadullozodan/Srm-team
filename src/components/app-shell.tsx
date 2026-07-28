@@ -11,7 +11,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <AppSidebar />
       <SidebarInset>
         <Header />
-        <main className="flex-1 px-4 py-6 pb-24 md:px-6 md:pb-6">{children}</main>
+        <main className="flex-1 px-4 py-5 pb-24 md:px-6 md:py-7 md:pb-8">
+          <div className="mx-auto w-full max-w-[1500px]">{children}</div>
+        </main>
       </SidebarInset>
       <MobileNav />
     </SidebarProvider>

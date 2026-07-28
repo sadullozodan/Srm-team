@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, User } from "lucide-react";
 import { NavIcon } from "@/components/icons";
+import { useT } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   dashboardApi,
@@ -37,6 +38,7 @@ import { IncomeCard } from "./income-card";
 import { Panel } from "../parts";
 
 export default function DashboardPage() {
+  const t = useT();
   const stats = useQuery({ queryKey: queryKeys.dashboard, queryFn: dashboardApi.stats });
 
   // Everything the stats endpoint does not cover. These fill in as they arrive
@@ -51,7 +53,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-[-0.03em]">{t("Dashboard")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("A quick read on students, attendance and cashflow.")}
+          </p>
+        </div>
         <DateField />
       </div>
 
@@ -174,13 +181,20 @@ function Kpi({
   label: string;
   icon: React.ReactNode;
 }) {
+  const t = useT();
   return (
-    <Panel className="px-4 py-5 text-center">
-      <p className="text-4xl font-bold text-primary">{value}</p>
-      <p className="mt-2 flex items-center justify-center gap-2 text-sm font-medium">
-        {icon}
-        {label}
-      </p>
+    <Panel className="group overflow-hidden px-4 py-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-4xl leading-none font-black tracking-[-0.05em] text-foreground tabular-nums">
+            {value}
+          </p>
+          <p className="mt-3 text-sm font-semibold text-muted-foreground">{t(label)}</p>
+        </div>
+        <span className="grid size-10 place-items-center rounded-xl bg-secondary text-primary transition-transform group-hover:scale-105">
+          {icon}
+        </span>
+      </div>
     </Panel>
   );
 }
@@ -199,9 +213,9 @@ function DateField() {
   return (
     <label
       onClick={() => input.current?.showPicker?.()}
-      className="relative flex cursor-pointer items-center gap-3 rounded-xl border bg-card px-4 py-3 transition-colors hover:border-primary focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/30"
+      className="relative flex cursor-pointer items-center gap-3 rounded-xl border border-border/75 bg-card/85 px-4 py-3 shadow-[0_10px_28px_rgb(31_37_60_/_0.06)] transition-all hover:border-primary/40 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/25"
     >
-      <span className="absolute -top-2 left-3 bg-card px-1 text-xs text-muted-foreground">
+      <span className="absolute -top-2 left-3 bg-card px-1 text-xs font-medium text-muted-foreground">
         Date
       </span>
 
