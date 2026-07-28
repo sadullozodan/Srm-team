@@ -15,11 +15,12 @@ import {
   Edit2,
   Trash2,
 } from "lucide-react";
-import { mentorLevelsApi, queryKeys } from "@/lib/api/resources";
-import type { MentorLevelDto } from "@/lib/api/types";
+import { mentorLevelsApi, employeesApi, queryKeys } from "@/lib/api/resources";
+import type { MentorLevelDto, MentorLevelType } from "@/lib/api/types";
 
 const MONTH_KEYS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUNE", "JULY", "AUG", "SEP", "OCT", "NOV", "DEC"] as const;
-const MONTH_NUM: Record<string, number> = { JAN: 1, FEB: 2, MAR: 3, APR: 4, MAY: 5, JUNE: 6, JULY: 7, AUG: 8, SEP: 9, OCT: 10, NOV: 11, DEC: 12 };
+const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const LEVELS: MentorLevelType[] = ["Intern", "Junior1", "Junior2", "Junior3", "Middle1", "Middle2", "Middle3", "Senior1", "Senior2", "Senior3"];
 
 function levelColor(level?: string) {
   if (!level) return "";
@@ -35,11 +36,32 @@ export function MentorLevelsPanel() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [isLevelsDrawerOpen, setIsLevelsDrawerOpen] = useState(false);
 
+  const [assignEmployeeId, setAssignEmployeeId] = useState("");
+  const [assignMonth, setAssignMonth] = useState(1);
+  const [assignLevel, setAssignLevel] = useState<MentorLevelType>("Junior1");
+  const [assignHourRate, setAssignHourRate] = useState(0);
+
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.list("MentorLevels", { pageSize: 1000 }),
     queryFn: () => mentorLevelsApi.list({ pageSize: 1000 }),
   });
+  const employeesQuery = useQuery({
+    queryKey: queryKeys.list("Employees", { pageSize: 200 }),
+    queryFn: () => employeesApi.list({ pageSize: 200 }),
+  });
   const allLevels = data?.items ?? [];
+
+  const assignMutation = useMutation({
+    mutationFn: () =>
+      mentorLevelsApi.create({ employeeId: assignEmployeeId, year: selectedYear, month: assignMonth, level: assignLevel, hourRate: assignHourRate }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["MentorLevels"] });
+      setAssignEmployeeId("");
+      setAssignMonth(1);
+      setAssignLevel("Junior1");
+      setAssignHourRate(0);
+    },
+  });
 
   const yearLevels = useMemo(() => allLevels.filter((l) => l.year === selectedYear), [allLevels, selectedYear]);
 
@@ -100,6 +122,40 @@ export function MentorLevelsPanel() {
             <Star className="size-4 fill-white text-white" /><span>Levels</span>
           </button>
         </div>
+      </div>
+
+      {/* Assign level form */}
+      <div className="flex flex-wrap items-end gap-3 p-4 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
+        <div className="min-w-40 flex-1">
+          <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">Employee</label>
+          <select value={assignEmployeeId} onChange={(e) => setAssignEmployeeId(e.target.value)} className="w-full px-3 py-2 text-xs font-medium bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200">
+            <option value="">Select employee</option>
+            {employeesQuery.data?.items?.map((e) => <option key={e.id} value={e.id}>{e.fullName ?? "—"}</option>)}
+          </select>
+        </div>
+        <div className="w-24">
+          <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">Month</label>
+          <select value={assignMonth} onChange={(e) => setAssignMonth(Number(e.target.value))} className="w-full px-3 py-2 text-xs font-medium bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200">
+            {MONTHS.map((m) => <option key={m} value={m}>{MONTH_KEYS[m - 1]}</option>)}
+          </select>
+        </div>
+        <div className="w-28">
+          <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">Level</label>
+          <select value={assignLevel} onChange={(e) => setAssignLevel(e.target.value as MentorLevelType)} className="w-full px-3 py-2 text-xs font-medium bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200">
+            {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </div>
+        <div className="w-24">
+          <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">Hour rate</label>
+          <input type="number" value={assignHourRate} onChange={(e) => setAssignHourRate(Number(e.target.value))} className="w-full px-3 py-2 text-xs font-bold bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200" />
+        </div>
+        <button
+          onClick={() => assignMutation.mutate()}
+          disabled={!assignEmployeeId || assignMutation.isPending}
+          className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs px-5 py-2 rounded-xl transition-all shadow-xs"
+        >
+          {assignMutation.isPending ? "Saving..." : "Assign"}
+        </button>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-800">
