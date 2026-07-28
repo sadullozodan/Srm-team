@@ -45,19 +45,16 @@ function Button({
   className,
   variant = "default",
   size = "default",
-  render,
   nativeButton,
+  render,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      nativeButton={nativeButton ?? (render ? false : undefined)}
       render={render}
-      // A custom `render` (e.g. a Next.js <Link> → <a>) is not a native <button>.
-      // Tell Base UI so it drops native-button semantics and stays accessible,
-      // instead of warning. An explicit `nativeButton` still wins.
-      nativeButton={nativeButton ?? render === undefined}
       {...props}
     />
   )

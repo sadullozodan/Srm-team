@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth/context";
+
+import { InitialLoadingProvider } from "@/components/providers/initial-loading-provider";
 import { LangProvider } from "@/lib/i18n";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -28,9 +30,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <AuthProvider>
-          <LangProvider>
-            <TooltipProvider>{children}</TooltipProvider>
-          </LangProvider>
+          <TooltipProvider>
+            <InitialLoadingProvider>
+              <LangProvider>{children}</LangProvider>
+            </InitialLoadingProvider>
+          </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

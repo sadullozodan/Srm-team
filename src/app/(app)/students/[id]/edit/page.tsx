@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader } from "@/components/ui/Loading";
 import { studentsApi, queryKeys } from "@/lib/api/resources";
 import { StudentForm } from "@/components/students/student-form";
 import { PanelHeader } from "../../../panels";
@@ -28,7 +28,7 @@ export default function EditStudentPage() {
         </div>
       ) : isPending ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="size-6 animate-spin text-primary" />
+          <Loader size="md" />
         </div>
       ) : (
         <StudentForm studentId={id} initial={data} />

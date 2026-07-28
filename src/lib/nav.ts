@@ -53,6 +53,8 @@ export const NAV: NavItem[] = [
       { label: "Expenses", href: "/accounting/expenses" },
       { label: "Salary", href: "/accounting/salary" },
       { label: "Avans", href: "/accounting/avans" },
+      { label: "Accountant", href: "/accounting/accountant" },
+      { label: "Net", href: "/accounting/net" },
     ],
   },
   { label: "Branches", icon: "branches", href: "/branches" },

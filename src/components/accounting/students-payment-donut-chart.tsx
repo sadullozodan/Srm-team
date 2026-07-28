@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 export interface PaymentSegment {
@@ -11,23 +11,6 @@ export interface PaymentSegment {
   color: string;
 }
 
-export const MOCK_PAYMENT_DATA: PaymentSegment[] = [
-  {
-    name: "Paid amount",
-    value: 22,
-    percentage: "20%",
-    count: 22,
-    color: "#a855f7", // Purple
-  },
-  {
-    name: "Not paid",
-    value: 48,
-    percentage: "80%",
-    count: 48,
-    color: "#ff7043", // Orange
-  },
-];
-
 export interface StudentsPaymentDonutChartProps {
   data?: PaymentSegment[];
   totalLabel?: string;
@@ -35,25 +18,23 @@ export interface StudentsPaymentDonutChartProps {
 }
 
 export function StudentsPaymentDonutChart({
-  data = MOCK_PAYMENT_DATA,
+  data = [],
   totalLabel = "Total",
-  totalCount = 60,
+  totalCount = 0,
 }: StudentsPaymentDonutChartProps) {
+  // Defer the Recharts container to after mount (real width + soft fade-in).
   const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   return (
-    <div className="w-full h-full min-h-[400px] bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+    <div className="w-full h-full min-h-[330px] bg-white dark:bg-slate-900/60 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
       {/* Title */}
       <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
         Students payment
       </h3>
 
       {/* Main Donut Visual */}
-      <div className="relative size-48 sm:size-52 mx-auto flex items-center justify-center shrink-0 my-2">
+      <div className="relative size-44 sm:size-48 mx-auto flex items-center justify-center shrink-0 my-1">
         {mounted && (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -61,8 +42,8 @@ export function StudentsPaymentDonutChart({
                 data={data}
                 cx="50%"
                 cy="50%"
-                innerRadius={55}
-                outerRadius={80}
+                innerRadius={50}
+                outerRadius={74}
                 paddingAngle={2}
                 dataKey="value"
                 stroke="none"

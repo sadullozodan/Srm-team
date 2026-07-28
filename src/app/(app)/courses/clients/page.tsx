@@ -1,93 +1,116 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { leadsApi, queryKeys } from "@/lib/api/resources";
 import type { LeadDto, LeadType } from "@/lib/api/types";
-import { Filters, NameCell, Panel, PanelHeader, Pill, SearchField, Segmented, cellCls, type Tone } from "../../panels";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const tone: Record<LeadType, Tone> = { Client: "success", Lead: "brand" };
-const VIEWS = ["Clients", "Leads", "All"] as const;
-type View = (typeof VIEWS)[number];
+const typeVariant: Record<LeadType, "default" | "success"> = { Lead: "default", Client: "success" };
 
 export default function ClientsPage() {
-  const [view, setView] = useState<View>("Clients");
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [type, setType] = useState<LeadType | "">("");
+  useEffect(() => {
+    const id = setTimeout(() => setSearch(searchInput.trim()), 350);
+    return () => clearTimeout(id);
+  }, [searchInput]);
 
-  const params = { pageSize: 300 };
+  const queryClient = useQueryClient();
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.list("Leads", params),
-    queryFn: () => leadsApi.list(params),
+    queryKey: queryKeys.list("Leads", { pageSize: 200, search }),
+    queryFn: () => leadsApi.list({ pageSize: 200, search }),
+    placeholderData: keepPreviousData,
   });
 
-  const rows = useMemo(() => {
-    const all = data?.items ?? [];
-    const byView = all.filter((l) => (view === "All" ? true : view === "Clients" ? l.type === "Client" : l.type === "Lead"));
-    const q = search.trim().toLowerCase();
-    return q
-      ? byView.filter((l) => (l.fullName ?? "").toLowerCase().includes(q) || (l.phone ?? "").includes(q))
-      : byView;
-  }, [data, view, search]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => leadsApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["Leads"] }),
+  });
+
+  function handleDelete(lead: LeadDto) {
+    if (window.confirm(`Delete ${lead.fullName ?? "this lead"}?`)) deleteMutation.mutate(lead.id);
+  }
+
+  const all = data?.items ?? [];
+  const rows = type ? all.filter((l) => l.type === type) : all;
 
   return (
-    <Panel>
-      <PanelHeader title="Clients" backHref="/courses" />
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Segmented options={VIEWS} value={view} onChange={setView} />
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Clients &amp; Leads</h1>
+        <Button size="lg" className="gap-1.5" render={<Link href="/courses/clients/new" />}>
+          <Plus className="size-4" />
+          Add new
+        </Button>
       </div>
 
-      <Filters>
-        <SearchField value={search} onChange={setSearch} placeholder="Search by name or phone" />
-      </Filters>
-
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full min-w-[760px] border-collapse text-left">
-          <thead>
-            <tr className="bg-muted/70 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
-              {["Name", "Phone", "Course", "Source", "Occupation", "Type"].map((c) => (
-                <th key={c} className={cellCls}>
-                  {c}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border text-xs font-medium sm:text-sm">
-            {isError ? (
-              <RowMessage>Couldn&apos;t load clients.</RowMessage>
-            ) : isPending ? (
-              <RowMessage>Loading…</RowMessage>
-            ) : rows.length === 0 ? (
-              <RowMessage>Nothing here.</RowMessage>
-            ) : (
-              rows.map((lead: LeadDto) => (
-                <tr key={lead.id} className="transition-colors hover:bg-muted/40">
-                  <td className={cellCls}>
-                    <NameCell name={lead.fullName ?? "—"} sub={lead.registerMonth} />
-                  </td>
-                  <td className={`${cellCls} font-mono text-xs text-muted-foreground`}>{lead.phone ?? "—"}</td>
-                  <td className={`${cellCls} text-muted-foreground`}>{lead.courseName ?? "—"}</td>
-                  <td className={`${cellCls} text-muted-foreground`}>{lead.utmSource ?? "—"}</td>
-                  <td className={`${cellCls} text-muted-foreground`}>{lead.occupation ?? "—"}</td>
-                  <td className={cellCls}>
-                    <Pill tone={tone[lead.type]}>{lead.type}</Pill>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative min-w-56 flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Search by name" className="h-11 rounded-xl bg-card pl-9" />
+        </div>
+        <div className="w-44">
+          <Select value={type} onChange={(e) => setType(e.target.value as LeadType | "")} className="h-11 rounded-xl bg-card">
+            <option value="">All</option>
+            <option value="Lead">Lead</option>
+            <option value="Client">Client</option>
+          </Select>
+        </div>
       </div>
-    </Panel>
-  );
-}
 
-function RowMessage({ children }: { children: React.ReactNode }) {
-  return (
-    <tr>
-      <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
-        {children}
-      </td>
-    </tr>
+      {isError ? (
+        <Card><CardContent className="p-6 text-sm text-destructive">Couldn&apos;t load leads.</CardContent></Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Full name</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead>Occupation</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isPending ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i} className="hover:bg-transparent">{Array.from({ length: 6 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>
+                ))
+              ) : rows.length === 0 ? (
+                <TableRow className="hover:bg-transparent"><TableCell colSpan={6} className="py-10 text-center text-muted-foreground">No leads found.</TableCell></TableRow>
+              ) : (
+                rows.map((l) => (
+                  <TableRow key={l.id}>
+                    <TableCell className="font-medium">{l.fullName ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{l.phone ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{l.courseName ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{l.occupation}</TableCell>
+                    <TableCell><Badge variant={typeVariant[l.type]}>{l.type}</Badge></TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/courses/clients/${l.id}/edit`} />}><Pencil className="size-4 text-primary" /></Button>
+                        <Button variant="ghost" size="icon-sm" aria-label="Delete" onClick={() => handleDelete(l)}><Trash2 className="size-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+    </div>
   );
 }

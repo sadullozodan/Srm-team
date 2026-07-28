@@ -345,6 +345,14 @@ export interface BranchDto {
   status: ActivationStatus;
 }
 
+export interface BranchWriteDto {
+  title: string;
+  city?: string | null;
+  district?: string | null;
+  address?: string | null;
+  status: ActivationStatus;
+}
+
 // ---- Courses ----
 export interface CourseDto {
   id: string;
@@ -362,6 +370,13 @@ export interface CourseWriteDto {
   durationMonths: number;
   logoUrl?: string | null;
   description?: string | null;
+}
+
+// ---- Tokens / coins (role-based: students earn coins) ----
+export interface TokenAccountDto {
+  studentId: string;
+  studentName: string | null;
+  balance: number;
 }
 
 // ---- Errors ----
@@ -383,23 +398,169 @@ export interface LeadDto {
   phone: string | null;
   courseId: string | null;
   courseName: string | null;
+  lessonTime: string | null;
   utmSource: string | null;
-  occupation: LeadOccupation | null;
-  type: LeadType;
+  occupation: LeadOccupation;
   // Free text, not a date: "June", "2024-06", "jun" have all been seen.
   registerMonth: string | null;
+  notes: string | null;
+  type: LeadType;
+}
+
+export interface LeadWriteDto {
+  fullName: string;
+  phone: string;
+  courseId?: string | null;
+  lessonTime?: string | null;
+  utmSource?: string | null;
+  occupation: LeadOccupation;
+  registerMonth?: string | null;
+  notes?: string | null;
+  type: LeadType;
+}
+
+// ---- Jobs ----
+export interface JobDto {
+  id: string;
+  title: string | null;
+  company: string | null;
+  description: string | null;
+  location: string | null;
+  salary: number | null;
+  graduateId: string | null;
+  status: JobStatus;
+}
+
+export interface JobWriteDto {
+  title: string;
+  company?: string | null;
+  description?: string | null;
+  location?: string | null;
+  salary?: number | null;
+  graduateId?: string | null;
+  status: JobStatus;
+}
+
+// ---- Timetable / Schedule ----
+export type LessonType = "Lecture" | "Practice" | "Exam";
+export type DayOfWeek =
+  | "Sunday"
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday";
+
+export interface ScheduleEntryDto {
+  id: string;
+  groupId: string;
+  groupName: string | null;
+  mentorId: string;
+  mentorName: string | null;
+  title: string | null;
+  type: LessonType;
+  day: DayOfWeek;
+  date: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  room: string | null;
+  color: string | null;
+}
+
+export interface ScheduleEntryWriteDto {
+  groupId: string;
+  mentorId: string;
+  title: string;
+  type: LessonType;
+  day: DayOfWeek;
+  date?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  room?: string | null;
+  color?: string | null;
+}
+
+// ---- SMS ----
+export type SmsTargetType = "Group" | "Students" | "Mentors" | "Leads" | "Graduates";
+
+export interface SmsMailingDto {
+  id: string;
+  title: string | null;
+  body: string | null;
+  targetType: SmsTargetType;
+  sentAt: string;
+  recipientCount: number;
+  recipients: SmsRecipientDto[] | null;
+}
+
+export interface SendSmsRequest {
+  title: string;
+  body: string;
+  targetType: SmsTargetType;
+  recipientIds?: string[] | null;
+}
+
+export interface SmsTemplateDto {
+  id: string;
+  title: string | null;
+  body: string | null;
+}
+
+export interface SmsTemplateWriteDto {
+  title: string;
+  body: string;
+}
+
+// ---- Administration ----
+export interface CreateUserRequest {
+  fullName: string;
+  userName: string;
+  password: string;
+  roleIds?: string[] | null;
+  studentId?: string | null;
+  employeeId?: string | null;
+  status?: ActivationStatus;
+}
+
+export interface UserDto {
+  id: string;
+  fullName: string | null;
+  userName: string | null;
+  type: string | null;
+  roles: string[] | null;
+  status: ActivationStatus;
+}
+
+export interface PermissionDto {
+  id: string;
+  name: string | null;
+  group: string | null;
+}
+
+export interface PermissionWriteDto {
+  name: string;
+  group?: string | null;
+}
+
+export interface RoleDto {
+  id: string;
+  name: string | null;
+  type: RoleType;
+  description: string | null;
+}
+
+export interface RoleWriteDto {
+  name: string;
+  type: RoleType;
+  description?: string | null;
 }
 
 // ---- Accounting ----
 export type PaymentStatus = "NotPaid" | "Active" | "Prepayment" | "Paid";
-export type AdvanceStatus = "Pending" | "Approved" | "Denied" | "Done";
 export type DebtStatus = "InProgress" | "Paid";
-export type ExpenseCategory =
-  | "Tax"
-  | "OfficeExpenses"
-  | "Marketing"
-  | "Employees"
-  | "Other";
+export type ExpenseCategory = "Tax" | "OfficeExpenses" | "Marketing" | "Employees" | "Other";
+export type AdvanceStatus = "Pending" | "Approved" | "Denied" | "Done";
 
 export interface PaymentDto {
   id: string;
@@ -501,6 +662,69 @@ export interface MentorLevelDto {
   hourRate: number;
 }
 
+export interface PaymentWriteDto {
+  studentId: string;
+  groupId?: string | null;
+  branchId?: string | null;
+  amount: number;
+  paid: number;
+  discount: number;
+  date: string;
+  status: PaymentStatus;
+}
+
+export interface DebtorWriteDto {
+  studentId?: string | null;
+  fullName: string;
+  fromDate: string;
+  toDate: string;
+  totalDebtAmount: number;
+  paymentPerMonth: number;
+  totalPaidAmount: number;
+  notes?: string | null;
+  status: DebtStatus;
+}
+
+export interface BudgetWriteDto {
+  categoryName: string;
+  fromDate: string;
+  toDate: string;
+  amountAllocated: number;
+  amountSpent: number;
+  branchId?: string | null;
+  status: ActivationStatus;
+}
+
+export interface ExpenseWriteDto {
+  category: ExpenseCategory;
+  name: string;
+  amount: number;
+  recipient?: string | null;
+  branchId?: string | null;
+  date: string;
+  status: ActivationStatus;
+}
+
+export interface SalaryWriteDto {
+  employeeId: string;
+  total: number;
+  prepaid: number;
+  remaining: number;
+  paid: number;
+  year: number;
+  month: number;
+  status: ActivationStatus;
+}
+
+export interface AdvanceWriteDto {
+  employeeId: string;
+  year: number;
+  month: number;
+  amount: number;
+  description?: string | null;
+  status: AdvanceStatus;
+}
+
 // ---- Graduates ----
 export interface GraduateDto {
   id: string;
@@ -512,6 +736,17 @@ export interface GraduateDto {
   dateOfIssue: string;
   workPlace: string | null;
   serialNumber: string | null;
+  certificateIssued: boolean;
+  status: GraduateStatus;
+}
+
+export interface GraduateWriteDto {
+  studentId: string;
+  groupId?: string | null;
+  age?: number | null;
+  dateOfIssue: string;
+  workPlace?: string | null;
+  serialNumber?: string | null;
   certificateIssued: boolean;
   status: GraduateStatus;
 }
@@ -548,81 +783,14 @@ export interface NotificationDto {
   createdAt: string;
 }
 
-// ---- Jobs ----
-export interface JobDto {
-  id: string;
-  title: string | null;
-  company: string | null;
-  description: string | null;
-  location: string | null;
-  salary: number | null;
-  graduateId: string | null;
-  graduateName: string | null;
-  status: JobStatus;
-}
-
-export interface JobWriteDto {
-  title: string;
-  company?: string | null;
-  description?: string | null;
-  location?: string | null;
-  salary?: number | null;
-  graduateId?: string | null;
-  status: JobStatus;
-}
-
-// ---- SMS mailings ----
-export type SmsTargetType = "Group" | "Students" | "Mentors" | "Leads" | "Graduates";
-
-export interface SmsTemplateDto {
-  id: string;
-  title: string | null;
-  body: string | null;
-}
-
+// ---- SMS recipient detail (from testchaos) ----
 export interface SmsRecipientDto {
   name: string | null;
   phone: string | null;
   delivered: boolean;
 }
 
-export interface SmsMailingDto {
-  id: string;
-  title: string | null;
-  body: string | null;
-  targetType: SmsTargetType;
-  sentAt: string;
-  recipientCount: number;
-  recipients: SmsRecipientDto[] | null;
-}
-
-// ---- Administration: Users ----
-export interface UserDto {
-  id: string;
-  fullName: string | null;
-  userName: string | null;
-  type: string | null;
-  roles: string[] | null;
-  status: ActivationStatus;
-  studentId: string | null;
-  employeeId: string | null;
-  createdAt: string;
-  lastLoginAt: string | null;
-}
-
-export interface RoleDto {
-  id: string;
-  name: string | null;
-  type: RoleType;
-  description: string | null;
-}
-
-export interface PermissionDto {
-  id: string;
-  name: string | null;
-  group: string | null;
-}
-
+// ---- Administration: role→permission assignment (from testchaos) ----
 export interface RolePermissionsDto {
   roleId: string;
   permissionIds: string[];
@@ -644,8 +812,7 @@ export interface LogParams extends ListParams {
   to?: string;
 }
 
-// ---- Timetable ----
-export type LessonType = "Lecture" | "Practice" | "Exam";
+// ---- Timetable: alternate day naming (from testchaos) ----
 export type DayName =
   | "Sunday"
   | "Monday"
@@ -655,29 +822,7 @@ export type DayName =
   | "Friday"
   | "Saturday";
 
-export interface ScheduleEntryDto {
-  id: string;
-  groupId: string | null;
-  groupName: string | null;
-  mentorId: string | null;
-  mentorName: string | null;
-  title: string | null;
-  type: LessonType;
-  day: DayName;
-  date: string | null;
-  startTime: string | null;
-  endTime: string | null;
-  room: string | null;
-  color: string | null;
-}
-
-// ---- Tokens & rewards (gamification) ----
-export interface TokenAccountDto {
-  studentId: string;
-  studentName: string | null;
-  balance: number;
-}
-
+// ---- Rewards (gamification, from testchaos) ----
 export type RewardRedemptionStatus = "Pending" | "Fulfilled" | "Rejected" | "Cancelled";
 
 export interface RewardDto {

@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Bell, ChevronDown, LogOut, Moon, Sun, User } from "lucide-react";
-import { LANGS } from "@/lib/langs";
-import { useLang } from "@/lib/i18n";
+import { useQuery } from "@tanstack/react-query";
+import { Bell, ChevronDown, Coins, LogOut, Moon, Search, Sun, User } from "lucide-react";
+import { LANGS, type LangCode } from "@/lib/langs";
 import { NotificationPanel } from "@/components/notifications";
-import { GlobalSearch } from "@/components/global-search";
-import { TokenBadge } from "@/components/token-badge";
 import { useAuth } from "@/lib/auth/context";
+import { tokensApi } from "@/lib/api/resources";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -22,15 +22,21 @@ import {
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-30 flex h-17 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 bg-background px-4 md:px-6">
       <SidebarTrigger className="text-primary" />
 
-      <GlobalSearch />
+      <div className="relative w-full max-w-md">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search..."
+          className="h-11 rounded-full bg-card pl-9"
+        />
+      </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         {/* Lang + notifications live in the bottom tab bar on mobile. */}
         <div className="hidden items-center gap-1 md:flex md:gap-2">
-          <TokenBadge />
           <LangMenu />
 
           <DropdownMenu>
@@ -52,6 +58,8 @@ export function Header() {
           </DropdownMenu>
         </div>
 
+        <CoinBalance />
+
         <ThemeToggle />
 
         <Separator orientation="vertical" className="mx-1 hidden h-6! sm:block" />
@@ -62,9 +70,34 @@ export function Header() {
   );
 }
 
+// Coins are a student-only concept, so the balance shows only when the signed-in
+// user is a student. `GET /api/Tokens/me` is skipped entirely for other roles.
+function CoinBalance() {
+  const { user } = useAuth();
+  const isStudent = !!user?.studentId || (user?.roles?.includes("Student") ?? false);
+
+  const { data } = useQuery({
+    queryKey: ["tokens", "me"],
+    queryFn: tokensApi.me,
+    enabled: isStudent,
+    staleTime: 60 * 1000,
+  });
+
+  if (!isStudent) return null;
+
+  return (
+    <div
+      className="flex h-10 items-center gap-1.5 rounded-full bg-amber-500/15 px-3 font-semibold text-amber-600 dark:text-amber-400"
+      title="Your coins"
+    >
+      <Coins className="size-4" />
+      <span className="tabular-nums">{data?.balance ?? 0}</span>
+    </div>
+  );
+}
+
 function AccountMenu() {
   const { user, logout } = useAuth();
-  const { t } = useLang();
   const initials = (user?.fullName ?? user?.userName ?? "")
     .split(" ")
     .map((part) => part[0])
@@ -95,13 +128,9 @@ function AccountMenu() {
             </p>
           )}
         </div>
-        <DropdownMenuItem render={<Link href="/profile" />}>
-          <User className="size-4" />
-          {t("Profile")}
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={logout} className="text-destructive">
           <LogOut className="size-4" />
-          {t("Sign out")}
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -110,86 +139,13 @@ function AccountMenu() {
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
-
-  function toggle() {
-    const next = resolvedTheme === "dark" ? "light" : "dark";
-    const root = document.documentElement;
-    const applyTheme = () => {
-      root.classList.toggle("dark", next === "dark");
-      root.style.colorScheme = next;
-      setTheme(next);
-    };
-
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // Element.animate is the reliable path here: animating a registered custom
-    // property inside mask-image (the previous approach) does not repaint the
-    // mask, so the circle never appeared. clip-path interpolates properly and
-    // stays on the compositor.
-    if (reduce || typeof document.body.animate !== "function") {
-      applyTheme();
-      return;
-    }
-
-    // Paint the wipe in the colour the page is ABOUT to become. Flip the theme
-    // class, read the token, flip back — all in one frame, so nothing repaints
-    // and the user sees no flash. Read --background rather than body's computed
-    // backgroundColor: body paints its wash through the `background` shorthand,
-    // which resets background-color to transparent.
-    const wasDark = root.classList.contains("dark");
-    root.classList.toggle("dark", next === "dark");
-    const nextBg =
-      getComputedStyle(root).getPropertyValue("--background").trim() || "#ffffff";
-    root.classList.toggle("dark", wasDark);
-
-    const x = window.innerWidth / 2;
-    const y = window.innerHeight / 2;
-    const radius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y),
-    );
-
-    const wipe = document.createElement("div");
-    wipe.style.cssText =
-      `position:fixed;inset:0;z-index:2147483647;pointer-events:none;background:${nextBg};` +
-      `clip-path:circle(0px at ${x}px ${y}px);`;
-    document.body.appendChild(wipe);
-
-    const remove = () => wipe.remove();
-    // Safety net: never leave the overlay on screen if a promise never settles.
-    const failsafe = window.setTimeout(remove, 1600);
-
-    const grow = wipe.animate(
-      {
-        clipPath: [
-          `circle(0px at ${x}px ${y}px)`,
-          `circle(${radius}px at ${x}px ${y}px)`,
-        ],
-      },
-      { duration: 420, easing: "cubic-bezier(0.23, 1, 0.32, 1)", fill: "forwards" },
-    );
-
-    grow.finished
-      .then(() => {
-        // Screen is fully covered — swap the theme behind the cover, then hand
-        // the new page over with a short fade instead of a hard cut.
-        applyTheme();
-        return wipe.animate({ opacity: [1, 0] }, { duration: 180, easing: "ease-out", fill: "forwards" })
-          .finished;
-      })
-      .catch(() => {})
-      .finally(() => {
-        window.clearTimeout(failsafe);
-        remove();
-      });
-  }
-
   return (
     <Button
       variant="ghost"
       size="icon"
-      className="rounded-full bg-card/70 text-primary shadow-[0_8px_22px_rgb(31_37_60_/_0.08)] ring-1 ring-border/70 hover:bg-primary hover:text-primary-foreground dark:shadow-[0_10px_28px_rgb(0_0_0_/_0.22)]"
+      className="rounded-full text-primary"
       aria-label="Toggle theme"
-      onClick={toggle}
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
       <Sun className="dark:hidden" />
       <Moon className="hidden dark:block" />
@@ -198,7 +154,7 @@ export function ThemeToggle() {
 }
 
 export function LangMenu() {
-  const { lang, setLang } = useLang();
+  const [lang, setLang] = useState<LangCode>("EN");
   const current = LANGS.find((l) => l.code === lang)!;
   return (
     <DropdownMenu>

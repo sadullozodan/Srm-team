@@ -1,136 +1,81 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
-import { permissionsApi, rolesFullApi } from "@/lib/api/resources";
-import type { PermissionDto, RoleDto } from "@/lib/api/types";
-import { cn } from "@/lib/utils";
-import { Panel, PanelHeader, PrimaryAction } from "../../panels";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { permissionsApi, queryKeys } from "@/lib/api/resources";
+import type { PermissionDto } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function PermissionPage() {
+export default function PermissionsPage() {
   const queryClient = useQueryClient();
-  const [roleId, setRoleId] = useState<string>("");
-  const [enabled, setEnabled] = useState<Set<string>>(new Set());
-
-  const roles = useQuery({
-    queryKey: ["roles", "list"],
-    queryFn: () => rolesFullApi.list({ pageSize: 50 }),
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.list("Permissions", { pageSize: 200 }),
+    queryFn: () => permissionsApi.list({ pageSize: 200 }),
   });
 
-  const permissions = useQuery({
-    queryKey: ["permissions", "all"],
-    queryFn: () => permissionsApi.list({ pageSize: 300 }),
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => permissionsApi.remove(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["Permissions"] }),
   });
 
-  // Default to the first role once loaded.
-  useEffect(() => {
-    if (!roleId && roles.data?.items?.length) setRoleId(roles.data.items[0].id);
-  }, [roles.data, roleId]);
+  function handleDelete(p: PermissionDto) {
+    if (window.confirm(`Delete ${p.name ?? "this permission"}?`)) deleteMutation.mutate(p.id);
+  }
 
-  const rolePerms = useQuery({
-    queryKey: ["roles", roleId, "permissions"],
-    queryFn: () => rolesFullApi.getPermissions(roleId),
-    enabled: !!roleId,
-  });
-
-  useEffect(() => {
-    if (rolePerms.data) setEnabled(new Set(rolePerms.data.permissionIds));
-  }, [rolePerms.data]);
-
-  const grouped = useMemo(() => {
-    const map = new Map<string, PermissionDto[]>();
-    for (const p of permissions.data?.items ?? []) {
-      const key = p.group ?? "Other";
-      (map.get(key) ?? map.set(key, []).get(key)!).push(p);
-    }
-    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [permissions.data]);
-
-  const save = useMutation({
-    mutationFn: () => rolesFullApi.setPermissions(roleId, [...enabled]),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles", roleId, "permissions"] }),
-  });
-
-  const toggle = (id: string) =>
-    setEnabled((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const permissions = data?.items ?? [];
 
   return (
-    <Panel>
-      <PanelHeader title="Permission">
-        <PrimaryAction onClick={() => save.mutate()} disabled={!roleId || save.isPending}>
-          {save.isPending ? "SAVING…" : "SAVE"}
-        </PrimaryAction>
-      </PanelHeader>
-
-      {/* Role selector */}
-      <div className="flex flex-wrap gap-2">
-        {(roles.data?.items ?? []).map((role: RoleDto) => (
-          <button
-            key={role.id}
-            type="button"
-            onClick={() => setRoleId(role.id)}
-            className={cn(
-              "rounded-xl border px-4 py-2 text-xs font-bold transition-colors",
-              role.id === roleId
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:bg-muted",
-            )}
-          >
-            {role.name}
-          </button>
-        ))}
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Permissions</h1>
+        <Button size="lg" className="gap-1.5" render={<Link href="/administration/permission/new" />}>
+          <Plus className="size-4" />
+          Add new
+        </Button>
       </div>
 
-      {save.isError && <p className="text-sm text-destructive">Couldn&apos;t save. Try again.</p>}
-
-      {permissions.isPending || rolePerms.isPending ? (
-        <div className="flex items-center gap-2 py-10 text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading…
-        </div>
+      {isError ? (
+        <Card><CardContent className="p-6 text-sm text-destructive">Couldn&apos;t load permissions.</CardContent></Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {grouped.map(([group, perms]) => (
-            <div key={group} className="rounded-2xl border border-border p-4">
-              <h3 className="mb-3 text-sm font-black tracking-tight">{group}</h3>
-              <div className="space-y-1">
-                {perms.map((p) => {
-                  const on = enabled.has(p.id);
-                  const action = (p.name ?? "").split(".").pop();
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => toggle(p.id)}
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted"
-                    >
-                      <span className="text-xs font-medium">{action}</span>
-                      <span
-                        aria-pressed={on}
-                        className={cn(
-                          "relative h-5 w-9 rounded-full transition-colors",
-                          on ? "bg-primary" : "bg-muted-foreground/30",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "absolute top-0.5 size-4 rounded-full bg-white transition-all",
-                            on ? "left-[18px]" : "left-0.5",
-                          )}
-                        />
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Name</TableHead>
+                <TableHead>Group</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isPending ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i} className="hover:bg-transparent">{Array.from({ length: 3 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-24" /></TableCell>)}</TableRow>
+                ))
+              ) : permissions.length === 0 ? (
+                <TableRow className="hover:bg-transparent"><TableCell colSpan={3} className="py-10 text-center text-muted-foreground">No permissions found.</TableCell></TableRow>
+              ) : (
+                permissions.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.name ?? "—"}</TableCell>
+                    <TableCell>{p.group ? <Badge variant="muted">{p.group}</Badge> : "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon-sm" aria-label="Edit" render={<Link href={`/administration/permission/${p.id}/edit`} />}><Pencil className="size-4 text-primary" /></Button>
+                        <Button variant="ghost" size="icon-sm" aria-label="Delete" onClick={() => handleDelete(p)}><Trash2 className="size-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       )}
-    </Panel>
+    </div>
   );
 }

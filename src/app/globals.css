@@ -6,90 +6,90 @@
 
 /* OMUZ palette expressed through shadcn's theme tokens. */
 :root {
-  --radius: 0.875rem;
+  --radius: 0.75rem;
 
-  --background: #f5f7fb;
-  --foreground: #111318;
+  --background: #f2f4f5;
+  --foreground: #12141c;
   --card: #ffffff;
-  --card-foreground: #111318;
+  --card-foreground: #12141c;
   --popover: #ffffff;
-  --popover-foreground: #111318;
+  --popover-foreground: #12141c;
 
   /* Brand indigo, sampled from the Figma logo and the Log in button. */
-  --primary: #493cf3;
+  --primary: #4a3aff;
   --primary-foreground: #ffffff;
-  --secondary: #eef0ff;
-  --secondary-foreground: #4338ca;
-  --muted: #edf0f6;
-  --muted-foreground: #667085;
-  --accent: #eef0ff;
-  --accent-foreground: #4338ca;
-  --destructive: #dc2626;
+  --secondary: #eceaff;
+  --secondary-foreground: #4f46e5;
+  --muted: #eef0f5;
+  --muted-foreground: #6b7280;
+  --accent: #eceaff;
+  --accent-foreground: #4f46e5;
+  --destructive: #e5484d;
 
-  --border: #dfe4ee;
-  --input: #d9dfeb;
-  --ring: #5448f6;
+  --border: #e6e7ef;
+  --input: #e3e5ee;
+  --ring: #4f46e5;
 
-  --chart-1: #493cf3;
-  --chart-2: #17a56b;
-  --chart-3: #d99022;
-  --chart-4: #d84e7f;
-  --chart-5: #178fbf;
+  --chart-1: #4f46e5;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #06b6d4;
 
   /* Sidebar (lavender panel, white active pill, indigo active text) */
-  --sidebar: #eef1f8;
-  --sidebar-foreground: #161925;
-  --sidebar-primary: #493cf3;
+  --sidebar: #e8eaf7;
+  --sidebar-foreground: #12141c;
+  --sidebar-primary: #4f46e5;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #ffffff;
-  --sidebar-accent-foreground: #4338ca;
-  --sidebar-border: #dce2ef;
-  --sidebar-ring: rgba(73, 60, 243, 0.32);
+  --sidebar-accent-foreground: #4f46e5;
+  --sidebar-border: #dcdef0;
+  --sidebar-ring: rgba(74, 58, 255, 0.35);
 
   /* Auth brand panel — its own token because it is slate, not the lavender
      sidebar, and it needs a dark counterpart. */
-  --auth-panel: #e8edf6;
-  --auth-panel-foreground: #151823;
+  --auth-panel: #e2e8f0;
+  --auth-panel-foreground: #262626;
 }
 
 .dark {
-  --background: #0b0d12;
-  --foreground: #eceef6;
-  --card: #161a24;
-  --card-foreground: #eceef6;
-  --popover: #171b26;
-  --popover-foreground: #eceef6;
+  --background: #0d0f16;
+  --foreground: #e7e9f2;
+  --card: #191d2b;
+  --card-foreground: #e7e9f2;
+  --popover: #191d2b;
+  --popover-foreground: #e7e9f2;
 
-  --primary: #928cff;
-  --primary-foreground: #090a0f;
-  --secondary: #252443;
-  --secondary-foreground: #d6d4ff;
-  --muted: #1a1f2b;
-  --muted-foreground: #9aa3b6;
-  --accent: #252443;
-  --accent-foreground: #d6d4ff;
+  --primary: #837bff;
+  --primary-foreground: #0d0f16;
+  --secondary: #262347;
+  --secondary-foreground: #cdd0ff;
+  --muted: #1b1f2e;
+  --muted-foreground: #9aa1b4;
+  --accent: #262347;
+  --accent-foreground: #cdd0ff;
   --destructive: #ff6369;
 
-  --border: #282e3d;
-  --input: #303748;
-  --ring: #928cff;
+  --border: #262a3a;
+  --input: #2b3040;
+  --ring: #837bff;
 
-  --chart-1: #928cff;
+  --chart-1: #837bff;
   --chart-2: #4ade80;
   --chart-3: #fbbf24;
   --chart-4: #f472b6;
   --chart-5: #38bdf8;
 
-  --sidebar: #111521;
+  --sidebar: #141726;
   --sidebar-foreground: #e7e9f2;
-  --sidebar-primary: #928cff;
+  --sidebar-primary: #837bff;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #23283a;
-  --sidebar-accent-foreground: #d6d4ff;
-  --sidebar-border: #272d3e;
-  --sidebar-ring: rgba(146, 140, 255, 0.38);
+  --sidebar-accent: #232840;
+  --sidebar-accent-foreground: #c4bfff;
+  --sidebar-border: #262a3a;
+  --sidebar-ring: rgba(131, 123, 255, 0.4);
 
-  --auth-panel: #101522;
+  --auth-panel: #161a2b;
   --auth-panel-foreground: #e7e9f2;
 }
 
@@ -135,132 +135,67 @@
 }
 
 @layer base {
-  html {
-    color-scheme: light;
-    scroll-behavior: smooth;
-  }
-
-  html.dark {
-    color-scheme: dark;
-  }
-
   * {
     @apply border-border outline-ring/50;
   }
-
   body {
     @apply bg-background text-foreground;
-    min-height: 100dvh;
-    background:
-      radial-gradient(circle at 18% -12%, color-mix(in oklch, var(--primary) 12%, transparent), transparent 36rem),
-      radial-gradient(circle at 96% 4%, rgba(23, 143, 191, 0.1), transparent 30rem),
-      linear-gradient(180deg, color-mix(in oklch, var(--background), white 30%), var(--background) 24rem);
     font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
-    text-rendering: optimizeLegibility;
   }
-
-  .dark body {
-    background:
-      radial-gradient(circle at 18% -12%, color-mix(in oklch, var(--primary) 14%, transparent), transparent 36rem),
-      radial-gradient(circle at 96% 4%, rgba(56, 189, 248, 0.08), transparent 30rem),
-      linear-gradient(180deg, color-mix(in oklch, var(--background), white 3%), var(--background) 26rem);
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-    mix-blend-mode: multiply;
-  }
-
-  .dark body::before {
-    opacity: 0.06;
-    mix-blend-mode: screen;
-  }
-
-  body > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  ::selection {
-    background: color-mix(in oklch, var(--primary) 28%, transparent);
+  select option {
+    background-color: var(--card);
     color: var(--foreground);
+    padding: 8px 12px;
+  }
+  .dark select option {
+    background-color: #191d2b;
+    color: #e7e9f2;
   }
 }
 
-/* Motion curves. The built-in CSS easings are too soft to read as intentional,
-   so UI transitions use these instead. The theme wipe itself is driven by
-   Element.animate in ThemeToggle (clip-path interpolates reliably; an animated
-   custom property inside mask-image does not repaint). */
-:root {
-  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
-}
-
-/* Row/card entrances: short stagger, opacity + transform only. */
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
+/* Animated 3-Tier Isometric Stacked Loader */
+@keyframes layerTopFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
     opacity: 1;
-    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px) scale(1.03);
+    opacity: 0.9;
   }
 }
 
-.rise-in {
-  animation: rise-in 320ms var(--ease-out-strong) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rise-in {
-    animation: none;
+@keyframes layerMidFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(-4px) scale(1.02);
+    opacity: 0.95;
   }
 }
 
-/* Auto-spinning 3D token coin (navbar balance badge). */
-.coin3d {
-  position: relative;
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  transform-style: preserve-3d;
-  animation: coin3d-spin 2.4s linear infinite;
-}
-.coin3d-face {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 900;
-  color: #7c2d12;
-  background: radial-gradient(circle at 32% 28%, #fef3c7, #fbbf24 55%, #b45309);
-  box-shadow:
-    inset 0 0 0 1.5px rgba(180, 83, 9, 0.55),
-    0 1px 2px rgba(0, 0, 0, 0.25);
-  backface-visibility: hidden;
-}
-.coin3d-back {
-  transform: rotateY(180deg);
-}
-@keyframes coin3d-spin {
-  to {
-    transform: rotateY(360deg);
+@keyframes layerBotFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translateY(-2px) scale(1.01);
+    opacity: 0.8;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .coin3d {
-    animation-duration: 6s;
-  }
+
+.animate-layer-top {
+  animation: layerTopFloat 2s ease-in-out infinite;
 }
+
+.animate-layer-mid {
+  animation: layerMidFloat 2s ease-in-out 0.2s infinite;
+}
+
+.animate-layer-bot {
+  animation: layerBotFloat 2s ease-in-out 0.4s infinite;
+}
+
