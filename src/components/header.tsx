@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
+import { useCircularReveal } from "@/hooks/use-circular-reveal";
+import { useLang } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, ChevronDown, Coins, LogOut, Moon, Search, Sun, User } from "lucide-react";
 import { LANGS, type LangCode } from "@/lib/langs";
@@ -128,6 +130,10 @@ function AccountMenu() {
             </p>
           )}
         </div>
+        <DropdownMenuItem render={<Link href="/profile" />}>
+          <User className="size-4" />
+          Profile
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={logout} className="text-destructive">
           <LogOut className="size-4" />
           Sign out
@@ -139,13 +145,16 @@ function AccountMenu() {
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+  const handleClick = useCircularReveal(() =>
+    setTheme(resolvedTheme === "dark" ? "light" : "dark"),
+  );
   return (
     <Button
       variant="ghost"
       size="icon"
       className="rounded-full text-primary"
       aria-label="Toggle theme"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      onClick={handleClick}
     >
       <Sun className="dark:hidden" />
       <Moon className="hidden dark:block" />
@@ -154,7 +163,7 @@ export function ThemeToggle() {
 }
 
 export function LangMenu() {
-  const [lang, setLang] = useState<LangCode>("EN");
+  const { lang, setLang } = useLang();
   const current = LANGS.find((l) => l.code === lang)!;
   return (
     <DropdownMenu>

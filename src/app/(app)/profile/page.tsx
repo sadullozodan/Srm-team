@@ -1,24 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, Phone, ShieldCheck } from "lucide-react";
-import { profileApi } from "@/lib/api/resources";
-import type { Language, NotificationChannel } from "@/lib/api/types";
-import {
-  FormActions,
-  FormError,
-  Panel,
-  PanelHeader,
-  Pill,
-  SectionTitle,
-  SelectBox,
-  TextField,
-} from "../panels";
+import { useQuery } from "@tanstack/react-query";
+import { Mail, Phone, ShieldCheck, User } from "lucide-react";
+import { authApi, studentsApi, employeesApi } from "@/lib/api/resources";
+import { Panel, PanelHeader, Pill } from "../panels";
 import { dateTime } from "../resource-table";
-
-const LANGS: Language[] = ["Ru", "En", "Tj"];
-const CHANNELS: NotificationChannel[] = ["Telegram", "Sms"];
 
 function initials(name: string | null) {
   return (name ?? "?")
@@ -31,53 +17,65 @@ function initials(name: string | null) {
 }
 
 export default function ProfilePage() {
-  const queryClient = useQueryClient();
-  const { data, isPending, isError } = useQuery({ queryKey: ["profile"], queryFn: profileApi.get });
-
-  const [fullName, setFullName] = useState("");
-  const [language, setLanguage] = useState<Language>("Ru");
-  const [channel, setChannel] = useState<NotificationChannel>("Telegram");
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (data) {
-      setFullName(data.fullName ?? "");
-      setLanguage(data.preferredLanguage);
-      setChannel(data.preferredChannel);
-    }
-  }, [data]);
-
-  const save = useMutation({
-    mutationFn: () => profileApi.update({ fullName, preferredLanguage: language, preferredChannel: channel }),
-    onSuccess: () => {
-      setError(null);
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-    },
-    onError: (e) => setError(e instanceof Error ? e.message : "Couldn't save."),
+  const { data: me, isPending: mePending, isError: meError } = useQuery({
+    queryKey: ["profile", "me"],
+    queryFn: authApi.me,
   });
 
-  if (isError) {
+  const isStudent = !!me?.studentId;
+  const isEmployee = !!me?.employeeId;
+
+  const { data: student } = useQuery({
+    queryKey: ["profile", "student", me?.studentId],
+    queryFn: () => studentsApi.get(me!.studentId!),
+    enabled: isStudent,
+  });
+
+  const { data: employee } = useQuery({
+    queryKey: ["profile", "employee", me?.employeeId],
+    queryFn: () => employeesApi.get(me!.employeeId!),
+    enabled: isEmployee,
+  });
+
+  if (meError) {
     return (
       <Panel>
         <PanelHeader title="Profile" />
-        <p className="py-10 text-center text-sm text-destructive">Couldn&apos;t load your profile.</p>
+        <p className="py-10 text-center text-sm text-destructive">
+          Couldn&apos;t load your profile.
+        </p>
       </Panel>
     );
   }
+
+  const fullName = me?.fullName ?? "—";
+  const roles = me?.roles ?? [];
+  const phone = student?.phoneNumber ?? employee?.phoneNumber ?? me?.userName ?? "—";
+  const email = student?.email ?? employee?.email ?? null;
+  const photo = student?.photoUrl ?? employee?.photoUrl ?? null;
+  const kind = isStudent ? "Student" : isEmployee ? "Employee" : "System";
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
       {/* Identity card */}
       <Panel className="h-fit lg:col-span-1">
         <div className="flex flex-col items-center text-center">
-          <div className="grid size-24 place-items-center rounded-full bg-primary/10 text-2xl font-black text-primary">
-            {isPending ? "…" : initials(data?.fullName ?? null)}
-          </div>
-          <h2 className="mt-4 text-lg font-black">{data?.fullName ?? "—"}</h2>
-          <p className="text-sm text-muted-foreground">{data?.kind}</p>
+          {photo ? (
+            <img
+              src={photo}
+              alt={fullName}
+              className="size-24 rounded-full object-cover"
+            />
+          ) : (
+            <div className="grid size-24 place-items-center rounded-full bg-primary/10 text-2xl font-black text-primary">
+              {mePending ? "…" : initials(fullName)}
+            </div>
+          )}
+          <h2 className="mt-4 text-lg font-black">{fullName}</h2>
+          <p className="text-sm text-muted-foreground">{kind}</p>
 
           <div className="mt-3 flex flex-wrap justify-center gap-1.5">
-            {(data?.roles ?? []).map((role) => (
+            {roles.map((role) => (
               <Pill key={role} tone="brand">
                 {role}
               </Pill>
@@ -86,51 +84,72 @@ export default function ProfilePage() {
         </div>
 
         <div className="mt-6 space-y-3 text-sm">
-          <Line icon={<Phone className="size-4" />} value={data?.phoneNumber} />
-          <Line icon={<Mail className="size-4" />} value={data?.email} />
-          <Line icon={<ShieldCheck className="size-4" />} value={data?.lastLoginAt ? `Last login ${dateTime(data.lastLoginAt)}` : "—"} />
+          <Line icon={<Phone className="size-4" />} value={phone} />
+          <Line icon={<Mail className="size-4" />} value={email} />
+          <Line
+            icon={<ShieldCheck className="size-4" />}
+            value={me?.id ? `User ID: ${me.id.slice(0, 8)}…` : "—"}
+          />
         </div>
       </Panel>
 
-      {/* Edit form */}
+      {/* Info panel */}
       <Panel className="lg:col-span-2">
         <PanelHeader title="Profile" />
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            save.mutate();
-          }}
-          className="space-y-5"
-        >
-          <SectionTitle>Personal</SectionTitle>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TextField label="Full name" value={fullName} onChange={setFullName} required />
-            <TextField label="Phone (login)" value={data?.phoneNumber ?? ""} onChange={() => {}} disabled />
-          </div>
 
-          <SectionTitle>Preferences</SectionTitle>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <SelectBox label="Language" value={language} onChange={(v) => setLanguage(v as Language)}>
-              {LANGS.map((l) => (
-                <option key={l} value={l}>
-                  {l === "Ru" ? "Русский" : l === "En" ? "English" : "Тоҷикӣ"}
-                </option>
-              ))}
-            </SelectBox>
-            <SelectBox label="Notifications" value={channel} onChange={(v) => setChannel(v as NotificationChannel)}>
-              {CHANNELS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </SelectBox>
-          </div>
+        <div className="space-y-6">
+          <section>
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Account
+            </h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <InfoRow label="Full name" value={fullName} />
+              <InfoRow label="Phone (login)" value={phone} />
+              <InfoRow label="Email" value={email ?? "—"} />
+              <InfoRow label="Role" value={kind} />
+            </div>
+          </section>
 
-          <FormError message={error} />
-          {save.isSuccess && !error && <p className="text-sm text-emerald-600 dark:text-emerald-400">Saved.</p>}
+          {isStudent && student && (
+            <section>
+              <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Student Info
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <InfoRow label="Status" value={student.status} />
+                <InfoRow label="Branch" value={student.branchName ?? "—"} />
+                <InfoRow
+                  label="Groups"
+                  value={student.groups?.join(", ") ?? "—"}
+                />
+                <InfoRow
+                  label="Telegram"
+                  value={student.telegramUsername ?? "—"}
+                />
+              </div>
+            </section>
+          )}
 
-          <FormActions saveLabel="SAVE" saving={save.isPending} onCancel={() => data && setFullName(data.fullName ?? "")} />
-        </form>
+          {isEmployee && employee && (
+            <section>
+              <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Employee Info
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <InfoRow label="Status" value={employee.status} />
+                <InfoRow label="Branch" value={employee.branchName ?? "—"} />
+                <InfoRow
+                  label="Positions"
+                  value={employee.positions?.join(", ") ?? "—"}
+                />
+                <InfoRow
+                  label="Experience"
+                  value={employee.experience ? `${employee.experience} yr` : "—"}
+                />
+              </div>
+            </section>
+          )}
+        </div>
       </Panel>
     </div>
   );
@@ -141,6 +160,15 @@ function Line({ icon, value }: { icon: React.ReactNode; value?: string | null })
     <div className="flex items-center gap-2.5 text-muted-foreground">
       <span className="text-primary">{icon}</span>
       <span className="truncate">{value || "—"}</span>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium">{value}</p>
     </div>
   );
 }
