@@ -22,6 +22,7 @@ import {
   Search,
   Trash2,
   Users,
+  BookOpen,
 } from "lucide-react";
 import { coursesApi, enrollmentsApi, groupsApi, queryKeys } from "@/lib/api/resources";
 import type { EnrollmentDto, GroupDto, GroupStatus } from "@/lib/api/types";
@@ -344,13 +345,14 @@ export default function GroupsPage() {
                     loading={enrollmentsQuery.isPending}
                     error={enrollmentsQuery.isError}
                     emptyText="No students enrolled yet."
+                    groupId={selectedId}
                   />
                 </div>
 
                 {left.length > 0 && (
                   <div>
                     <h2 className="mb-3 text-lg font-semibold">Left course</h2>
-                    <EnrollmentTable rows={left} loading={false} error={false} showReason />
+                    <EnrollmentTable rows={left} loading={false} error={false} showReason groupId={selectedId} />
                   </div>
                 )}
               </>
@@ -560,13 +562,16 @@ function EnrollmentTable({
   error,
   emptyText = "Nothing here.",
   showReason = false,
+  groupId,
 }: {
   rows: EnrollmentDto[];
   loading: boolean;
   error: boolean;
   emptyText?: string;
   showReason?: boolean;
+  groupId: string | null;
 }) {
+  const colCount = showReason ? 6 : 5;
   return (
     <Card className="overflow-hidden">
       <Table>
@@ -577,13 +582,14 @@ function EnrollmentTable({
             <TableHead>Account</TableHead>
             {showReason && <TableHead>Reason</TableHead>}
             <TableHead>Status</TableHead>
+            <TableHead className="text-right">Journal</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <TableRow key={i} className="hover:bg-transparent">
-                {Array.from({ length: showReason ? 5 : 4 }).map((_, j) => (
+                {Array.from({ length: colCount }).map((_, j) => (
                   <TableCell key={j}>
                     <Skeleton className="h-4 w-24" />
                   </TableCell>
@@ -592,13 +598,13 @@ function EnrollmentTable({
             ))
           ) : error ? (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={showReason ? 5 : 4} className="py-8 text-center text-destructive">
+              <TableCell colSpan={colCount} className="py-8 text-center text-destructive">
                 Couldn&apos;t load students.
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={showReason ? 5 : 4} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={colCount} className="py-8 text-center text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
@@ -617,6 +623,16 @@ function EnrollmentTable({
                 )}
                 <TableCell>
                   <Badge variant={enrollmentVariant[e.status]}>{e.status}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Journal"
+                    render={<Link href={`/progressbook/${groupId}`} />}
+                  >
+                    <BookOpen className="size-4 text-primary" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))
