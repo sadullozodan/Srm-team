@@ -12,7 +12,6 @@ import {
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useT } from "@/lib/i18n";
 
 // The design language the team's Figma is drawn in, shared by every page in
 // the (app) group: one bordered panel per screen, a black-weight title, pill
@@ -27,9 +26,7 @@ export function Panel({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        // rise-in: one short entrance per screen so navigation does not snap.
-        // Opacity + transform only, and it collapses under reduced motion.
-        "rise-in w-full space-y-6 rounded-2xl border border-border bg-card p-5 text-foreground shadow-xs sm:p-7 md:rounded-3xl",
+        "w-full space-y-6 rounded-2xl border border-border bg-card p-5 text-foreground shadow-xs sm:p-7 md:rounded-3xl",
         className
       )}
       {...props}
@@ -47,22 +44,19 @@ export function PanelHeader({
   backHref?: string;
   children?: React.ReactNode;
 }) {
-  // Every screen's title flows through here, so translating it once covers the
-  // whole app rather than 30-odd call sites.
-  const t = useT();
   return (
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
       <div className="flex items-center gap-3">
         {backHref && (
           <Link
             href={backHref}
-            aria-label={t("Back")}
+            aria-label="Back"
             className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <ArrowLeft className="size-5 stroke-[2.5]" />
           </Link>
         )}
-        <h1 className="text-xl font-black tracking-tight sm:text-2xl">{t(title)}</h1>
+        <h1 className="text-xl font-black tracking-tight sm:text-2xl">{title}</h1>
       </div>
 
       {children && <div className="flex flex-wrap items-center gap-3">{children}</div>}
@@ -71,18 +65,13 @@ export function PanelHeader({
 }
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
-  const t = useT();
-  return (
-    <h2 className="text-base font-extrabold sm:text-lg">
-      {typeof children === "string" ? t(children) : children}
-    </h2>
-  );
+  return <h2 className="text-base font-extrabold sm:text-lg">{children}</h2>;
 }
 
 // Both actions render as a link when given an href and a button otherwise —
 // the Figma uses the same pill for "go to Mentor levels" and for "EXPORT".
 const actionBase =
-  "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold tracking-wider transition-[transform,background-color,box-shadow,border-color,color] duration-200 ease-[var(--ease-out-strong)] active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100";
+  "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold tracking-wider transition-all disabled:opacity-50";
 
 function Action({
   className,
@@ -90,20 +79,16 @@ function Action({
   children,
   ...props
 }: React.ComponentProps<"button"> & { href?: string }) {
-  const t = useT();
-  // Plain-string labels (SAVE, CANCEL, ADD STUDENT…) translate here; composed
-  // children keep their own markup and translate at the call site.
-  const label = typeof children === "string" ? t(children) : children;
   if (href) {
     return (
       <Link href={href} className={cn(actionBase, className)}>
-        {label}
+        {children}
       </Link>
     );
   }
   return (
     <button type="button" className={cn(actionBase, className)} {...props}>
-      {label}
+      {children}
     </button>
   );
 }
@@ -128,17 +113,16 @@ export function PrimaryAction(props: React.ComponentProps<"button"> & { href?: s
 }
 
 export function ExportButton() {
-  const t = useT();
   return (
     <OutlineAction>
       <Upload className="size-4 stroke-[2.5]" />
-      <span>{t("EXPORT")}</span>
+      <span>EXPORT</span>
     </OutlineAction>
   );
 }
 
 export const fieldCls =
-  "w-full rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-xs font-medium text-foreground transition-[background-color,border-color,box-shadow] duration-200 ease-[var(--ease-out-strong)] focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none";
+  "w-full rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-xs font-medium text-foreground transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none";
 
 /**
  * Wrapper that notches a small label into the top border. The Figma only shows
@@ -156,12 +140,11 @@ export function Field({
   required?: boolean;
   children: React.ReactNode;
 }) {
-  const t = useT();
   return (
     <div className="relative">
       {filled && (
         <span className="absolute -top-2.5 left-3 z-10 bg-card px-1 text-[11px] font-medium text-muted-foreground">
-          {t(label)}
+          {label}
           {required && <span className="text-destructive"> *</span>}
         </span>
       )}
@@ -320,7 +303,6 @@ export function SearchField({
   label?: string;
   placeholder?: string;
 }) {
-  const t = useT();
   return (
     <Field label={label}>
       <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
@@ -328,7 +310,7 @@ export function SearchField({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={t(placeholder)}
+        placeholder={placeholder}
         className={cn(fieldCls, "pl-9")}
       />
     </Field>
@@ -348,13 +330,12 @@ export function SelectField<T extends string>({
   onChange: (value: T | "") => void;
   allLabel: string;
 }) {
-  const t = useT();
   return (
     <SelectBox label={label} value={value} onChange={(v) => onChange(v as T | "")}>
-      <option value="">{t(allLabel)}</option>
+      <option value="">{allLabel}</option>
       {options.map((option) => (
         <option key={option} value={option}>
-          {t(option)}
+          {option}
         </option>
       ))}
     </SelectBox>
@@ -382,7 +363,6 @@ export type Tone = keyof typeof TONES;
 
 /** The Figma's rounded status pill. */
 export function Pill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
-  const t = useT();
   return (
     <span
       className={cn(
@@ -390,7 +370,7 @@ export function Pill({ tone, children }: { tone: Tone; children: React.ReactNode
         TONES[tone]
       )}
     >
-      {typeof children === "string" ? t(children) : children}
+      {children}
     </span>
   );
 }
@@ -523,11 +503,10 @@ export function LabeledField({
   required?: boolean;
   children: React.ReactNode;
 }) {
-  const t = useT();
   return (
     <div className="space-y-1.5">
       <label className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
-        {t(label)}
+        {label}
         {required && <span className="text-destructive"> *</span>}
       </label>
       {children}
@@ -545,7 +524,6 @@ export function Segmented<T extends string>({
   value: T;
   onChange: (value: T) => void;
 }) {
-  const t = useT();
   return (
     <div className="flex flex-wrap gap-2">
       {options.map((option) => (
@@ -561,7 +539,7 @@ export function Segmented<T extends string>({
               : "border-border text-muted-foreground hover:bg-muted"
           )}
         >
-          {t(option)}
+          {option}
         </button>
       ))}
     </div>
@@ -578,11 +556,10 @@ export function FormActions({
   saving: boolean;
   onCancel: () => void;
 }) {
-  const t = useT();
   return (
     <div className="flex items-center gap-3 pt-2">
       <PrimaryAction type="submit" disabled={saving}>
-        {saving ? t("SAVING…") : t(saveLabel)}
+        {saving ? "SAVING…" : saveLabel}
       </PrimaryAction>
       <OutlineAction onClick={onCancel}>CANCEL</OutlineAction>
     </div>

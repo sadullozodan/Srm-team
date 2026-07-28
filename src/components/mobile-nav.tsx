@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Bell, Globe, User } from "lucide-react";
 import { LogoMark } from "./icons";
-import { LANGS, type LangCode } from "@/lib/langs";
+import { LANGS } from "@/lib/langs";
+import { useLang } from "@/lib/i18n";
 import { NotificationPanel, useUnreadNotificationCount } from "@/components/notifications";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
@@ -23,8 +25,7 @@ export function MobileNav() {
   const [langOpen, setLangOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
-  // ponytail: local until i18n exists — header's own picker is hidden on mobile.
-  const [lang, setLang] = useState<LangCode>("EN");
+  const { lang, setLang } = useLang();
 
   return (
     <>
@@ -61,11 +62,13 @@ export function MobileNav() {
           Notification
         </button>
 
-        {/* ponytail: profile panel not wired yet */}
-        <button className={`${tabCls} text-muted-foreground`}>
+        <Link
+          href="/profile"
+          className={`${tabCls} text-muted-foreground`}
+        >
           <User className="size-6" />
           Profile
-        </button>
+        </Link>
       </nav>
 
       <Sheet open={langOpen} onOpenChange={setLangOpen}>
