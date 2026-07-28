@@ -1,5 +1,5 @@
-import { AddEmployeePanel } from "@/components/employees/add-employee-panel";
+import { EmployeeForm } from "@/components/employees/employee-form";
 
 export default function AddEmployeePage() {
-  return <AddEmployeePanel />;
+  return <EmployeeForm />;
 }
