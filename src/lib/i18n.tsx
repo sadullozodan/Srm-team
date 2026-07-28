@@ -178,6 +178,14 @@ const DICT: Record<string, Entry> = {
   "Nobody is in debt.": { RU: "Должников нет.", TJ: "Қарздор нест." },
   "No mentor levels set.": { RU: "Уровни не заданы.", TJ: "Сатҳҳо таъин нашудаанд." },
   "No lessons": { RU: "Занятий нет", TJ: "Дарс нест" },
+
+  // --- Profile ---
+  Edit: { RU: "Редактировать", TJ: "Тағйир додан" },
+  Save: { RU: "Сохранить", TJ: "Нигоҳ доштан" },
+  Cancel: { RU: "Отмена", TJ: "Бекор кардан" },
+  Email: { RU: "Эл. почта", TJ: "Почтаи электронӣ" },
+  "Notification channel": { RU: "Канал уведомлений", TJ: "Канали огоҳинома" },
+  "Created at": { RU: "Создан", TJ: "Эҷод шудааст" },
 };
 
 interface LangContextValue {

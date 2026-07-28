@@ -872,6 +872,9 @@ export interface ProfileDto {
 
 export interface UpdateProfileRequest {
   fullName: string;
+  phoneNumber?: string | null;
+  email?: string | null;
+  telegramUsername?: string | null;
   preferredLanguage: Language;
   preferredChannel: NotificationChannel;
 }
