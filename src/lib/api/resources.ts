@@ -5,6 +5,7 @@
 import { apiFetch, toQuery } from "./client";
 import type {
   AbsenteeDto,
+  ActivationStatus,
   AddLessonRequest,
   AdvanceDto,
   AdvanceWriteDto,
@@ -13,8 +14,15 @@ import type {
   BranchDto,
   BudgetDto,
   BudgetWriteDto,
+  ChangeEnrollmentStatusRequest,
+  ChangePasswordRequest,
+  ContractDto,
+  ContractWriteDto,
   CourseDto,
+  CourseLessonDto,
+  CourseLessonWriteDto,
   CourseWriteDto,
+  CreateUserRequest,
   CreateWeekRequest,
   DailyAttendanceDto,
   DashboardStatsDto,
@@ -22,12 +30,14 @@ import type {
   DebtorWriteDto,
   EmployeeDto,
   EmployeeWriteDto,
+  EnrollStudentRequest,
   EnrollmentDto,
   ExpenseDto,
   ExpenseWriteDto,
   ForgotPasswordRequest,
   GraduateDto,
   GraduateWriteDto,
+  GrantTokensDto,
   GroupDto,
   GroupWriteDto,
   JobDto,
@@ -40,7 +50,9 @@ import type {
   ListParams,
   LoginRequest,
   MentorLevelDto,
+  MonthlyCountDto,
   NotificationDto,
+  NotificationWriteDto,
   PagedResult,
   PaymentDto,
   PaymentWriteDto,
@@ -48,9 +60,17 @@ import type {
   PermissionWriteDto,
   PositionDto,
   PositionWriteDto,
+  RedeemRequest,
+  RefreshRequest,
   RegisterRequest,
+  RejectRedemptionRequest,
   ResetPasswordByCodeRequest,
+  ResetPasswordRequest,
+  RewardDto,
+  RewardRedemptionDto,
+  RewardWriteDto,
   RoleDto,
+  RolePermissionsDto,
   RoleWriteDto,
   SalaryDto,
   SalaryWriteDto,
@@ -58,21 +78,26 @@ import type {
   ScheduleEntryWriteDto,
   SendSmsRequest,
   SetAttendanceRequest,
+  SetRolePermissionsRequest,
+  SetUserStatusRequest,
   SetWeekResultRequest,
   SmsMailingDto,
   SmsTemplateDto,
   SmsTemplateWriteDto,
   StudentDto,
+  StudentInviteResultDto,
   StudentWriteDto,
   TokenAccountDto,
-  CreateUserRequest,
+  TokenTransactionDto,
+  TransferRequest,
+  UpdateUserRequest,
+  UpdateUserRolesRequest,
+  UploadResult,
   UserDto,
   UserProfileDto,
   WeekResultDto,
-  RewardDto,
   LogDto,
   LogParams,
-  RolePermissionsDto,
   GlobalSearchResultDto,
   ProfileDto,
   UpdateProfileRequest,
@@ -107,13 +132,19 @@ function crud<TDto, TWrite>(resource: string): CrudApi<TDto, TWrite> {
   };
 }
 
-export const studentsApi = crud<StudentDto, StudentWriteDto>("Students");
+export const studentsApi = {
+  ...crud<StudentDto, StudentWriteDto>("Students"),
+  invite: (id: string) =>
+    apiFetch<StudentInviteResultDto>(`/api/Students/${id}/invite`, { method: "POST" }),
+};
 export const groupsApi = crud<GroupDto, GroupWriteDto>("Groups");
 export const employeesApi = crud<EmployeeDto, EmployeeWriteDto>("Employees");
 export const coursesApi = crud<CourseDto, CourseWriteDto>("Courses");
 export const branchesApi = crud<BranchDto, unknown>("Branches");
 export const positionsApi = crud<PositionDto, PositionWriteDto>("Positions");
 export const mentorLevelsApi = crud<MentorLevelDto, unknown>("MentorLevels");
+export const contractsApi = crud<ContractDto, ContractWriteDto>("Contracts");
+export const courseLessonsApi = crud<CourseLessonDto, CourseLessonWriteDto>("CourseLessons");
 
 // Accounting + module resources. Each is a plain paged list controller.
 // (`paymentsApi` is read by the dashboard income card too.)
@@ -140,21 +171,32 @@ export const usersApi = {
   get: (id: string) => apiFetch<UserDto>(`/api/Users/${id}`),
   create: (body: CreateUserRequest) =>
     apiFetch<UserDto>("/api/Users", { method: "POST", json: body }),
+  update: (id: string, body: UpdateUserRequest) =>
+    apiFetch<UserDto>(`/api/Users/${id}`, { method: "PUT", json: body }),
   remove: (id: string) => apiFetch<void>(`/api/Users/${id}`, { method: "DELETE" }),
   setRoles: (id: string, roleIds: string[]) =>
-    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roleIds } }),
-  setStatus: (id: string, status: string) =>
-    apiFetch<UserDto>(`/api/Users/${id}/status`, { method: "PUT", json: { status } }),
+    apiFetch<UserDto>(`/api/Users/${id}/roles`, { method: "PUT", json: { roleIds } as UpdateUserRolesRequest }),
+  setStatus: (id: string, status: ActivationStatus) =>
+    apiFetch<UserDto>(`/api/Users/${id}/status`, { method: "PUT", json: { status } as SetUserStatusRequest }),
   resetPassword: (id: string, newPassword: string) =>
-    apiFetch<void>(`/api/Users/${id}/reset-password`, { method: "POST", json: { newPassword } }),
+    apiFetch<void>(`/api/Users/${id}/reset-password`, { method: "POST", json: { newPassword } as ResetPasswordRequest }),
 };
 
-// Enrollments are addressed by student or group, not a flat list.
 export const enrollmentsApi = {
+  list: (params: ListParams = {}) =>
+    apiFetch<PagedResult<EnrollmentDto>>(`/api/Enrollments${toQuery(params as Record<string, string | number | undefined | null>)}`),
+  create: (body: EnrollStudentRequest) =>
+    apiFetch<EnrollmentDto>("/api/Enrollments", { method: "POST", json: body }),
   byStudent: (studentId: string) =>
     apiFetch<EnrollmentDto[]>(`/api/Enrollments/student/${studentId}`),
   byGroup: (groupId: string) =>
     apiFetch<EnrollmentDto[]>(`/api/Enrollments/group/${groupId}`),
+  remove: (id: string) =>
+    apiFetch<void>(`/api/Enrollments/${id}`, { method: "DELETE" }),
+  transfer: (id: string, body: TransferRequest) =>
+    apiFetch<EnrollmentDto>(`/api/Enrollments/${id}/transfer`, { method: "POST", json: body }),
+  changeStatus: (id: string, body: ChangeEnrollmentStatusRequest) =>
+    apiFetch<EnrollmentDto>(`/api/Enrollments/${id}/status`, { method: "PUT", json: body }),
 };
 
 export const authApi = {
@@ -163,6 +205,10 @@ export const authApi = {
   register: (body: RegisterRequest) =>
     apiFetch<AuthResponse>("/api/Auth/register", { method: "POST", json: body }),
   me: () => apiFetch<UserProfileDto>("/api/Auth/me"),
+  refresh: (body: RefreshRequest) =>
+    apiFetch<AuthResponse>("/api/Auth/refresh", { method: "POST", json: body }),
+  changePassword: (body: ChangePasswordRequest) =>
+    apiFetch<void>("/api/Auth/change-password", { method: "POST", json: body }),
   // Password recovery by SMS code: request one, then reset with it.
   forgotPassword: (body: ForgotPasswordRequest) =>
     apiFetch<void>("/api/Auth/forgot-password", { method: "POST", json: body }),
@@ -180,6 +226,10 @@ export const dashboardApi = {
   // date is a plain yyyy-mm-dd day, not a timestamp.
   absentees: (date: string) =>
     apiFetch<AbsenteeDto[]>(`/api/Dashboard/absentees${toQuery({ date })}`),
+  leads: (year?: number) =>
+    apiFetch<MonthlyCountDto[]>(`/api/Dashboard/leads${toQuery({ year })}`),
+  enrollments: (year?: number) =>
+    apiFetch<MonthlyCountDto[]>(`/api/Dashboard/enrollments${toQuery({ year })}`),
   leftCourses: (year: number) =>
     apiFetch<LeftCoursesPointDto[]>(
       `/api/Dashboard/left-courses${toQuery({ year })}`,
@@ -196,8 +246,15 @@ export const notificationsApi = {
     apiFetch<void>(`/api/Notifications/${id}/read`, { method: "PUT" }),
   markAllRead: () =>
     apiFetch<void>("/api/Notifications/read-all", { method: "PUT" }),
-  create: (body: { title: string; message: string }) =>
+  create: (body: NotificationWriteDto) =>
     apiFetch<NotificationDto>("/api/Notifications", { method: "POST", json: body }),
+  remove: (id: string) =>
+    apiFetch<void>(`/api/Notifications/${id}`, { method: "DELETE" }),
+};
+
+export const filesApi = {
+  upload: (formData: FormData) =>
+    apiFetch<UploadResult>("/api/Files/upload", { method: "POST", rawBody: formData }),
 };
 
 // Journal is a nested tree (group → weeks → lessons → attendance) edited in place.
@@ -230,7 +287,24 @@ export const journalApi = {
 
 // ---- Level-up modules (testchaos) ----
 export const graduatesFullApi = crud<GraduateDto, unknown>("Graduates");
-export const rewardsApi = crud<RewardDto, unknown>("Rewards");
+export const rewardsApi = {
+  ...crud<RewardDto, RewardWriteDto>("Rewards"),
+  redeem: (rewardId: string, body?: RedeemRequest) =>
+    apiFetch<RewardRedemptionDto>(`/api/Rewards/${rewardId}/redeem`, { method: "POST", json: body ?? {} }),
+  redemptions: {
+    list: (params: ListParams = {}) =>
+      apiFetch<PagedResult<RewardRedemptionDto>>(
+        `/api/Rewards/redemptions${toQuery(params as Record<string, string | number | undefined | null>)}`,
+      ),
+    me: () => apiFetch<RewardRedemptionDto[]>("/api/Rewards/redemptions/me"),
+    cancel: (id: string) =>
+      apiFetch<RewardRedemptionDto>(`/api/Rewards/redemptions/${id}/cancel`, { method: "POST" }),
+    fulfill: (id: string) =>
+      apiFetch<RewardRedemptionDto>(`/api/Rewards/redemptions/${id}/fulfill`, { method: "POST" }),
+    reject: (id: string, body?: RejectRedemptionRequest) =>
+      apiFetch<RewardRedemptionDto>(`/api/Rewards/redemptions/${id}/reject`, { method: "POST", json: body ?? {} }),
+  },
+};
 
 export const smsMailingsApi = {
   key: "SmsMailings",
@@ -255,7 +329,7 @@ export const rolesFullApi = {
   setPermissions: (id: string, permissionIds: string[]) =>
     apiFetch<RolePermissionsDto>(`/api/Roles/${id}/permissions`, {
       method: "PUT",
-      json: { permissionIds },
+      json: { permissionIds } as SetRolePermissionsRequest,
     }),
 };
 
@@ -278,9 +352,17 @@ export const reportsApi = {
 
 export const tokensApi = {
   me: () => apiFetch<TokenAccountDto>("/api/Tokens/me"),
-  grant: (body: { studentId: string; amount: number; reason?: string }) =>
+  myTransactions: (params: ListParams = {}) =>
+    apiFetch<PagedResult<TokenTransactionDto>>(
+      `/api/Tokens/me/transactions${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
+  grant: (body: GrantTokensDto) =>
     apiFetch<TokenAccountDto>("/api/Tokens/grant", { method: "POST", json: body }),
   studentBalance: (studentId: string) => apiFetch<TokenAccountDto>(`/api/Tokens/students/${studentId}`),
+  studentTransactions: (studentId: string, params: ListParams = {}) =>
+    apiFetch<PagedResult<TokenTransactionDto>>(
+      `/api/Tokens/students/${studentId}/transactions${toQuery(params as Record<string, string | number | undefined | null>)}`,
+    ),
 };
 
 export const overviewApi = {

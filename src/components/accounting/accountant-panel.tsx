@@ -31,7 +31,7 @@ export function AccountantPanel() {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  const paymentsQuery = useQuery({
+  const paymentsQuery = useQuery({ 
     queryKey: queryKeys.list(paymentsApi.key, FETCH_ALL),
     queryFn: () => paymentsApi.list(FETCH_ALL),
   });

@@ -2,11 +2,13 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Upload,
   Plus,
+  SquarePen,
+  Trash2,
   Calendar,
 } from "lucide-react";
 import { BudgetPlanChart } from "./budget-plan-chart";
@@ -15,11 +17,14 @@ import {
   budgetsApi,
   queryKeys,
 } from "@/lib/api/resources";
+import { Toast } from "@/components/ui/toast";
 
 const FETCH_ALL = { page: 1, pageSize: 1000 };
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function BudgetPlanPanel() {
+  const queryClient = useQueryClient();
+  const [toast, setToast] = useState<string | null>(null);
   const budgetsQuery = useQuery({
     queryKey: queryKeys.list(budgetsApi.key, FETCH_ALL),
     queryFn: () => budgetsApi.list(FETCH_ALL),
@@ -60,6 +65,14 @@ export function BudgetPlanPanel() {
       spent: spentByMonth[i],
     }));
   }, [budgetsQuery.data]);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => budgetsApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.list(budgetsApi.key, FETCH_ALL) });
+      setToast("Budget deleted");
+    },
+  });
 
   // Chart Date Filters
   const [chartFromDate, setChartFromDate] = useState("Jan 2023");
@@ -118,10 +131,11 @@ export function BudgetPlanPanel() {
                 onChange={(e) => setTableDate(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 pr-9"
               />
-              <Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
+<Calendar className="absolute right-3 size-4 text-slate-400 pointer-events-none" />
             </div>
           </div>
         </div>
+        <Toast message={toast} onClose={() => setToast(null)} />
 
         {/* + ADD NEW Button */}
         <Link
@@ -144,6 +158,7 @@ export function BudgetPlanPanel() {
               <th className="py-3.5 px-4">AMOUNT ALLOCATED</th>
               <th className="py-3.5 px-4">AMOUNT SPENT</th>
               <th className="py-3.5 px-4 text-center">STATUS</th>
+              <th className="py-3.5 px-4 text-right">ACTION</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
@@ -171,6 +186,16 @@ export function BudgetPlanPanel() {
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400">
                     {row.status}
                   </span>
+                </td>
+                <td className="py-3.5 px-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link href={`/accounting/budget/${row.id}/edit`} onClick={(e) => e.stopPropagation()} className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
+                      <SquarePen className="size-4" />
+                    </Link>
+                    <button onClick={(e) => { e.stopPropagation(); if (confirm("Delete this budget?")) deleteMutation.mutate(row.id); }} className="p-1 text-rose-500 hover:text-rose-700">
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

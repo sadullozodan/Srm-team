@@ -20,11 +20,13 @@ import {
   advancesApi,
   queryKeys,
 } from "@/lib/api/resources";
+import { Toast } from "@/components/ui/toast";
 
 const FETCH_ALL = { page: 1, pageSize: 1000 };
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function AvansPanel() {
+  const [toast, setToast] = useState<string | null>(null);
   const advancesQuery = useQuery({
     queryKey: queryKeys.list(advancesApi.key, FETCH_ALL),
     queryFn: () => advancesApi.list(FETCH_ALL),
@@ -45,7 +47,10 @@ export function AvansPanel() {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
     mutationFn: (id: string) => advancesApi.remove(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.list(advancesApi.key, FETCH_ALL) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.list(advancesApi.key, FETCH_ALL) });
+      setToast("Advance deleted");
+    },
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -483,7 +488,7 @@ export function AvansPanel() {
                         <button className="p-1 text-indigo-500 hover:text-indigo-700">
                           <SquarePen className="size-4" />
                         </button>
-                        <button className="p-1 text-rose-500 hover:text-rose-700">
+                        <button onClick={() => { if (confirm("Delete this advance?")) deleteMutation.mutate("1"); }} className="p-1 text-rose-500 hover:text-rose-700">
                           <Trash2 className="size-4" />
                         </button>
                       </div>
@@ -508,7 +513,7 @@ export function AvansPanel() {
                         <button className="p-1 text-indigo-500 hover:text-indigo-700">
                           <SquarePen className="size-4" />
                         </button>
-                        <button className="p-1 text-rose-500 hover:text-rose-700">
+                        <button onClick={() => { if (confirm("Delete this advance?")) deleteMutation.mutate("3"); }} className="p-1 text-rose-500 hover:text-rose-700">
                           <Trash2 className="size-4" />
                         </button>
                       </div>
@@ -520,6 +525,7 @@ export function AvansPanel() {
           </div>
         </div>
       )}
+      <Toast message={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

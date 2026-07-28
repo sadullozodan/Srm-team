@@ -751,6 +751,153 @@ export interface GraduateWriteDto {
   status: GraduateStatus;
 }
 
+// ---- Contracts ----
+export interface ContractDto {
+  id: string;
+  studentId: string;
+  studentName: string | null;
+  groupId: string | null;
+  groupName: string | null;
+  number: string | null;
+  startDate: string;
+  endDate: string;
+  amount: number;
+  fileUrl: string | null;
+  status: ContractStatus;
+}
+
+export interface ContractWriteDto {
+  studentId: string;
+  groupId?: string | null;
+  number?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  amount?: number | null;
+  fileUrl?: string | null;
+  status?: ContractStatus | null;
+}
+
+// ---- Course Lessons ----
+export interface CourseLessonDto {
+  id: string;
+  courseId: string;
+  title: string | null;
+  description: string | null;
+  type: LessonType;
+  orderIndex: number;
+}
+
+export interface CourseLessonWriteDto {
+  courseId: string;
+  title: string;
+  description?: string | null;
+  type?: LessonType | null;
+  orderIndex?: number | null;
+}
+
+// ---- Monthly count (used by Dashboard leads & enrollments) ----
+export interface MonthlyCountDto {
+  month: number;
+  count: number;
+}
+
+// ---- Student invite ----
+export interface StudentInviteResultDto {
+  userId: string;
+  userName: string | null;
+  temporaryPassword: string | null;
+}
+
+// ---- Enrollments extended ----
+export interface EnrollStudentRequest {
+  studentId: string;
+  groupId: string;
+  hasAccount?: boolean;
+  contractEndDate?: string | null;
+}
+
+export interface TransferRequest {
+  targetGroupId: string;
+}
+
+export interface ChangeEnrollmentStatusRequest {
+  status: EnrollmentStatus;
+  reason?: string | null;
+}
+
+// ---- File upload ----
+export interface UploadResult {
+  url: string | null;
+  fileName: string | null;
+  size: number;
+}
+
+// ---- Rewards write ----
+export interface RewardWriteDto {
+  name: string;
+  description?: string | null;
+  cost: number;
+  imageUrl?: string | null;
+  stock?: number | null;
+  isActive: boolean;
+}
+
+export interface RedeemRequest {
+  studentId?: string | null;
+}
+
+export interface RejectRedemptionRequest {
+  reason?: string | null;
+}
+
+// ---- Tokens transactions ----
+export type TokenTransactionType = "Grant" | "Purchase" | "Refund" | "Adjustment";
+
+export interface TokenTransactionDto {
+  id: string;
+  amount: number;
+  type: TokenTransactionType;
+  typeName: string | null;
+  reason: string | null;
+  rewardRedemptionId: string | null;
+  createdAt: string;
+}
+
+export interface GrantTokensDto {
+  studentId: string;
+  amount: number;
+  reason?: string | null;
+}
+
+// ---- Notifications write ----
+export interface NotificationWriteDto {
+  userId?: string | null;
+  title: string;
+  message?: string | null;
+}
+
+// ---- Users extended ----
+export interface UpdateUserRequest {
+  fullName: string;
+  userName: string;
+}
+
+export interface UpdateUserRolesRequest {
+  roleIds?: string[] | null;
+}
+
+export interface SetUserStatusRequest {
+  status: ActivationStatus;
+}
+
+export interface SetRolePermissionsRequest {
+  permissionIds?: string[] | null;
+}
+
+export interface ResetPasswordRequest {
+  newPassword?: string | null;
+}
+
 // ---- Dashboard charts ----
 export interface DailyAttendanceDto {
   day: number;

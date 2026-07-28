@@ -21,12 +21,14 @@ import {
   queryKeys,
 } from "@/lib/api/resources";
 import type { PaymentDto } from "@/lib/api/types";
+import { Toast } from "@/components/ui/toast";
 
 const DRAWER_TRANSACTIONS: { id: number; amount: string; type: string; date: string; comment: string }[] = [];
 
 const FETCH_ALL = { page: 1, pageSize: 1000 };
 
 export function PaymentsListPanel() {
+  const [toast, setToast] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("All groups");
   const [selectedBranch, setSelectedBranch] = useState("All branches");
@@ -74,7 +76,10 @@ export function PaymentsListPanel() {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
     mutationFn: (id: string) => paymentsApi.remove(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["Payments"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["Payments"] });
+      setToast("Payment deleted");
+    },
   });
 
   // Modals state
@@ -845,6 +850,7 @@ export function PaymentsListPanel() {
           </div>
         </div>
       )}
+      <Toast message={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

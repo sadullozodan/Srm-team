@@ -2,18 +2,21 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Upload, Plus, Search, Calendar, SquarePen, X } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Upload, Plus, Search, Calendar, SquarePen, Trash2, X } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import {
   debtorsApi,
   queryKeys,
 } from "@/lib/api/resources";
 import type { DebtorDto } from "@/lib/api/types";
+import { Toast } from "@/components/ui/toast";
 
 const FETCH_ALL = { page: 1, pageSize: 1000 };
 
 export function DebtorsPanel() {
+  const queryClient = useQueryClient();
+  const [toast, setToast] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All status");
   const [selectedDate, setSelectedDate] = useState("July 2023");
@@ -21,6 +24,14 @@ export function DebtorsPanel() {
   const debtorsQuery = useQuery({
     queryKey: queryKeys.list(debtorsApi.key, FETCH_ALL),
     queryFn: () => debtorsApi.list(FETCH_ALL),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => debtorsApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.list(debtorsApi.key, FETCH_ALL) });
+      setToast("Debtor deleted");
+    },
   });
 
   const debtors = useMemo(() => {
@@ -157,6 +168,7 @@ export function DebtorsPanel() {
               <th className="py-3.5 px-4">TOTAL PAID AMOUNT</th>
               <th className="py-3.5 px-4">NOTES</th>
               <th className="py-3.5 px-4 text-center">STATUS</th>
+              <th className="py-3.5 px-4 text-right">ACTION</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-medium">
@@ -213,6 +225,16 @@ export function DebtorsPanel() {
                     </span>
                   )}
                 </td>
+                <td className="py-3.5 px-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link href={`/accounting/debtors/${row.id}/edit`} onClick={(e) => e.stopPropagation()} className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
+                      <SquarePen className="size-4" />
+                    </Link>
+                    <button onClick={(e) => { e.stopPropagation(); if (confirm("Delete this debtor?")) deleteMutation.mutate(row.id); }} className="p-1 text-rose-500 hover:text-rose-700">
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -257,7 +279,7 @@ export function DebtorsPanel() {
                   ) : (
                     <Plus className="size-5 stroke-[3]" />
                   )}
-                </div>
+</div>
               </div>
 
               {/* Form Content when Expanded (image_75628e.png) */}
@@ -356,6 +378,7 @@ export function DebtorsPanel() {
           </div>
         </div>
       )}
+      <Toast message={toast} onClose={() => setToast(null)} />
     </div>
   );
 }
